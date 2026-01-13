@@ -192,6 +192,10 @@ const translations = {
     discount: "Discount",
     sunday: "Sunday", monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday",
     thursday: "Thursday", friday: "Friday", saturday: "Saturday",
+    logoUrl: "Logo URL (Splash Screen & PWA)",
+    offerDescription: "Description (\"i\" icon)",
+    confirmDelete: "Delete this code?",
+    delete: "Delete",
   },
   de: {
     appTitle: "Afroboost",
