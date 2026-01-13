@@ -35,6 +35,7 @@ class Course(BaseModel):
     time: str
     locationName: str
     mapsUrl: Optional[str] = ""
+    visible: bool = True
 
 class CourseCreate(BaseModel):
     name: str
@@ -42,6 +43,7 @@ class CourseCreate(BaseModel):
     time: str
     locationName: str
     mapsUrl: Optional[str] = ""
+    visible: bool = True
 
 class Offer(BaseModel):
     model_config = ConfigDict(extra="ignore")
