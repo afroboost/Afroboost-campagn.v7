@@ -1290,11 +1290,14 @@ function App() {
 
   useEffect(() => { const timer = setTimeout(() => setShowSplash(false), 1500); return () => clearTimeout(timer); }, []);
 
-  // LOGIQUE CODE PROMO: Validation en temps réel avec messages clairs
+  // LOGIQUE CODE PROMO: Validation en temps réel - Case Insensitive avec trim
   useEffect(() => {
     const validateCode = async () => {
+      // Normalize input: trim spaces
+      const normalizedCode = discountCode?.trim() || '';
+      
       // Reset if no code entered
-      if (!discountCode || discountCode.trim() === '') { 
+      if (!normalizedCode) { 
         setAppliedDiscount(null); 
         setPromoMessage({ type: '', text: '' });
         return; 
@@ -1308,9 +1311,10 @@ function App() {
       }
       
       try {
+        // Send normalized code to backend (backend will also normalize)
         const res = await axios.post(`${API}/discount-codes/validate`, { 
-          code: discountCode.trim(), 
-          email: userEmail || '', 
+          code: normalizedCode,
+          email: userEmail?.trim() || '', 
           courseId: selectedCourse.id 
         });
         
@@ -1318,29 +1322,36 @@ function App() {
           const code = res.data.code;
           setAppliedDiscount(code);
           
-          // Calculate and display the discount amount
+          // Calculate the actual discount amount for display
+          let discountAmount = 0;
           let discountText = '';
-          if (code.type === '100%') {
-            discountText = 'Réduction de 100% appliquée (GRATUIT)';
+          
+          if (code.type === '100%' || (code.type === '%' && parseFloat(code.value) >= 100)) {
+            discountAmount = selectedOffer ? selectedOffer.price : 0;
+            discountText = `Code validé : -${discountAmount.toFixed(2)} CHF (GRATUIT)`;
           } else if (code.type === '%') {
-            const discountAmount = selectedOffer ? (selectedOffer.price * parseFloat(code.value) / 100).toFixed(2) : code.value;
-            discountText = `Réduction de ${code.value}% appliquée (-${discountAmount} CHF)`;
+            discountAmount = selectedOffer ? (selectedOffer.price * parseFloat(code.value) / 100) : 0;
+            discountText = `Code validé : -${discountAmount.toFixed(2)} CHF (-${code.value}%)`;
           } else if (code.type === 'CHF') {
-            discountText = `Réduction de ${code.value} CHF appliquée`;
+            discountAmount = parseFloat(code.value);
+            discountText = `Code validé : -${discountAmount.toFixed(2)} CHF`;
           }
+          
           setPromoMessage({ type: 'success', text: `✅ ${discountText}` });
         } else { 
           setAppliedDiscount(null);
           // Display specific error message from backend
-          const errorMsg = res.data.message || 'Code invalide';
+          const errorMsg = res.data.message || 'Code inconnu ou non applicable à ce cours';
           setPromoMessage({ type: 'error', text: `❌ ${errorMsg}` });
         }
       } catch (err) { 
+        console.error("Promo validation error:", err);
         setAppliedDiscount(null); 
-        setPromoMessage({ type: 'error', text: '❌ Code invalide' });
+        setPromoMessage({ type: 'error', text: '❌ Code inconnu ou non applicable à ce cours' });
       }
     };
     
+    // Debounce to avoid too many API calls
     const debounce = setTimeout(validateCode, 400);
     return () => clearTimeout(debounce);
   }, [discountCode, selectedCourse, selectedOffer, userEmail]);
