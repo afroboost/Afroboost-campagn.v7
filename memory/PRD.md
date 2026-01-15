@@ -235,6 +235,7 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 - [x] Architecture config Vercel initiée
 - [x] Bouton "Voir les avis Google" côté client
 - [x] Champ "Lien des avis Google" dans Mode Coach
+- [x] Gestionnaire de Campagnes opérationnel (Email BCC, WhatsApp nav, Instagram DM)
 
 ### P1 - À faire
 - [ ] Refactoring App.js en composants modulaires (fichier > 3000 lignes)
