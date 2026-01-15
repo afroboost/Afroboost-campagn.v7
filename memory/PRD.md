@@ -348,6 +348,13 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - **Logos officiels** : Twint, PayPal, Visa, Mastercard en blanc (filtre invert) sans rectangle
   - **Toggles admin** : Interrupteurs ON/OFF pour activer/désactiver chaque logo de paiement
   - **Police fine** : Style minimaliste avec font-weight 300 et letter-spacing
+- [x] **Widget IA avec Capture de Données (15 Jan 2026)**:
+  - **Bouton flottant WhatsApp** : Icône verte en bas à droite (bottom: 80px) avec ombre
+  - **Formulaire Lead Generation** : Prénom, WhatsApp, Email obligatoires avant chat
+  - **Sauvegarde MongoDB** : Collection 'leads' avec id, firstName, whatsapp, email, createdAt, source
+  - **Chat IA personnalisé** : "Enchanté [Prénom] ! Je suis l'assistant IA d'Afroboost..."
+  - **Contexte enrichi** : L'IA utilise la description Afroboost et les cours disponibles
+  - **API Endpoints** : POST /api/leads, GET /api/leads, POST /api/chat
 
 ### P1 - À faire
 - [ ] Continuer refactoring: Extraire CoachDashboard, CoachLoginModal dans composants séparés
@@ -359,6 +366,7 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 - [ ] Envoi Instagram via ig.me
 - [ ] Notifications email après réservation
 - [ ] Dashboard analytics pour le coach
+- [ ] Ajouter une vue "Leads" dans le Mode Coach pour visualiser les contacts capturés
 
 ---
 
@@ -370,4 +378,4 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 
 ## Known Limitations
 ~~⚠️ **DONNÉES NON PERSISTANTES**: Le backend utilise actuellement des listes en mémoire.~~ 
-✅ **Résolu**: Toutes les données sont maintenant persistées dans MongoDB (cours, offres, réservations, configurations).
+✅ **Résolu**: Toutes les données sont maintenant persistées dans MongoDB (cours, offres, réservations, configurations, leads).
