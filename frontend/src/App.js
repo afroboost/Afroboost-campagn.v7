@@ -1873,20 +1873,43 @@ const SuccessOverlay = ({ t, data, onClose }) => {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
+  // QR Code data - contains reservation ID for coach validation
+  const qrData = JSON.stringify({
+    id: data.id || data.reservationCode,
+    code: data.reservationCode,
+    name: data.userName,
+    email: data.userEmail,
+    type: 'afroboost_reservation'
+  });
+
   return (
     <div className="success-overlay">
       <div className="success-message glass rounded-xl p-6 max-w-md w-full text-center neon-border relative print-proof">
         <button onClick={onClose} className="absolute top-3 right-4 text-2xl text-white" data-testid="close-success">×</button>
         <div style={{ fontSize: '48px' }}>🎧</div>
         <p className="font-bold text-white my-2" style={{ fontSize: '20px' }}>{t('reservationConfirmed')}</p>
-        <div className="my-4 p-4 rounded-lg bg-white/10 border-2 border-dashed" style={{ borderColor: '#d91cd2' }}>
+        
+        {/* QR Code for coach validation */}
+        <div className="my-4 p-4 rounded-lg bg-white flex flex-col items-center">
+          <QRCodeSVG 
+            value={qrData} 
+            size={150} 
+            level="H"
+            includeMargin={true}
+            bgColor="#ffffff"
+            fgColor="#000000"
+          />
+          <p className="text-xs text-gray-600 mt-2">{t('scanToValidate') || 'Scannez pour valider'}</p>
+        </div>
+        
+        <div className="my-3 p-3 rounded-lg bg-white/10 border-2 border-dashed" style={{ borderColor: '#d91cd2' }}>
           <p className="text-xs text-white opacity-60">{t('reservationCode')}:</p>
           <p className="text-2xl font-bold tracking-widest text-white" data-testid="reservation-code">{data.reservationCode}</p>
         </div>
         <div className="text-sm text-left space-y-1 mb-6 text-white opacity-80">
           <p><strong>{t('name')}:</strong> {data.userName}</p>
           <p><strong>{t('courses')}:</strong> {data.courseName}</p>
-          <p><strong>{t('total')}:</strong> CHF {data.totalPrice}</p>
+          <p><strong>{t('total')}:</strong> CHF {data.totalPrice}{data.quantity > 1 ? ` (x${data.quantity})` : ''}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={handlePrint} className="flex-1 p-2 glass rounded-lg text-white text-sm">{t('print')}</button>
