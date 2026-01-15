@@ -4574,9 +4574,10 @@ function App() {
     }
   }, [coachMode, fetchData]);
 
-  // Update favicon dynamically when logoUrl changes
+  // Update favicon dynamically when logoUrl changes (fallback if no faviconUrl)
   useEffect(() => {
-    if (concept.logoUrl && concept.logoUrl.trim() !== '') {
+    // Only use logoUrl as favicon if no faviconUrl is set
+    if (concept.logoUrl && concept.logoUrl.trim() !== '' && (!concept.faviconUrl || concept.faviconUrl.trim() === '')) {
       // Update favicon
       let link = document.querySelector("link[rel~='icon']");
       if (!link) {
@@ -4595,12 +4596,12 @@ function App() {
       }
       appleLink.href = concept.logoUrl;
     }
-  }, [concept.logoUrl]);
+  }, [concept.logoUrl, concept.faviconUrl]);
 
-  // Update favicon dynamically when faviconUrl changes
+  // Update favicon dynamically when faviconUrl changes (priority over logoUrl)
   useEffect(() => {
     if (concept.faviconUrl && concept.faviconUrl.trim() !== '') {
-      // Update favicon immediately
+      // Update favicon immediately - faviconUrl has priority
       let link = document.querySelector("link[rel~='icon']");
       if (!link) {
         link = document.createElement('link');
@@ -4608,6 +4609,7 @@ function App() {
         document.head.appendChild(link);
       }
       link.href = concept.faviconUrl;
+      console.log("Favicon updated to:", concept.faviconUrl);
     }
   }, [concept.faviconUrl]);
 
