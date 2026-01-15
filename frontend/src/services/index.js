@@ -1,9 +1,10 @@
 // /services/index.js - Export centralisé des services Afroboost
-// Compatible Vercel
+// Compatible Vercel - Données persistées dans MongoDB
 
-// === EMAIL SERVICE (EmailJS) ===
+// === EMAIL SERVICE (EmailJS + MongoDB) ===
 export {
   getEmailJSConfig,
+  getEmailJSConfigSync,
   saveEmailJSConfig,
   isEmailJSConfigured,
   initEmailJS,
@@ -12,9 +13,10 @@ export {
   testEmailJSConfig
 } from './emailService';
 
-// === WHATSAPP SERVICE (Twilio) ===
+// === WHATSAPP SERVICE (Twilio + MongoDB) ===
 export {
   getWhatsAppConfig,
+  getWhatsAppConfigSync,
   saveWhatsAppConfig,
   isWhatsAppConfigured,
   formatPhoneE164,
