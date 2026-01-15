@@ -240,22 +240,23 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 ```
 /app/
 ├── backend/
-│   ├── server.py       # FastAPI avec données en mémoire
+│   ├── server.py       # FastAPI avec AI Webhook, MongoDB
 │   ├── requirements.txt
 │   └── tests/
 │       ├── test_afroboost_api.py
 │       └── test_campaigns_api.py
 └── frontend/
     ├── src/
-    │   ├── App.js      # Composant React principal (~3800 lignes)
+    │   ├── App.js      # Composant React principal (~4000 lignes)
     │   ├── App.css     # Styles néon organisés par sections
     │   ├── config/
     │   │   ├── index.js      # Configuration groupée
     │   │   └── constants.js  # Constantes exportées
     │   ├── services/
-    │   │   ├── index.js          # Export centralisé services
-    │   │   ├── emailService.js   # EmailJS automatisé
-    │   │   └── whatsappService.js # WhatsApp Twilio API (NOUVEAU)
+    │   │   ├── index.js            # Export centralisé services
+    │   │   ├── emailService.js     # EmailJS automatisé
+    │   │   ├── whatsappService.js  # WhatsApp Twilio API
+    │   │   └── aiResponseService.js # IA WhatsApp config (NOUVEAU)
     │   ├── components/
     │   │   ├── index.js          # Export centralisé
     │   │   ├── OfferCard.js      # Composants offres + multi-images
