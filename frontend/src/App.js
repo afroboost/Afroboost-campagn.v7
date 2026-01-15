@@ -307,6 +307,9 @@ const translations = {
     offerDescription: "Beschreibung (\"i\" Symbol)",
     confirmDelete: "Diesen Code löschen?",
     delete: "Löschen",
+    termsText: "AGB-Text",
+    termsPlaceholder: "Geben Sie Ihren AGB-Text ein...",
+    scanToValidate: "Zum Validieren scannen",
   }
 };
 
