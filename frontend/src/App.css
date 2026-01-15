@@ -334,6 +334,44 @@ html, body {
   50% { transform: scale(1.1); opacity: 0.8; }
 }
 
+/* Offers Horizontal Slider */
+.offers-slider {
+  scrollbar-width: thin;
+  scrollbar-color: #d91cd2 rgba(0, 0, 0, 0.3);
+}
+
+.offers-slider::-webkit-scrollbar {
+  height: 6px;
+}
+
+.offers-slider::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.offers-slider::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #d91cd2, #8b5cf6);
+  border-radius: 3px;
+}
+
+.offers-slider::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #f0abfc, #a78bfa);
+}
+
+/* Offer Card in Slider - LED Neon effect */
+.offers-slider .offer-card.selected {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px #d91cd2, 0 0 40px rgba(217, 28, 210, 0.5), inset 0 0 20px rgba(217, 28, 210, 0.1);
+  }
+  50% { 
+    box-shadow: 0 0 30px #d91cd2, 0 0 60px rgba(217, 28, 210, 0.7), inset 0 0 30px rgba(217, 28, 210, 0.2);
+  }
+}
+
 /* Concept Glow Text */
 .concept-glow {
   text-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
