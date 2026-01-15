@@ -163,6 +163,21 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
    - Ouvre le lien Google dans un nouvel onglet
    - Masqué si aucun lien configuré
 
+### Gestionnaire de Campagnes Opérationnel (15 Jan 2026)
+1. ✅ **Compteur de clients ciblés**:
+   - Affichage "👥 Nombre de clients ciblés : X" en rose
+   - Détail "📧 X avec email • 📱 X avec WhatsApp"
+   - Extraction automatique depuis réservations + users
+
+2. ✅ **Mode Envoi Direct par Canal**:
+   - **📧 Email Groupé (BCC)**: Génère un lien mailto: avec premier email en TO et reste en BCC pour confidentialité
+   - **📱 WhatsApp**: Navigation contact par contact avec boutons "Préc./Suivant", affiche nom du contact actuel
+   - **📸 Instagram DM**: Copie le message dans le presse-papier + ouvre le profil Instagram configuré
+
+3. ✅ **Compatibilité Vercel**:
+   - Fonctions d'extraction de données pures (useMemo)
+   - Pas de dépendances serveur pour l'envoi direct
+
 ---
 
 ## Technical Architecture
