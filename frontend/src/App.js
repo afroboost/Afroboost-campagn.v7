@@ -3634,14 +3634,10 @@ function App() {
           <div className="mb-8">
             <h2 className="font-semibold mb-4 text-white" style={{ fontSize: '18px' }}>{t('chooseOffer')}</h2>
             
-            {/* Horizontal Slider for Offers with LED effect */}
+            {/* Horizontal Slider for Offers with LED effect - SWIPE FLUIDE */}
             <div 
-              className="offers-slider flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory px-2"
-              style={{ 
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#d91cd2 #1a1a2e',
-                WebkitOverflowScrolling: 'touch'
-              }}
+              className="offers-slider"
+              data-testid="offers-slider"
             >
               {visibleOffers.map(offer => (
                 <OfferCardSlider 
