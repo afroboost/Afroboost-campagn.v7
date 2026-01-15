@@ -111,6 +111,14 @@ class Reservation(BaseModel):
     discountType: Optional[str] = None
     discountValue: Optional[float] = None
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # E-commerce / Shipping fields
+    validated: bool = False
+    validatedAt: Optional[str] = None
+    selectedVariants: Optional[dict] = None  # { size: "M", color: "Noir" }
+    tva: float = 0.0
+    shippingCost: float = 0.0
+    trackingNumber: Optional[str] = None  # Numéro de suivi colis
+    shippingStatus: str = "pending"  # pending, shipped, delivered
 
 class ReservationCreate(BaseModel):
     userId: str
