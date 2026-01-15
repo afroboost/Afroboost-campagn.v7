@@ -206,6 +206,9 @@ const translations = {
     offerDescription: "Description (\"i\" icon)",
     confirmDelete: "Delete this code?",
     delete: "Delete",
+    termsText: "Terms and Conditions Text",
+    termsPlaceholder: "Enter your terms and conditions text...",
+    scanToValidate: "Scan to validate",
   },
   de: {
     appTitle: "Afroboost",
