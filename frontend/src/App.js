@@ -743,6 +743,184 @@ const OfferCardSlider = ({ offer, selected, onClick }) => {
   );
 };
 
+// QR Scanner Modal with Camera Support
+const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualValidation }) => {
+  const [scanning, setScanning] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [manualMode, setManualMode] = useState(false);
+  const scannerRef = useRef(null);
+  const html5QrCodeRef = useRef(null);
+
+  // Start camera scanning
+  const startScanning = async () => {
+    setCameraError(null);
+    setScanning(true);
+    
+    try {
+      const html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCodeRef.current = html5QrCode;
+      
+      await html5QrCode.start(
+        { facingMode: "environment" }, // Back camera
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText) => {
+          // QR code detected - extract reservation code from URL
+          let code = decodedText;
+          if (decodedText.includes('/validate/')) {
+            code = decodedText.split('/validate/').pop().toUpperCase();
+          } else if (decodedText.startsWith('AFR-')) {
+            code = decodedText.toUpperCase();
+          }
+          
+          // Stop scanning and validate
+          stopScanning();
+          if (code) {
+            onValidate(code);
+          }
+        },
+        () => {} // Ignore scan errors
+      );
+    } catch (err) {
+      console.error("Camera error:", err);
+      setCameraError("Impossible d'accéder à la caméra. Vérifiez les permissions ou utilisez la saisie manuelle.");
+      setScanning(false);
+      setManualMode(true);
+    }
+  };
+
+  // Stop camera scanning
+  const stopScanning = () => {
+    if (html5QrCodeRef.current) {
+      html5QrCodeRef.current.stop().catch(() => {});
+      html5QrCodeRef.current = null;
+    }
+    setScanning(false);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.stop().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Handle close
+  const handleClose = () => {
+    stopScanning();
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-content glass rounded-xl p-6 max-w-md w-full neon-border" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-white">📷 Scanner un ticket</h3>
+          <button onClick={handleClose} className="text-2xl text-white hover:text-purple-400">×</button>
+        </div>
+        
+        {/* Success Result */}
+        {scanResult?.success && (
+          <div className="p-4 rounded-lg bg-green-600/30 border border-green-500 mb-4 animate-pulse">
+            <div className="flex items-center gap-3">
+              <span className="text-5xl">✅</span>
+              <div>
+                <p className="text-white font-bold text-xl">Ticket validé !</p>
+                <p className="text-green-300 text-lg">{scanResult.reservation?.userName}</p>
+                <p className="text-green-300 text-sm">{scanResult.reservation?.reservationCode}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Error */}
+        {scanError && (
+          <div className="p-4 rounded-lg bg-red-600/30 border border-red-500 mb-4">
+            <p className="text-red-300">❌ {scanError}</p>
+          </div>
+        )}
+        
+        {/* Camera Error */}
+        {cameraError && (
+          <div className="p-3 rounded-lg bg-yellow-600/30 border border-yellow-500 mb-4">
+            <p className="text-yellow-300 text-sm">⚠️ {cameraError}</p>
+          </div>
+        )}
+        
+        {/* Camera Scanner */}
+        {!scanResult?.success && !manualMode && (
+          <div className="mb-4">
+            <div 
+              id="qr-reader" 
+              ref={scannerRef}
+              className="rounded-lg overflow-hidden mb-4"
+              style={{ 
+                width: '100%', 
+                minHeight: scanning ? '300px' : '0px',
+                background: scanning ? '#000' : 'transparent'
+              }}
+            />
+            
+            {!scanning ? (
+              <button 
+                onClick={startScanning}
+                className="w-full py-4 rounded-lg btn-primary flex items-center justify-center gap-2 text-lg"
+                data-testid="start-camera-btn"
+              >
+                📷 Activer la caméra
+              </button>
+            ) : (
+              <button 
+                onClick={stopScanning}
+                className="w-full py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+              >
+                ⏹ Arrêter le scan
+              </button>
+            )}
+            
+            <button 
+              onClick={() => { stopScanning(); setManualMode(true); }}
+              className="w-full mt-3 py-2 rounded-lg glass text-white text-sm opacity-70 hover:opacity-100"
+            >
+              ⌨️ Saisie manuelle
+            </button>
+          </div>
+        )}
+        
+        {/* Manual code input (fallback) */}
+        {!scanResult?.success && manualMode && (
+          <div>
+            <form onSubmit={onManualValidation} className="space-y-4">
+              <p className="text-white text-sm opacity-70">Entrez le code de réservation :</p>
+              <input 
+                type="text" 
+                name="code"
+                placeholder="AFR-XXXXXX"
+                className="w-full px-4 py-3 rounded-lg neon-input uppercase text-center text-xl tracking-widest"
+                autoFocus
+                data-testid="manual-code-input"
+              />
+              <button type="submit" className="w-full py-3 rounded-lg btn-primary" data-testid="validate-code-btn">
+                ✓ Valider le ticket
+              </button>
+            </form>
+            <button 
+              onClick={() => setManualMode(false)}
+              className="w-full mt-3 py-2 rounded-lg glass text-white text-sm opacity-70 hover:opacity-100"
+            >
+              📷 Retour au scan caméra
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Coach Login Modal
 const CoachLoginModal = ({ t, onLogin, onCancel }) => {
   const [email, setEmail] = useState("");
