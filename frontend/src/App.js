@@ -595,14 +595,14 @@ const CloseIcon = () => (
 const OfferCard = ({ offer, selected, onClick }) => {
   const [showDescription, setShowDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const defaultImage = "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=200&fit=crop";
+  const defaultImage = "https://picsum.photos/seed/default/400/200";
   
-  // Liste des images disponibles
-  const images = (offer.images && offer.images.length > 0) 
-    ? offer.images.filter(img => img && img.trim()) 
-    : (offer.thumbnail ? [offer.thumbnail] : [defaultImage]);
+  // PRIORITÉ: offer.images[0] > offer.thumbnail > defaultImage
+  const images = (offer.images && Array.isArray(offer.images) && offer.images.length > 0) 
+    ? offer.images.filter(img => img && typeof img === 'string' && img.trim()) 
+    : (offer.thumbnail && typeof offer.thumbnail === 'string' ? [offer.thumbnail] : [defaultImage]);
   
-  const currentImage = images[currentImageIndex] || defaultImage;
+  const currentImage = images[currentImageIndex] || images[0] || defaultImage;
   const hasMultipleImages = images.length > 1;
   
   const toggleDescription = (e) => {
