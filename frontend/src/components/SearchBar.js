@@ -214,9 +214,17 @@ export const NavigationBar = ({
 
       {/* Styles pour hover et focus */}
       <style>{`
+        .filter-chip-minimal {
+          background: transparent !important;
+          background-color: transparent !important;
+        }
         .filter-chip-minimal:hover {
           color: #fff !important;
           border-color: rgba(217, 28, 210, 0.5) !important;
+        }
+        .filter-chip-minimal.active {
+          border-color: #d91cd2 !important;
+          box-shadow: 0 0 12px rgba(217, 28, 210, 0.4) !important;
         }
         .filter-chip-minimal.active:hover {
           border-color: #d91cd2 !important;
