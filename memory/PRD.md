@@ -325,6 +325,13 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - **Fallback placeholder** : Image Afroboost par défaut si média ne charge pas (onError)
   - **Overlays réduits** : Bandes haut/bas réduites de 55/80px à 35/50px et plus transparentes (70% → 30%)
   - **Lisibilité texte** : text-shadow ajouté au titre et description pour contraste sur vidéo
+- [x] **Réparation Médias, Logos & Persistence (15 Jan 2026)**:
+  - **Lecteur vidéo amélioré** : parseMediaUrl supporte YouTube shorts, v/, embed formats + WebM, MOV, AVI
+  - **Overlays supprimés** : Plus aucun overlay sombre sur la vidéo - 100% visible
+  - **Hook Logo/Favicon** : Mise à jour dynamique du favicon avec priorité faviconUrl > logoUrl
+  - **CDNs supportés** : ImgBB, Cloudinary, Imgur, Unsplash, Pexels reconnus
+  - **Logs d'erreur améliorés** : Messages détaillés côté frontend et backend pour diagnostiquer les échecs
+  - **Navigation vérifiée** : Filtres épurés, recherche rose, scroll mobile fluide fonctionnels
 
 ### P1 - À faire
 - [ ] Continuer refactoring: Extraire CoachDashboard, CoachLoginModal dans composants séparés
