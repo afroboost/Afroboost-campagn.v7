@@ -2043,6 +2043,53 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
     reader.readAsText(file); e.target.value = '';
   };
 
+  // Export promo codes to CSV
+  const exportPromoCodesCSV = () => {
+    if (discountCodes.length === 0) {
+      alert("Aucun code promo à exporter.");
+      return;
+    }
+    
+    // CSV headers
+    const headers = ["Code", "Type", "Valeur", "Bénéficiaire", "Utilisations Max", "Utilisé", "Date Expiration", "Actif", "Cours Autorisés"];
+    
+    // CSV rows
+    const rows = discountCodes.map(code => {
+      const coursesNames = code.courses?.length > 0 
+        ? code.courses.map(cId => courses.find(c => c.id === cId)?.name || cId).join("; ")
+        : "Tous";
+      
+      return [
+        code.code || "",
+        code.type || "",
+        code.value || "",
+        code.assignedEmail || "",
+        code.maxUses || "",
+        code.used || 0,
+        code.expiresAt ? new Date(code.expiresAt).toLocaleDateString() : "",
+        code.active ? "Oui" : "Non",
+        coursesNames
+      ];
+    });
+    
+    // Build CSV content
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+    
+    // Create and trigger download
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `codes_promo_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const updateCourse = async (course) => { await axios.put(`${API}/courses/${course.id}`, course); };
   const addCourse = async (e) => {
     e.preventDefault();
