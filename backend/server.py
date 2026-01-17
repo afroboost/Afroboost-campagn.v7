@@ -1224,6 +1224,81 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Dynamic manifest.json endpoint for PWA
+@app.get("/api/manifest.json")
+async def get_dynamic_manifest():
+    """Serve dynamic manifest.json with logo from coach settings"""
+    concept = await db.concept.find_one({})
+    
+    # Use coach-configured logo or fallback to defaults
+    logo_url = None
+    if concept:
+        logo_url = concept.get("logoUrl") or concept.get("faviconUrl")
+    
+    manifest = {
+        "short_name": "Afroboost",
+        "name": "Afroboost - Réservation de casque",
+        "description": "Le concept Afroboost : cardio + danse afrobeat + casques audio immersifs.",
+        "icons": [
+            {
+                "src": "favicon.ico",
+                "sizes": "64x64 32x32 24x24 16x16",
+                "type": "image/x-icon"
+            }
+        ],
+        "start_url": ".",
+        "display": "standalone",
+        "theme_color": "#000000",
+        "background_color": "#000000",
+        "orientation": "portrait-primary"
+    }
+    
+    # Add dynamic logo icons if configured
+    if logo_url:
+        manifest["icons"] = [
+            {
+                "src": logo_url,
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": logo_url,
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "favicon.ico",
+                "sizes": "64x64 32x32 24x24 16x16",
+                "type": "image/x-icon"
+            }
+        ]
+    else:
+        # Fallback to default icons
+        manifest["icons"] = [
+            {
+                "src": "favicon.ico",
+                "sizes": "64x64 32x32 24x24 16x16",
+                "type": "image/x-icon"
+            },
+            {
+                "src": "logo192.png",
+                "type": "image/png",
+                "sizes": "192x192",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "logo512.png",
+                "type": "image/png",
+                "sizes": "512x512",
+                "purpose": "any maskable"
+            }
+        ]
+    
+    from fastapi.responses import JSONResponse
+    return JSONResponse(content=manifest, media_type="application/manifest+json")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
