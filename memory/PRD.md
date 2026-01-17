@@ -374,6 +374,15 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - **Bouton Mute/Unmute** : Ajouté sous la vidéo YouTube/Vimeo, permet d'activer le son manuellement
   - **Logo Twint corrigé** : Remplacé l'image cassée par un texte SVG "TWINT" blanc
   - **Manifest PWA dynamique** : Endpoint `/api/manifest.json` utilise le logo configuré par le coach
+- [x] **Génération de Codes Promo en Série (17 Jan 2026)**:
+  - **Mode série** : Checkbox "Génération en série" pour basculer entre mode unique et mode batch
+  - **Préfixe personnalisé** : Champ "Préfixe du code" (ex: VIP → VIP-1, VIP-2, VIP-3...)
+  - **Nombre de codes** : Champ "Nombre de codes" avec maximum 20 par série
+  - **Paramètres partagés** : Type, valeur, expiration et cours autorisés appliqués à tous les codes de la série
+  - **Message de succès** : Alert "✅ X codes créés avec succès !" après génération
+  - **Rafraîchissement automatique** : Liste mise à jour immédiatement après création
+  - **Gestion individuelle** : Chaque code reste modifiable/activable/supprimable individuellement
+  - **Tests complets** : 12/12 tests backend + 10/10 fonctionnalités frontend vérifiées
 
 ### P1 - À faire
 - [ ] **CRITICAL: Refactoring de App.js** - Le fichier monolithique dépasse 5500 lignes. Extraire la logique restante dans des hooks et composants dédiés.
