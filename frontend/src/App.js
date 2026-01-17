@@ -1800,6 +1800,10 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
   const [scanError, setScanError] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  
+  // Manual contact form state
+  const [showManualContactForm, setShowManualContactForm] = useState(false);
+  const [manualContact, setManualContact] = useState({ name: "", email: "", whatsapp: "" });
 
   useEffect(() => {
     const loadData = async () => {
