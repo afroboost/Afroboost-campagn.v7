@@ -1343,19 +1343,23 @@ app.add_middleware(
 # Dynamic manifest.json endpoint for PWA
 @app.get("/api/manifest.json")
 async def get_dynamic_manifest():
-    """Serve dynamic manifest.json with logo from coach settings"""
+    """Serve dynamic manifest.json with logo and name from coach settings"""
     concept = await db.concept.find_one({})
     
     # Use coach-configured favicon (priority) or logo as fallback
     logo_url = None
+    app_name = "Afroboost"  # Default name
     if concept:
         # faviconUrl has priority, then logoUrl (same as frontend)
         logo_url = concept.get("faviconUrl") or concept.get("logoUrl")
+        # Use custom appName if configured
+        if concept.get("appName"):
+            app_name = concept.get("appName")
     
     manifest = {
-        "short_name": "Afroboost",
-        "name": "Afroboost - Réservation de casque",
-        "description": "Le concept Afroboost : cardio + danse afrobeat + casques audio immersifs.",
+        "short_name": app_name,
+        "name": f"{app_name} - Réservation de casque",
+        "description": concept.get("description", "Le concept Afroboost : cardio + danse afrobeat + casques audio immersifs.") if concept else "Le concept Afroboost : cardio + danse afrobeat + casques audio immersifs.",
         "icons": [
             {
                 "src": "favicon.ico",
