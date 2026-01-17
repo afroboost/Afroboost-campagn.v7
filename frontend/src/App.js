@@ -2761,32 +2761,35 @@ function App() {
   if (coachMode) return <CoachDashboard t={t} lang={lang} onBack={() => setCoachMode(false)} onLogout={() => setCoachMode(false)} />;
 
   // Filtrer les offres et cours selon visibilité, filtre actif et recherche
-  // SÉPARATION VISIBILITÉ : Les produits physiques sont TOUJOURS visibles
-  // La visibilité des cours n'impacte PAS les produits
-  const baseOffers = offers.filter(o => {
-    // Les produits physiques sont toujours visibles (sauf si explicitement masqués)
-    if (o.isProduct === true) return o.visible !== false;
-    // Les offres/services suivent leur propre visibilité
-    return o.visible !== false;
-  });
+  // =====================================================
+  // SÉPARATION TOTALE : PRODUITS vs COURS/SESSIONS
+  // Les produits physiques sont COMPLÈTEMENT INDÉPENDANTS des cours
+  // =====================================================
   
-  // Les cours ont leur propre visibilité indépendante
+  // 1. PRODUITS PHYSIQUES (isProduct: true) - Toujours visibles si visible !== false
+  const visibleProducts = offers.filter(o => 
+    o.isProduct === true && o.visible !== false
+  );
+  
+  // 2. OFFRES/SERVICES (isProduct: false ou undefined) - Sessions, abonnements
+  const visibleServices = offers.filter(o => 
+    !o.isProduct && o.visible !== false
+  );
+  
+  // 3. COURS avec leur propre visibilité
   const baseCourses = courses.filter(c => c.visible !== false);
   
   // Fonction de recherche floue (fuzzy search)
   const fuzzyMatch = (text, query) => {
     if (!text || !query) return false;
     const normalizedText = text.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Supprime les accents
-      .replace(/[^a-z0-9\s]/g, ""); // Garde uniquement lettres et chiffres
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, "");
     const normalizedQuery = query.toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\s]/g, "");
     
-    // Correspondance exacte
     if (normalizedText.includes(normalizedQuery)) return true;
-    
-    // Correspondance partielle (chaque mot de la requête)
     const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 1);
     return queryWords.every(word => normalizedText.includes(word));
   };
@@ -2804,11 +2807,8 @@ function App() {
     't-shirt': ['tshirt', 'tee', 'haut']
   };
   
-  // Recherche avec synonymes
   const searchWithSynonyms = (text, query) => {
     if (fuzzyMatch(text, query)) return true;
-    
-    // Chercher avec les synonymes
     const queryNorm = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     for (const [key, values] of Object.entries(synonyms)) {
       if (queryNorm.includes(key)) {
@@ -2820,41 +2820,54 @@ function App() {
     return false;
   };
   
-  // Appliquer le filtre de catégorie
-  // OFFRES = abonnements + sessions cardio (tous les non-produits)
-  // SHOP = uniquement produits physiques
-  let visibleOffers = baseOffers.filter(offer => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'sessions') return !offer.isProduct;
-    if (activeFilter === 'offers') return !offer.isProduct; // Tous les non-produits (abonnements + sessions)
-    if (activeFilter === 'shop') return offer.isProduct === true; // Uniquement produits physiques
-    return true;
-  });
+  // =====================================================
+  // FILTRAGE SÉPARÉ : Sessions/Offres vs Produits vs Cours
+  // =====================================================
   
-  // Appliquer le filtre de recherche textuelle avec FUZZY SEARCH
+  // Filtrer les SERVICES (sessions, abonnements) selon la recherche
+  let filteredServices = visibleServices;
   if (searchQuery.trim()) {
     const query = searchQuery.trim();
-    visibleOffers = visibleOffers.filter(offer => {
-      // Recherche dans le nom
-      if (searchWithSynonyms(offer.name || '', query)) return true;
-      // Recherche dans la description
-      if (searchWithSynonyms(offer.description || '', query)) return true;
-      // Recherche dans les mots-clés (champ invisible pour SEO)
-      if (searchWithSynonyms(offer.keywords || '', query)) return true;
-      return false;
-    });
+    filteredServices = visibleServices.filter(offer => 
+      searchWithSynonyms(offer.name || '', query) ||
+      searchWithSynonyms(offer.description || '', query) ||
+      searchWithSynonyms(offer.keywords || '', query)
+    );
   }
   
-  // Filtrer les cours selon le filtre et la recherche
+  // Filtrer les PRODUITS selon la recherche
+  let filteredProducts = visibleProducts;
+  if (searchQuery.trim()) {
+    const query = searchQuery.trim();
+    filteredProducts = visibleProducts.filter(product => 
+      searchWithSynonyms(product.name || '', query) ||
+      searchWithSynonyms(product.description || '', query) ||
+      searchWithSynonyms(product.keywords || '', query)
+    );
+  }
+  
+  // Filtrer les COURS selon la recherche
   let visibleCourses = baseCourses;
   if (activeFilter === 'shop') {
-    visibleCourses = []; // Masquer les cours uniquement sur Shop
+    visibleCourses = []; // Masquer les cours sur la page Shop
   } else if (searchQuery.trim()) {
     const query = searchQuery.trim();
     visibleCourses = baseCourses.filter(course => 
       searchWithSynonyms(course.name || '', query) ||
       searchWithSynonyms(course.locationName || '', query)
     );
+  }
+  
+  // =====================================================
+  // VARIABLE COMBINÉE pour l'affichage selon le filtre actif
+  // =====================================================
+  let visibleOffers;
+  if (activeFilter === 'shop') {
+    visibleOffers = filteredProducts; // Uniquement produits
+  } else if (activeFilter === 'sessions' || activeFilter === 'offers') {
+    visibleOffers = filteredServices; // Uniquement services
+  } else {
+    visibleOffers = [...filteredServices, ...filteredProducts]; // Tout
   }
   
   const totalPrice = calculateTotal();
