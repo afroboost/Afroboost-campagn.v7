@@ -1256,10 +1256,11 @@ async def get_dynamic_manifest():
     """Serve dynamic manifest.json with logo from coach settings"""
     concept = await db.concept.find_one({})
     
-    # Use coach-configured logo or fallback to defaults
+    # Use coach-configured favicon (priority) or logo as fallback
     logo_url = None
     if concept:
-        logo_url = concept.get("logoUrl") or concept.get("faviconUrl")
+        # faviconUrl has priority, then logoUrl (same as frontend)
+        logo_url = concept.get("faviconUrl") or concept.get("logoUrl")
     
     manifest = {
         "short_name": "Afroboost",
