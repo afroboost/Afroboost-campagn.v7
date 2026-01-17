@@ -2989,14 +2989,14 @@ function App() {
           <MediaDisplay url={concept.heroImageUrl} className="hero-media-container mb-8" />
         )}
 
-        {/* Barre de Recherche uniquement (filtres masqués) */}
+        {/* Barre de Recherche + Navigation par onglets (Tout, Cours, Shop) */}
         <NavigationBar 
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           showSearch={true}
-          showFilters={false}
+          showFilters={true}
         />
 
         {/* Message si aucun résultat */}
