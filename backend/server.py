@@ -70,6 +70,7 @@ class CourseCreate(BaseModel):
     locationName: str
     mapsUrl: Optional[str] = ""
     visible: bool = True
+    archived: bool = False
 
 class Offer(BaseModel):
     model_config = ConfigDict(extra="ignore")
