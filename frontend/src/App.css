@@ -511,6 +511,7 @@ html, body {
 }
 
 /* Offers Horizontal Slider - SCROLL ENABLED - PRIORITÉ HAUTE */
+/* padding-top: 30px pour que le glow rose ne soit pas coupé en haut */
 .offers-slider {
   display: flex !important;
   flex-wrap: nowrap !important;
@@ -522,7 +523,7 @@ html, body {
   scrollbar-width: thin !important;
   scrollbar-color: #d91cd2 rgba(0, 0, 0, 0.3) !important;
   gap: 16px !important;
-  padding: 20px 20px 10px 20px !important; /* Augmenté padding-top pour le glow */
+  padding: 30px 20px 10px 20px !important; /* padding-top 30px pour le glow */
   touch-action: pan-x !important;
   -ms-overflow-style: none;
 }
