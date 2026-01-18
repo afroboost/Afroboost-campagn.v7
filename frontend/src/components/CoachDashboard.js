@@ -2518,20 +2518,12 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   </select>
                   <input type="number" placeholder={t('value')} value={newCode.value} onChange={e => setNewCode({ ...newCode, value: e.target.value })}
                     className="px-3 py-2 rounded-lg neon-input text-sm" data-testid="new-code-value" />
-                  {/* Beneficiary Dropdown */}
-                  <select value={newCode.assignedEmail} onChange={e => setNewCode({ ...newCode, assignedEmail: e.target.value })}
-                    className="px-3 py-2 rounded-lg neon-input text-sm" data-testid="new-code-beneficiary">
-                    <option value="">{t('selectBeneficiary')}</option>
-                    {uniqueCustomers.map((c, i) => (
-                      <option key={i} value={c.email}>{c.name} - {c.email}</option>
-                    ))}
-                  </select>
                 </div>
               )}
               
               {/* Paramètres communs (Type, Valeur pour le mode série) */}
               {isBatchMode && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                   <select value={newCode.type} onChange={e => setNewCode({ ...newCode, type: e.target.value })} className="px-3 py-2 rounded-lg neon-input text-sm" data-testid="batch-code-type">
                     <option value="">{t('type')}</option>
                     <option value="100%">100% (Gratuit)</option>
@@ -2540,16 +2532,55 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   </select>
                   <input type="number" placeholder={t('value')} value={newCode.value} onChange={e => setNewCode({ ...newCode, value: e.target.value })}
                     className="px-3 py-2 rounded-lg neon-input text-sm" data-testid="batch-code-value" />
-                  {/* Beneficiary Dropdown */}
-                  <select value={newCode.assignedEmail} onChange={e => setNewCode({ ...newCode, assignedEmail: e.target.value })}
-                    className="px-3 py-2 rounded-lg neon-input text-sm" data-testid="batch-code-beneficiary">
-                    <option value="">{t('selectBeneficiary')}</option>
-                    {uniqueCustomers.map((c, i) => (
-                      <option key={i} value={c.email}>{c.name} - {c.email}</option>
-                    ))}
-                  </select>
                 </div>
               )}
+              
+              {/* ============ SÉLECTION MULTIPLE DES BÉNÉFICIAIRES ============ */}
+              <div className="mb-4">
+                <label className="block text-white text-xs mb-2 opacity-70">
+                  👥 Sélectionner les bénéficiaires ({selectedBeneficiaries.length} sélectionné{selectedBeneficiaries.length > 1 ? 's' : ''})
+                </label>
+                <div className="border border-purple-500/30 rounded-lg p-3 bg-purple-900/10" style={{ maxHeight: '120px', overflowY: 'auto' }}>
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueCustomers.length > 0 ? uniqueCustomers.map((c, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => toggleBeneficiarySelection(c.email)}
+                        className={`px-2 py-1 rounded text-xs transition-all flex items-center gap-1 ${
+                          selectedBeneficiaries.includes(c.email) 
+                            ? 'bg-pink-600 text-white' 
+                            : 'bg-gray-700 text-white hover:bg-gray-600'
+                        }`}
+                        data-testid={`beneficiary-${i}`}
+                      >
+                        {selectedBeneficiaries.includes(c.email) && <span>✓</span>}
+                        {c.name.split(' ')[0]}
+                      </button>
+                    )) : (
+                      <span className="text-white text-xs opacity-50">Aucun contact disponible</span>
+                    )}
+                  </div>
+                </div>
+                {/* Affichage des bénéficiaires sélectionnés avec croix de suppression */}
+                {selectedBeneficiaries.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {selectedBeneficiaries.map((email, i) => {
+                      const customer = uniqueCustomers.find(c => c.email === email);
+                      return (
+                        <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-pink-600/30 text-pink-300">
+                          {customer?.name || email}
+                          <button
+                            type="button"
+                            onClick={() => toggleBeneficiarySelection(email)}
+                            className="hover:text-white ml-1"
+                          >×</button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <input type="number" placeholder={t('maxUses')} value={newCode.maxUses} onChange={e => setNewCode({ ...newCode, maxUses: e.target.value })}
@@ -2557,7 +2588,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                 <input type="date" value={newCode.expiresAt} onChange={e => setNewCode({ ...newCode, expiresAt: e.target.value })}
                   className="px-3 py-2 rounded-lg neon-input text-sm" />
                 <div>
-                  <label className="block text-white text-xs mb-1 opacity-70">{t('allowedCourses')}</label>
+                  <label className="block text-white text-xs mb-1 opacity-70">📦 Articles autorisés (Cours + Produits)</label>
                   {/* Scrollable courses list */}
                   <div className="courses-scroll-container" style={{ maxHeight: '120px', overflowY: 'auto', padding: '4px' }} data-testid="courses-scroll-container">
                     <div className="flex flex-wrap gap-2">
