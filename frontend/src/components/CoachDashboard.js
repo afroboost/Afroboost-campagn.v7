@@ -1562,6 +1562,135 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         />
       )}
 
+      {/* ========== MODAL GESTION AUDIO / PLAYLIST ========== */}
+      {showAudioModal && selectedCourseForAudio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+          <div 
+            className="glass rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto"
+            style={{ border: '1px solid rgba(217, 28, 210, 0.3)' }}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  🎵 Gérer la Playlist
+                </h2>
+                <p className="text-white/60 text-sm mt-1">
+                  Cours : <span className="text-purple-400">{selectedCourseForAudio.name}</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowAudioModal(false)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                style={{ color: '#fff' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Ajouter une URL */}
+            <div className="mb-6">
+              <label className="block text-white text-sm mb-2">Ajouter un morceau (URL MP3/Stream)</label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={newAudioUrl}
+                  onChange={(e) => setNewAudioUrl(e.target.value)}
+                  placeholder="https://example.com/music.mp3"
+                  className="flex-1 px-3 py-2 rounded-lg neon-input text-sm"
+                  onKeyPress={(e) => e.key === 'Enter' && addAudioUrl()}
+                  data-testid="audio-url-input"
+                />
+                <button
+                  onClick={addAudioUrl}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #d91cd2, #8b5cf6)',
+                    color: '#fff'
+                  }}
+                  data-testid="add-audio-btn"
+                >
+                  + Ajouter
+                </button>
+              </div>
+              <p className="text-white/40 text-xs mt-2">
+                Formats supportés : MP3, WAV, OGG, streams M3U/M3U8, Soundcloud, Spotify
+              </p>
+            </div>
+
+            {/* Liste de la playlist */}
+            <div className="mb-6">
+              <h3 className="text-white text-sm font-semibold mb-3">
+                Playlist ({playlistUrls.length} morceaux)
+              </h3>
+              
+              {playlistUrls.length === 0 ? (
+                <div className="p-4 rounded-lg text-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <p className="text-white/40 text-sm">Aucun morceau dans la playlist</p>
+                  <p className="text-white/30 text-xs mt-1">Ajoutez des URLs ci-dessus</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                  {playlistUrls.map((url, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center gap-3 p-3 rounded-lg group"
+                      style={{ background: 'rgba(255,255,255,0.05)' }}
+                    >
+                      <span className="text-purple-400 text-sm font-mono">#{index + 1}</span>
+                      <span className="flex-1 text-white text-sm truncate" title={url}>
+                        {url.length > 40 ? url.substring(0, 40) + '...' : url}
+                      </span>
+                      <button
+                        onClick={() => removeAudioUrl(url)}
+                        className="p-1 rounded hover:bg-red-500/30 transition-colors opacity-0 group-hover:opacity-100"
+                        style={{ color: '#ef4444' }}
+                        title="Supprimer ce morceau"
+                        data-testid={`remove-audio-${index}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAudioModal(false)}
+                className="flex-1 py-3 rounded-lg glass text-white text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={savePlaylist}
+                disabled={savingPlaylist}
+                className="flex-1 py-3 rounded-lg font-semibold text-sm transition-all"
+                style={{ 
+                  background: 'linear-gradient(135deg, #d91cd2, #8b5cf6)',
+                  color: '#fff',
+                  opacity: savingPlaylist ? 0.7 : 1
+                }}
+                data-testid="save-playlist-btn"
+              >
+                {savingPlaylist ? '⏳ Sauvegarde...' : '💾 Sauvegarder'}
+              </button>
+            </div>
+
+            {/* Info */}
+            <p className="text-white/30 text-xs text-center mt-4">
+              Les morceaux seront liés au cours "{selectedCourseForAudio.name}" (ID: {selectedCourseForAudio.id})
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
           <div>
