@@ -57,12 +57,14 @@ async def api_health_check():
 @app.get("/api/favicon.ico")
 async def favicon():
     """Return empty response for favicon requests to prevent 404 errors"""
-    return JSONResponse(status_code=204, content=None)
+    from starlette.responses import Response
+    return Response(status_code=204)
 
 @api_router.get("/favicon.ico")
 async def api_favicon():
     """Return empty response for favicon requests via API router"""
-    return JSONResponse(status_code=204, content=None)
+    from starlette.responses import Response
+    return Response(status_code=204)
 
 # ==================== MODELS ====================
 
