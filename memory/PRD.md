@@ -480,6 +480,17 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - **Backend** : Modèles `Reservation` et `ReservationCreate` mis à jour avec `selectedDates: List[str]` et `selectedDatesText: str`
   - **UNE seule réservation** : Créée avec le tableau de toutes les dates sélectionnées
   - **Tests** : 8/8 tests backend pytest + 100% tests frontend passés
+- [x] **Optimisation Performance & Pagination (18 Jan 2026)**:
+  - **Pagination backend** : GET /api/reservations?page=1&limit=20 (20 dernières par défaut)
+  - **Structure réponse** : `{data: [], pagination: {page, limit, total, pages}}`
+  - **Projections MongoDB** : Ne récupère que les champs nécessaires à l'affichage
+  - **Export CSV** : `all_data=true` récupère TOUTES les réservations
+  - **UI pagination** : Affichage "Affichage X-Y sur Z réservations" + boutons Précédent/Suivant
+  - **Tests** : 12/12 tests backend pytest passés
+- [x] **Fix Mots-clés Offres (18 Jan 2026)**:
+  - **Édition** : Champ `keywords` pré-rempli lors du clic sur "Modifier" une offre
+  - **Recherche client** : Filtre par titre + description + mots-clés instantanément
+  - **Tests** : Keywords persistence et search functionality vérifiés
 
 ### P1 - À faire
 - [x] ~~**CRITICAL: Refactoring de App.js**~~ - ✅ COMPLÉTÉ - App.js réduit de 52%
