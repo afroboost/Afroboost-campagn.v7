@@ -501,6 +501,16 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - **Extraction** : Composant extrait vers `/components/CoachLoginModal.js` (226 lignes)
   - **App.js réduit** : De 3552 à 3444 lignes (-108 lignes)
   - **Fonctionnalités** : Login, récupération mot de passe intactes
+- [x] **Amélioration Assistant IA - Mémorisation & UI (18 Jan 2026)**:
+  - **UI Scroll** : `max-height: 80vh` et `overflow-y: auto` sur le conteneur du chat
+  - **Mémorisation client** : Données sauvegardées dans localStorage (`af_chat_client`)
+  - **Client reconnu** : Badge ✓ rose sur le bouton WhatsApp + chat direct sans formulaire
+  - **Message personnalisé** : "Bonjour [Prénom] ! 😊 Ravi de te revoir !"
+  - **Header personnalisé** : Affiche "👋 [Prénom]" quand client reconnu
+  - **Synchronisation contacts** : Création/mise à jour automatique dans Users via `syncContactToDatabase()`
+  - **Changer d'identité** : Lien "Pas [Prénom] ? Changer d'identité" efface localStorage
+  - **Backend** : Ajout endpoint `PUT /api/users/{id}` pour mise à jour des contacts
+  - **Tests** : 11/11 tests backend pytest + 100% frontend passés
 
 ### P1 - À faire
 - [x] ~~**CRITICAL: Refactoring de App.js**~~ - ✅ COMPLÉTÉ - App.js réduit de 52%
