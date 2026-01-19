@@ -1895,6 +1895,18 @@ const SuccessOverlay = ({ t, data, onClose, onClearTicket }) => {
           
           {/* Secondary action: Print */}
           <button onClick={handlePrint} className="w-full p-2 glass rounded-lg text-white text-sm">{t('print')}</button>
+          
+          {/* Bouton Fermer et effacer - supprime le ticket du localStorage */}
+          {onClearTicket && (
+            <button 
+              onClick={onClearTicket}
+              className="w-full p-2 rounded-lg text-white/60 text-sm hover:text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+              data-testid="clear-ticket-btn"
+            >
+              <span>🗑️</span>
+              <span>Fermer et effacer le ticket</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
