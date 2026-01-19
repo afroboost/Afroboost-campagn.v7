@@ -2059,6 +2059,14 @@ function App() {
     setHasSavedTicket(true);
   };
 
+  // Fonction pour effacer le ticket sauvegardé
+  const clearSavedTicket = () => {
+    localStorage.removeItem('af_last_ticket');
+    setHasSavedTicket(false);
+    setShowSuccess(false);
+    setLastReservation(null);
+  };
+
   // Check for /validate/:code URL on mount
   useEffect(() => {
     const path = window.location.pathname;
