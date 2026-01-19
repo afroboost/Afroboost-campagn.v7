@@ -305,6 +305,9 @@ class Concept(BaseModel):
     # Affiche Événement (popup)
     eventPosterEnabled: bool = False
     eventPosterMediaUrl: str = ""  # URL image ou vidéo
+    # Personnalisation des couleurs
+    primaryColor: str = "#D91CD2"  # Couleur principale (glow)
+    secondaryColor: str = "#8b5cf6"  # Couleur secondaire
 
 class ConceptUpdate(BaseModel):
     appName: Optional[str] = None  # Nom de l'application
@@ -328,6 +331,9 @@ class ConceptUpdate(BaseModel):
     # Affiche Événement (popup)
     eventPosterEnabled: Optional[bool] = None
     eventPosterMediaUrl: Optional[str] = None
+    # Personnalisation des couleurs
+    primaryColor: Optional[str] = None
+    secondaryColor: Optional[str] = None
 
 class AppConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
