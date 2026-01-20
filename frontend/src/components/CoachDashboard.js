@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import { QRCodeSVG } from "qrcode.react";
+import emailjs from '@emailjs/browser'; // Import direct EmailJS SDK
 import { 
   getEmailJSConfig, 
   saveEmailJSConfig, 
@@ -24,6 +25,11 @@ import {
   setLastMediaUrl as setLastMediaUrlService
 } from "../services/aiResponseService";
 import { LandingSectionSelector } from "./SearchBar";
+
+// === CONSTANTES EMAILJS FIXES ===
+const EMAILJS_SERVICE_ID = "service_8mrmxim";
+const EMAILJS_TEMPLATE_ID = "template_3n1u86p";
+const EMAILJS_PUBLIC_KEY = "5LfgQSIEQoqq_XSqt";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
