@@ -1595,30 +1595,36 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   };
 
-  // === FONCTION TEST EMAILJS - ISOLATION COMPLÈTE ===
-  // Utilise la fonction autonome performEmailSend pour éviter les conflits PostHog
+  // === FONCTION TEST EMAILJS - CONNEXION TECHNIQUE RÉPARÉE ===
+  // Utilise la fonction autonome performEmailSend avec debug avancé
   const handleTestEmailJS = async (e) => {
-    // === BLOCAGE CRASH POSTHOG ===
-    // Ces lignes DOIVENT être en premier, avant toute autre logique
+    // === SUPPRESSION DU CRASH - BLOCAGE POSTHOG ===
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('EMAILJS_DEBUG: Test déclenché');
+    
     // Validation basique
     if (!testEmailAddress || !testEmailAddress.includes('@')) {
+      console.log('EMAILJS_DEBUG: Email invalide -', testEmailAddress);
       alert('Veuillez entrer une adresse email valide pour le test');
       return;
     }
     
-    // Mise à jour UI - dans un try/catch séparé pour isoler PostHog
+    console.log('EMAILJS_DEBUG: Email validé -', testEmailAddress);
+    
+    // Mise à jour UI - dans un try/catch séparé
     try {
       setTestEmailStatus('sending');
     } catch (stateError) {
-      console.warn('PostHog bloqué sur setState mais envoi maintenu:', stateError);
+      console.warn('EMAILJS_DEBUG: setState bloqué (PostHog) mais envoi maintenu');
     }
     
-    // === ENVOI TECHNIQUE - ISOLÉ DE LA GESTION D'ÉTAT ===
+    // === ENVOI TECHNIQUE - LIAISON RÉELLE EMAILJS ===
     try {
-      // Appel de la fonction autonome (hors composant React)
+      console.log('EMAILJS_DEBUG: Appel performEmailSend...');
+      
+      // Le texte est injecté dans {{message}} du template EmailJS
       const result = await performEmailSend(
         testEmailAddress,
         'Client',
@@ -1626,31 +1632,39 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         'Ceci est un test de configuration EmailJS. Si vous recevez ce message, tout fonctionne !'
       );
       
-      // Gestion du résultat - également isolée
+      // === DEBUG RÉSULTAT ===
+      console.log('EMAILJS_DEBUG: Résultat =', result.success ? 'SUCCÈS' : 'ÉCHEC');
+      if (result.debug) {
+        console.log(result.debug);
+      }
+      
+      // Gestion du résultat
       try {
         if (result.success) {
           setTestEmailStatus('success');
+          console.log('EMAILJS_DEBUG: UI mise à jour - succès');
           alert('✅ Email de test envoyé avec succès !');
           setTimeout(() => setTestEmailStatus(null), 5000);
         } else {
           setTestEmailStatus('error');
-          alert(`❌ Erreur EmailJS: ${result.error}`);
+          console.log('EMAILJS_DEBUG: UI mise à jour - erreur');
+          alert(`❌ Erreur EmailJS: ${result.error}\n\nDébug: ${result.debug || 'N/A'}`);
           setTimeout(() => setTestEmailStatus(null), 3000);
         }
       } catch (uiError) {
-        console.warn('PostHog bloqué sur UI update mais envoi réussi:', uiError);
+        console.warn('EMAILJS_DEBUG: UI bloquée par PostHog mais envoi réussi');
         if (result.success) {
           alert('✅ Email envoyé (UI bloquée par PostHog)');
         }
       }
     } catch (sendError) {
-      console.error('❌ Erreur envoi email:', sendError);
+      console.error('EMAILJS_DEBUG: Exception globale -', sendError.message);
       try {
         setTestEmailStatus('error');
         alert(`❌ Erreur technique: ${sendError.message}`);
         setTimeout(() => setTestEmailStatus(null), 3000);
       } catch (e) {
-        console.warn('PostHog bloqué mais erreur signalée:', e);
+        console.warn('EMAILJS_DEBUG: Erreur signalée malgré blocage PostHog');
         alert(`❌ Erreur: ${sendError.message}`);
       }
     }
