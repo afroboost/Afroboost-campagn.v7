@@ -6,7 +6,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import { QRCodeSVG } from "qrcode.react";
-import emailjs from '@emailjs/browser'; // Import direct EmailJS SDK
+import emailjs from '@emailjs/browser';
+
+// === 1. INITIALISATION PRIORITAIRE - TOUT EN HAUT, HORS FONCTION ===
+emailjs.init("5LfgQSIEQoqq_XSqt");
+
 import { 
   getEmailJSConfig, 
   saveEmailJSConfig, 
