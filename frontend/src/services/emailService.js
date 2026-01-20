@@ -1,61 +1,87 @@
 // emailService.js - Service d'envoi d'emails automatisés via EmailJS
-// Compatible Vercel - Configuration stockée dans MongoDB
+// Compatible Vercel - Configuration stockée dans localStorage et MongoDB
 import emailjs from '@emailjs/browser';
 
 // API URL
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
-// === CONFIGURATION CACHE ===
+// === CONFIGURATION DÉFAUT (si rien n'est configuré) ===
+const DEFAULT_CONFIG = {
+  serviceId: 'service_8mrmxim',
+  templateId: 'template_3n1u86p',
+  publicKey: '5LfgQSIEQoqq_XSqt'
+};
+
+// === CONFIGURATION CACHE (localStorage) ===
 let cachedConfig = null;
 
 /**
- * Récupère la configuration EmailJS depuis MongoDB
+ * Charge la config depuis localStorage (synchrone)
  */
-export const getEmailJSConfig = async () => {
+const loadConfigFromStorage = () => {
   try {
-    const response = await fetch(`${API}/api/emailjs-config`);
-    if (response.ok) {
-      cachedConfig = await response.json();
-      return cachedConfig;
+    const stored = localStorage.getItem('emailjs_config');
+    if (stored) {
+      return JSON.parse(stored);
     }
   } catch (e) {
-    console.error('Error fetching EmailJS config:', e);
+    console.error('Error loading EmailJS config from storage:', e);
   }
-  return { serviceId: '', templateId: '', publicKey: '' };
+  return DEFAULT_CONFIG;
 };
 
 /**
- * Récupère la configuration EmailJS synchrone (depuis cache)
+ * Sauvegarde la config dans localStorage
  */
-export const getEmailJSConfigSync = () => {
-  return cachedConfig || { serviceId: '', templateId: '', publicKey: '' };
-};
-
-/**
- * Sauvegarde la configuration EmailJS dans MongoDB
- */
-export const saveEmailJSConfig = async (config) => {
+const saveConfigToStorage = (config) => {
   try {
-    const response = await fetch(`${API}/api/emailjs-config`, {
+    localStorage.setItem('emailjs_config', JSON.stringify(config));
+    return true;
+  } catch (e) {
+    console.error('Error saving EmailJS config to storage:', e);
+    return false;
+  }
+};
+
+// Initialiser le cache au chargement
+cachedConfig = loadConfigFromStorage();
+
+/**
+ * Récupère la configuration EmailJS (synchrone depuis cache)
+ */
+export const getEmailJSConfig = () => {
+  if (!cachedConfig) {
+    cachedConfig = loadConfigFromStorage();
+  }
+  return cachedConfig;
+};
+
+/**
+ * Sauvegarde la configuration EmailJS
+ */
+export const saveEmailJSConfig = (config) => {
+  cachedConfig = config;
+  const saved = saveConfigToStorage(config);
+  
+  // Aussi sauvegarder en backend si disponible
+  try {
+    fetch(`${API}/api/emailjs-config`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config)
-    });
-    if (response.ok) {
-      cachedConfig = await response.json();
-      return true;
-    }
+    }).catch(e => console.log('Backend save optional:', e));
   } catch (e) {
-    console.error('Error saving EmailJS config:', e);
+    // Ignorer si backend non disponible
   }
-  return false;
+  
+  return saved;
 };
 
 /**
  * Vérifie si EmailJS est configuré
  */
 export const isEmailJSConfigured = () => {
-  const config = cachedConfig || { serviceId: '', templateId: '', publicKey: '' };
+  const config = getEmailJSConfig();
   return !!(config.serviceId && config.templateId && config.publicKey);
 };
 
@@ -63,10 +89,16 @@ export const isEmailJSConfigured = () => {
  * Initialise EmailJS avec la clé publique
  */
 export const initEmailJS = () => {
-  const config = cachedConfig || { publicKey: '' };
+  const config = getEmailJSConfig();
   if (config.publicKey) {
-    emailjs.init(config.publicKey);
-    return true;
+    try {
+      emailjs.init(config.publicKey);
+      console.log('✅ EmailJS initialized with public key');
+      return true;
+    } catch (e) {
+      console.error('❌ EmailJS init error:', e);
+      return false;
+    }
   }
   return false;
 };
@@ -75,17 +107,21 @@ export const initEmailJS = () => {
  * Envoie un email à un destinataire unique
  */
 export const sendEmail = async (params) => {
-  const config = cachedConfig || await getEmailJSConfig();
+  const config = getEmailJSConfig();
   
   if (!config.serviceId || !config.templateId || !config.publicKey) {
+    console.error('❌ EmailJS non configuré:', config);
     throw new Error('EmailJS non configuré. Veuillez configurer les clés dans l\'onglet Campagnes.');
   }
 
+  // Initialiser EmailJS
+  initEmailJS();
+
   // Personnaliser le message avec le prénom
-  let personalizedMessage = params.message;
+  let personalizedMessage = params.message || '';
   if (params.to_name) {
     const firstName = params.to_name.split(' ')[0];
-    personalizedMessage = params.message.replace(/{prénom}/gi, firstName);
+    personalizedMessage = personalizedMessage.replace(/{prénom}/gi, firstName);
   }
 
   // Ajouter le média au message si présent
@@ -93,6 +129,7 @@ export const sendEmail = async (params) => {
     ? `${personalizedMessage}\n\n🔗 Voir le visuel: ${params.media_url}`
     : personalizedMessage;
 
+  // PARAMÈTRES EXACTS pour le template EmailJS
   const templateParams = {
     to_email: params.to_email,
     to_name: params.to_name || 'Client',
@@ -102,6 +139,13 @@ export const sendEmail = async (params) => {
     reply_to: 'contact.artboost@gmail.com'
   };
 
+  console.log('📧 Sending email with params:', {
+    serviceId: config.serviceId,
+    templateId: config.templateId,
+    to: params.to_email,
+    subject: templateParams.subject
+  });
+
   try {
     const response = await emailjs.send(
       config.serviceId,
@@ -109,10 +153,12 @@ export const sendEmail = async (params) => {
       templateParams,
       config.publicKey
     );
+    
+    console.log('✅ Email sent successfully:', response);
     return { success: true, response };
   } catch (error) {
-    console.error('EmailJS send error:', error);
-    return { success: false, error: error.text || error.message };
+    console.error('❌ EmailJS send error:', error);
+    return { success: false, error: error.text || error.message || 'Erreur inconnue' };
   }
 };
 
@@ -129,19 +175,20 @@ export const sendBulkEmails = async (recipients, campaign, onProgress) => {
 
   const total = recipients.length;
 
-  // Charger la config si pas en cache
-  if (!cachedConfig) {
-    await getEmailJSConfig();
-  }
-
-  // Initialiser EmailJS
-  if (!initEmailJS()) {
+  // Vérifier la configuration
+  if (!isEmailJSConfigured()) {
+    console.error('❌ EmailJS not configured');
     return {
       ...results,
       failed: total,
       errors: ['EmailJS non configuré']
     };
   }
+
+  // Initialiser EmailJS
+  initEmailJS();
+
+  console.log(`📧 Starting bulk email send to ${total} recipients...`);
 
   // Envoyer les emails un par un avec délai
   for (let i = 0; i < recipients.length; i++) {
@@ -167,6 +214,7 @@ export const sendBulkEmails = async (recipients, campaign, onProgress) => {
           name: recipient.name,
           status: 'sent'
         });
+        console.log(`✅ [${i + 1}/${total}] Email sent to ${recipient.email}`);
       } else {
         results.failed++;
         results.errors.push(`${recipient.email}: ${result.error}`);
@@ -176,21 +224,24 @@ export const sendBulkEmails = async (recipients, campaign, onProgress) => {
           status: 'failed',
           error: result.error
         });
+        console.error(`❌ [${i + 1}/${total}] Failed to send to ${recipient.email}:`, result.error);
       }
     } catch (error) {
       results.failed++;
-      results.errors.push(`${recipient.email}: ${error.message}`);
+      const errorMsg = error.message || 'Erreur inconnue';
+      results.errors.push(`${recipient.email}: ${errorMsg}`);
       results.details.push({
         email: recipient.email,
         name: recipient.name,
         status: 'failed',
-        error: error.message
+        error: errorMsg
       });
+      console.error(`❌ [${i + 1}/${total}] Exception for ${recipient.email}:`, error);
     }
 
-    // Délai entre les envois (200ms)
+    // Délai entre les envois (300ms pour éviter rate limit)
     if (i < recipients.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
   }
 
@@ -198,6 +249,7 @@ export const sendBulkEmails = async (recipients, campaign, onProgress) => {
     onProgress(total, total, 'completed');
   }
 
+  console.log(`📧 Bulk email complete: ${results.sent} sent, ${results.failed} failed`);
   return results;
 };
 
@@ -205,17 +257,26 @@ export const sendBulkEmails = async (recipients, campaign, onProgress) => {
  * Teste la configuration EmailJS
  */
 export const testEmailJSConfig = async (testEmail) => {
-  return sendEmail({
+  console.log('🧪 Testing EmailJS config with email:', testEmail);
+  
+  const result = await sendEmail({
     to_email: testEmail,
     to_name: 'Test',
     subject: 'Test EmailJS - Afroboost',
-    message: '🎉 Félicitations ! Votre configuration EmailJS fonctionne correctement.'
+    message: '🎉 Félicitations ! Votre configuration EmailJS fonctionne correctement.\n\nCet email a été envoyé depuis le panneau admin Afroboost.'
   });
+  
+  if (result.success) {
+    console.log('✅ Test email sent successfully!', result.response);
+  } else {
+    console.error('❌ Test email failed:', result.error);
+  }
+  
+  return result;
 };
 
 export default {
   getEmailJSConfig,
-  getEmailJSConfigSync,
   saveEmailJSConfig,
   isEmailJSConfigured,
   initEmailJS,
