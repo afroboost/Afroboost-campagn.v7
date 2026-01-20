@@ -1229,7 +1229,13 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   };
 
   // Tester la configuration EmailJS
-  const handleTestEmailJS = async () => {
+  const handleTestEmailJS = async (e) => {
+    // Empêcher le rafraîchissement de la page
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!testEmailAddress || !testEmailAddress.includes('@')) {
       alert('Veuillez entrer une adresse email valide pour le test');
       return;
@@ -1242,6 +1248,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     setTestEmailStatus('sending');
     
     try {
+      // Créer un objet simple sans références complexes
       const result = await testEmailJSConfig(testEmailAddress);
       console.log('📧 Test result:', result);
       
@@ -1264,7 +1271,13 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   };
 
   // Envoyer la campagne email automatiquement
-  const handleSendEmailCampaign = async () => {
+  const handleSendEmailCampaign = async (e) => {
+    // Empêcher le rafraîchissement de la page
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!isEmailJSConfigured()) {
       alert('⚠️ EmailJS non configuré. Cliquez sur "⚙️ Configurer EmailJS" pour ajouter vos clés.');
       return;
