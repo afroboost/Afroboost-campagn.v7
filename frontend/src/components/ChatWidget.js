@@ -460,6 +460,7 @@ export const ChatWidget = () => {
     setInputMessage('');
     setMessages(prev => [...prev, { type: 'user', text: userMessage }]);
     setLastMessageCount(prev => prev + 1);
+    setMessageCount(prev => prev + 1);
     setIsLoading(true);
     
     try {
