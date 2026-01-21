@@ -1,74 +1,168 @@
 // /services/notificationService.js - Service de notifications sonores et visuelles
-// Pour le système de chat Afroboost
+// Pour le système de chat Afroboost - Optimisé pour iOS et Android
 
 /**
- * Sons de notification encodés en base64 (courts bips)
- * Utilise l'API Web Audio pour générer des sons sans fichiers externes
+ * Sons de notification utilisant Web Audio API
+ * Optimisé pour iOS (Safari) et Android
  */
 
-// Contexte Audio global
+// Contexte Audio global avec gestion iOS
 let audioContext = null;
+let isAudioUnlocked = false;
 
+/**
+ * Obtient le contexte audio, le créant si nécessaire
+ */
 const getAudioContext = () => {
   if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      audioContext = new AudioContext();
+    }
   }
   return audioContext;
 };
 
 /**
+ * Déverrouille l'audio sur iOS (nécessite une interaction utilisateur)
+ * À appeler lors du premier clic/tap de l'utilisateur
+ */
+export const unlockAudio = () => {
+  if (isAudioUnlocked) return Promise.resolve();
+  
+  return new Promise((resolve) => {
+    const ctx = getAudioContext();
+    if (!ctx) {
+      resolve();
+      return;
+    }
+    
+    // Créer un son silencieux pour débloquer l'audio sur iOS
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+    
+    // Résumer le contexte si suspendu
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        isAudioUnlocked = true;
+        resolve();
+      });
+    } else {
+      isAudioUnlocked = true;
+      resolve();
+    }
+  });
+};
+
+/**
  * Joue un son de notification pour les messages entrants
+ * Optimisé pour iOS et Android
  * @param {string} type - 'message' | 'coach' | 'user'
  */
-export const playNotificationSound = (type = 'message') => {
+export const playNotificationSound = async (type = 'message') => {
   try {
     const ctx = getAudioContext();
+    if (!ctx) {
+      console.warn('Web Audio API not supported');
+      return;
+    }
     
-    // Résumer le contexte audio si suspendu (politique navigateur)
+    // Résumer le contexte audio si suspendu (politique navigateur iOS/Chrome)
     if (ctx.state === 'suspended') {
-      ctx.resume();
+      await ctx.resume();
     }
 
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
+    
+    // Ajouter un filtre pour un son plus doux sur mobile
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 2000;
 
-    oscillator.connect(gainNode);
+    oscillator.connect(filter);
+    filter.connect(gainNode);
     gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'sine';
+    
+    const now = ctx.currentTime;
 
     // Différents sons selon le type
     switch (type) {
       case 'coach':
-        // Son plus grave pour réponse coach (double bip)
-        oscillator.frequency.setValueAtTime(440, ctx.currentTime); // La
-        oscillator.frequency.setValueAtTime(523, ctx.currentTime + 0.1); // Do
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.2);
+        // Son distinctif pour réponse coach (double bip harmonieux)
+        oscillator.frequency.setValueAtTime(523, now); // Do5
+        oscillator.frequency.setValueAtTime(659, now + 0.12); // Mi5
+        gainNode.gain.setValueAtTime(0.35, now);
+        gainNode.gain.setValueAtTime(0.3, now + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        oscillator.start(now);
+        oscillator.stop(now + 0.25);
         break;
       
       case 'user':
-        // Son aigu pour message utilisateur (bip simple)
-        oscillator.frequency.setValueAtTime(880, ctx.currentTime); // La aigu
-        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.15);
+        // Son aigu pour message utilisateur (notification subtile)
+        oscillator.frequency.setValueAtTime(784, now); // Sol5
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        oscillator.start(now);
+        oscillator.stop(now + 0.15);
         break;
       
       default:
-        // Son standard
-        oscillator.frequency.setValueAtTime(660, ctx.currentTime);
-        gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.1);
+        // Son standard (bip agréable)
+        oscillator.frequency.setValueAtTime(587, now); // Ré5
+        gainNode.gain.setValueAtTime(0.28, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        oscillator.start(now);
+        oscillator.stop(now + 0.12);
     }
-
-    oscillator.type = 'sine';
 
   } catch (err) {
     console.warn('Notification sound failed:', err);
+  }
+};
+
+/**
+ * Joue un son de notification plus long et distinct (pour les notifications push)
+ */
+export const playPushNotificationSound = async () => {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    const now = ctx.currentTime;
+    
+    // Créer un son de notification plus élaboré
+    const notes = [523, 659, 784]; // Do, Mi, Sol (accord majeur)
+    
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const startTime = now + i * 0.1;
+      gain.gain.setValueAtTime(0.2, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.3);
+    });
+
+  } catch (err) {
+    console.warn('Push notification sound failed:', err);
   }
 };
 
@@ -113,6 +207,7 @@ export const showBrowserNotification = async (title, body, options = {}) => {
     badge: options.badge || '/favicon.ico',
     tag: options.tag || 'afroboost-chat',
     requireInteraction: options.requireInteraction || false,
+    silent: false, // Permet le son système
     ...options
   });
 
@@ -155,6 +250,8 @@ export const containsLinks = (text) => {
 
 export default {
   playNotificationSound,
+  playPushNotificationSound,
+  unlockAudio,
   requestNotificationPermission,
   showBrowserNotification,
   linkifyText,
