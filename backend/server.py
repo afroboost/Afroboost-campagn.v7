@@ -3383,7 +3383,7 @@ async def notify_coach_new_message(participant_name: str, message_preview: str, 
     
     try:
         params = {
-            "from": "Afroboost <onboarding@resend.dev>",
+            "from": "Afroboost <notifications@afroboosteur.com>",
             "to": [coach_email],
             "subject": f"🔔 Nouveau message de {participant_name}",
             "html": html_content
