@@ -1,8 +1,10 @@
 // /components/ChatWidget.js - Widget IA flottant avec capture de leads et reconnaissance automatique
 // Architecture modulaire Afroboost - Utilise l'API chat améliorée
+// Fonctionnalités: Notifications sonores, liens cliquables, suppression historique, chat communautaire
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import { playNotificationSound, linkifyText } from '../services/notificationService';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -31,6 +33,64 @@ const SendIcon = () => (
   </svg>
 );
 
+// Icône Corbeille
+const TrashIcon = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+  </svg>
+);
+
+// Icône Groupe
+const GroupIcon = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+  </svg>
+);
+
+/**
+ * Composant pour afficher un message avec liens cliquables
+ */
+const MessageBubble = ({ msg, isUser }) => {
+  // Convertir le texte en HTML avec liens cliquables
+  const htmlContent = linkifyText(msg.text);
+  
+  return (
+    <div
+      style={{
+        alignSelf: isUser ? 'flex-end' : 'flex-start',
+        maxWidth: '85%'
+      }}
+    >
+      <div
+        style={{
+          background: isUser 
+            ? 'linear-gradient(135deg, #d91cd2, #8b5cf6)' 
+            : 'rgba(255,255,255,0.1)',
+          color: '#fff',
+          padding: '10px 14px',
+          borderRadius: isUser 
+            ? '16px 16px 4px 16px' 
+            : '16px 16px 16px 4px',
+          fontSize: '13px',
+          lineHeight: '1.4'
+        }}
+      >
+        {/* Indicateur si message du coach */}
+        {msg.type === 'coach' && (
+          <div style={{ fontSize: '10px', opacity: 0.7, marginBottom: '4px' }}>
+            🏋️ Coach
+          </div>
+        )}
+        {/* Rendu du texte avec liens cliquables */}
+        <span 
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
+          style={{ wordBreak: 'break-word' }}
+        />
+      </div>
+    </div>
+  );
+};
+
 /**
  * Widget de chat IA flottant avec reconnaissance automatique et historique
  * Utilise l'API /api/chat/smart-entry pour identifier les utilisateurs
@@ -46,7 +106,11 @@ export const ChatWidget = () => {
   const [isReturningClient, setIsReturningClient] = useState(false);
   const [sessionData, setSessionData] = useState(null);
   const [participantId, setParticipantId] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isCommunityMode, setIsCommunityMode] = useState(false);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const pollingRef = useRef(null);
 
   // Extraire le token de lien depuis l'URL si présent
   const getLinkTokenFromUrl = () => {
@@ -54,6 +118,52 @@ export const ChatWidget = () => {
     const match = path.match(/\/chat\/([a-zA-Z0-9-]+)/);
     return match ? match[1] : null;
   };
+
+  // === POLLING pour nouveaux messages (mode humain/communautaire) ===
+  const pollForNewMessages = useCallback(async () => {
+    if (!sessionData?.id) return;
+    
+    try {
+      const res = await axios.get(`${API}/chat/sessions/${sessionData.id}/messages`);
+      const newMessages = res.data;
+      
+      // Vérifier s'il y a de nouveaux messages
+      if (newMessages.length > lastMessageCount) {
+        const latestMessage = newMessages[newMessages.length - 1];
+        
+        // Si le dernier message n'est pas de l'utilisateur actuel, notification
+        if (latestMessage.sender_id !== participantId && latestMessage.sender_type !== 'user') {
+          playNotificationSound('coach');
+          
+          // Mettre à jour les messages
+          const formattedMessages = newMessages.map(m => ({
+            id: m.id,
+            type: m.sender_type === 'user' ? 'user' : m.sender_type === 'coach' ? 'coach' : 'ai',
+            text: m.content,
+            sender: m.sender_name
+          }));
+          setMessages(formattedMessages);
+        }
+        
+        setLastMessageCount(newMessages.length);
+      }
+    } catch (err) {
+      console.warn('Polling error:', err);
+    }
+  }, [sessionData, participantId, lastMessageCount]);
+
+  // Démarrer le polling quand en mode humain ou communautaire
+  useEffect(() => {
+    if (sessionData && !sessionData.is_ai_active && step === 'chat') {
+      pollingRef.current = setInterval(pollForNewMessages, 3000);
+    }
+    
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [sessionData, step, pollForNewMessages]);
 
   // === MÉMORISATION CLIENT: Charger les données au démarrage ===
   useEffect(() => {
@@ -79,7 +189,9 @@ export const ChatWidget = () => {
 
     if (savedSession) {
       try {
-        setSessionData(JSON.parse(savedSession));
+        const session = JSON.parse(savedSession);
+        setSessionData(session);
+        setIsCommunityMode(session.mode === 'community');
       } catch (err) {
         localStorage.removeItem(CHAT_SESSION_KEY);
       }
@@ -122,22 +234,27 @@ export const ChatWidget = () => {
       setParticipantId(participant.id);
       setSessionData(session);
       setIsReturningClient(is_returning);
+      setIsCommunityMode(session.mode === 'community');
 
       // Restaurer l'historique si utilisateur reconnu
       if (is_returning && chat_history && chat_history.length > 0) {
         const restoredMessages = chat_history.map(msg => ({
-          type: msg.sender_type === 'user' ? 'user' : 'ai',
-          text: msg.content
+          id: msg.id,
+          type: msg.sender_type === 'user' ? 'user' : msg.sender_type === 'coach' ? 'coach' : 'ai',
+          text: msg.content,
+          sender: msg.sender_name
         }));
         setMessages([
           { type: 'ai', text: message },
           ...restoredMessages
         ]);
+        setLastMessageCount(chat_history.length + 1);
       } else {
         setMessages([{
           type: 'ai',
           text: message
         }]);
+        setLastMessageCount(1);
       }
 
       setStep('chat');
@@ -254,6 +371,7 @@ export const ChatWidget = () => {
     const userMessage = inputMessage.trim();
     setInputMessage('');
     setMessages(prev => [...prev, { type: 'user', text: userMessage }]);
+    setLastMessageCount(prev => prev + 1);
     setIsLoading(true);
     
     try {
@@ -266,15 +384,21 @@ export const ChatWidget = () => {
         });
         
         if (response.data.response) {
+          // Jouer un son pour la réponse
+          playNotificationSound('message');
+          
           setMessages(prev => [...prev, { 
             type: 'ai', 
             text: response.data.response
           }]);
+          setLastMessageCount(prev => prev + 1);
         } else if (!response.data.ai_active) {
           // IA désactivée - message en attente
           setMessages(prev => [...prev, { 
             type: 'ai', 
-            text: "Message reçu ! Le coach vous répondra bientôt. 💬"
+            text: isCommunityMode 
+              ? "Message envoyé au groupe ! 👥 Les autres participants verront votre message."
+              : "Message reçu ! Le coach vous répondra bientôt. 💬"
           }]);
         }
       } else {
@@ -284,6 +408,8 @@ export const ChatWidget = () => {
           firstName: leadData.firstName,
           leadId: ''
         });
+        
+        playNotificationSound('message');
         
         setMessages(prev => [...prev, { 
           type: 'ai', 
@@ -302,9 +428,39 @@ export const ChatWidget = () => {
     }
   };
 
+  // === SUPPRIMER L'HISTORIQUE ===
+  const handleDeleteHistory = async () => {
+    if (!sessionData?.id) return;
+    
+    const confirm = window.confirm('Êtes-vous sûr de vouloir supprimer votre historique de conversation ?');
+    if (!confirm) return;
+    
+    try {
+      // Marquer tous les messages comme supprimés
+      for (const msg of messages) {
+        if (msg.id) {
+          await axios.put(`${API}/chat/messages/${msg.id}/delete`);
+        }
+      }
+      
+      // Vider l'affichage local
+      setMessages([{
+        type: 'ai',
+        text: '🗑️ Historique supprimé. Comment puis-je vous aider ?'
+      }]);
+      setLastMessageCount(1);
+      setShowMenu(false);
+      
+    } catch (err) {
+      console.error('Delete history error:', err);
+      alert('Erreur lors de la suppression de l\'historique');
+    }
+  };
+
   // Réinitialiser le widget
   const handleClose = () => {
     setIsOpen(false);
+    setShowMenu(false);
   };
 
   // Option pour changer d'identité (nouveau client)
@@ -317,10 +473,24 @@ export const ChatWidget = () => {
     setMessages([]);
     setSessionData(null);
     setParticipantId(null);
+    setShowMenu(false);
+    setLastMessageCount(0);
   };
 
   return (
     <>
+      {/* Style pour les liens dans les messages */}
+      <style>{`
+        .chat-link {
+          color: #a78bfa;
+          text-decoration: underline;
+          word-break: break-all;
+        }
+        .chat-link:hover {
+          color: #c4b5fd;
+        }
+      `}</style>
+
       {/* Bouton flottant WhatsApp */}
       {!isOpen && (
         <button
@@ -390,7 +560,9 @@ export const ChatWidget = () => {
           {/* Header */}
           <div 
             style={{
-              background: 'linear-gradient(135deg, #25D366, #128C7E)',
+              background: isCommunityMode 
+                ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' 
+                : 'linear-gradient(135deg, #25D366, #128C7E)',
               padding: '12px 16px',
               display: 'flex',
               alignItems: 'center',
@@ -410,32 +582,101 @@ export const ChatWidget = () => {
                   justifyContent: 'center'
                 }}
               >
-                <WhatsAppIcon />
+                {isCommunityMode ? <GroupIcon /> : <WhatsAppIcon />}
               </div>
               <div>
-                <div className="text-white font-semibold text-sm">Afroboost</div>
+                <div className="text-white font-semibold text-sm">
+                  {isCommunityMode ? 'Communauté Afroboost' : 'Afroboost'}
+                </div>
                 <div className="text-white text-xs" style={{ opacity: 0.8 }}>
-                  {isReturningClient && step === 'chat' ? `👋 ${leadData.firstName}` : 'Assistant IA'}
+                  {isReturningClient && step === 'chat' 
+                    ? `👋 ${leadData.firstName}` 
+                    : isCommunityMode 
+                      ? '👥 Chat Groupe'
+                      : sessionData?.is_ai_active === false 
+                        ? '👤 Mode Coach'
+                        : '🤖 Assistant IA'}
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '32px',
-                height: '32px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              data-testid="chat-close-btn"
-            >
-              <CloseIcon />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Menu burger */}
+              {step === 'chat' && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowMenu(!showMenu)}
+                    style={{
+                      background: 'rgba(255,255,255,0.2)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      width: '32px',
+                      height: '32px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: '16px'
+                    }}
+                    data-testid="chat-menu-btn"
+                  >
+                    ⋮
+                  </button>
+                  
+                  {/* Menu déroulant */}
+                  {showMenu && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '40px',
+                        right: '0',
+                        background: '#1a1a1a',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        overflow: 'hidden',
+                        minWidth: '180px',
+                        zIndex: 100
+                      }}
+                    >
+                      <button
+                        onClick={handleDeleteHistory}
+                        className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                        style={{ color: '#ef4444', border: 'none', background: 'none' }}
+                        data-testid="delete-history-btn"
+                      >
+                        <TrashIcon /> Supprimer l'historique
+                      </button>
+                      <button
+                        onClick={handleChangeIdentity}
+                        className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                        style={{ color: '#fff', border: 'none', background: 'none' }}
+                        data-testid="change-identity-btn"
+                      >
+                        🔄 Changer d'identité
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <button
+                onClick={handleClose}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                data-testid="chat-close-btn"
+              >
+                <CloseIcon />
+              </button>
+            </div>
           </div>
 
           {/* Contenu avec scroll */}
@@ -564,6 +805,24 @@ export const ChatWidget = () => {
             {/* Zone de chat */}
             {step === 'chat' && (
               <>
+                {/* Indicateur mode non-IA */}
+                {sessionData && !sessionData.is_ai_active && (
+                  <div 
+                    style={{
+                      background: isCommunityMode ? 'rgba(139, 92, 246, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                      padding: '8px 16px',
+                      textAlign: 'center',
+                      fontSize: '11px',
+                      color: isCommunityMode ? '#a78bfa' : '#fbbf24',
+                      borderBottom: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    {isCommunityMode 
+                      ? '👥 Mode Communauté - Plusieurs participants' 
+                      : '👤 Mode Humain - Le coach vous répondra'}
+                  </div>
+                )}
+
                 <div 
                   style={{
                     flex: 1,
@@ -576,30 +835,7 @@ export const ChatWidget = () => {
                   }}
                 >
                   {messages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        alignSelf: msg.type === 'user' ? 'flex-end' : 'flex-start',
-                        maxWidth: '85%'
-                      }}
-                    >
-                      <div
-                        style={{
-                          background: msg.type === 'user' 
-                            ? 'linear-gradient(135deg, #d91cd2, #8b5cf6)' 
-                            : 'rgba(255,255,255,0.1)',
-                          color: '#fff',
-                          padding: '10px 14px',
-                          borderRadius: msg.type === 'user' 
-                            ? '16px 16px 4px 16px' 
-                            : '16px 16px 16px 4px',
-                          fontSize: '13px',
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {msg.text}
-                      </div>
-                    </div>
+                    <MessageBubble key={idx} msg={msg} isUser={msg.type === 'user'} />
                   ))}
                   
                   {isLoading && (
@@ -665,31 +901,6 @@ export const ChatWidget = () => {
                     data-testid="chat-send-btn"
                   >
                     <SendIcon />
-                  </button>
-                </div>
-
-                {/* Option pour changer d'identité */}
-                <div 
-                  style={{
-                    padding: '8px 12px',
-                    borderTop: '1px solid rgba(255,255,255,0.05)',
-                    textAlign: 'center',
-                    flexShrink: 0
-                  }}
-                >
-                  <button
-                    onClick={handleChangeIdentity}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'rgba(255,255,255,0.4)',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
-                    }}
-                    data-testid="change-identity-btn"
-                  >
-                    Pas {leadData.firstName} ? Changer d'identité
                   </button>
                 </div>
               </>
