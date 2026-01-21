@@ -2807,7 +2807,9 @@ async def get_ai_response_with_session(request: Request):
         }
     
     # Construire le contexte
-    context = f"\n\nLe client qui te parle s'appelle {participant.get('name', 'l\\'utilisateur')}. Utilise son prénom dans ta réponse."
+    default_name = "l'utilisateur"
+    participant_name = participant.get('name', default_name)
+    context = f"\n\nLe client qui te parle s'appelle {participant_name}. Utilise son prénom dans ta réponse."
     
     # Récupérer les derniers messages pour le contexte
     recent_messages = await db.chat_messages.find(
