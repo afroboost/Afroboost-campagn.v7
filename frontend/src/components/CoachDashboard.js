@@ -5708,16 +5708,18 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               </div>
             </div>
 
-            {/* Liste des liens générés */}
+            {/* Liste des liens générés - AVEC FILTRAGE */}
             <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
               <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                📋 Liens & Groupes ({chatLinks.length})
+                📋 Liens & Groupes ({filteredChatLinks.length}{conversationSearch ? `/${chatLinks.length}` : ''})
               </h3>
-              {chatLinks.length === 0 ? (
-                <p className="text-white/50 text-sm text-center py-4">Aucun lien généré pour le moment</p>
+              {filteredChatLinks.length === 0 ? (
+                <p className="text-white/50 text-sm text-center py-4">
+                  {conversationSearch ? 'Aucun lien correspondant' : 'Aucun lien généré pour le moment'}
+                </p>
               ) : (
                 <div className="space-y-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  {chatLinks.map(link => (
+                  {filteredChatLinks.map(link => (
                     <div 
                       key={link.link_token}
                       className="flex items-center justify-between gap-2 p-3 rounded-lg transition-all hover:bg-white/5"
@@ -5739,7 +5741,15 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                           }}
                           data-testid={`copy-link-${link.link_token}`}
                         >
-                          {copiedLinkId === link.link_token ? '✓ Copié !' : '📋 Copier'}
+                          {copiedLinkId === link.link_token ? '✓ Copié' : '📋'}
+                        </button>
+                        <button
+                          onClick={() => deleteChatSession(link.session_id || link.id)}
+                          className="px-2 py-1 rounded text-xs transition-all hover:bg-red-600/30"
+                          style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
+                          title="Supprimer"
+                        >
+                          🗑️
                         </button>
                       </div>
                     </div>
@@ -5748,15 +5758,17 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               )}
             </div>
 
-            {/* Liste des conversations actives */}
+            {/* Liste des conversations actives - AVEC FILTRAGE ET SUPPRESSION */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Panel gauche: Liste des sessions */}
               <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
                 <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  🗨️ Conversations actives ({chatSessions.length})
+                  🗨️ Conversations ({filteredChatSessions.length}{conversationSearch ? `/${chatSessions.length}` : ''})
                 </h3>
-                {chatSessions.length === 0 ? (
-                  <p className="text-white/50 text-sm text-center py-8">Aucune conversation pour le moment</p>
+                {filteredChatSessions.length === 0 ? (
+                  <p className="text-white/50 text-sm text-center py-8">
+                    {conversationSearch ? 'Aucune conversation correspondante' : 'Aucune conversation pour le moment'}
+                  </p>
                 ) : (
                   <div className="space-y-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                     {chatSessions.map(session => {
