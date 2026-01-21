@@ -5400,6 +5400,293 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             </div>
           </div>
         )}
+
+        {/* ========== ONGLET CONVERSATIONS ========== */}
+        {tab === "conversations" && (
+          <div className="space-y-6">
+            {/* Header avec bouton génération de lien */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white">💬 Conversations</h2>
+                <p className="text-white/60 text-sm">Gérez vos chats et générez des liens de partage</p>
+              </div>
+              <button 
+                onClick={loadConversations}
+                disabled={loadingConversations}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{ background: 'rgba(139, 92, 246, 0.3)', color: '#fff' }}
+              >
+                {loadingConversations ? '⏳ Chargement...' : '🔄 Actualiser'}
+              </button>
+            </div>
+
+            {/* Section Générer un lien */}
+            <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.3)' }}>
+              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                🔗 Générer un lien partageable
+              </h3>
+              <p className="text-white/60 text-xs mb-3">
+                Créez un lien unique à partager sur Instagram, Facebook ou WhatsApp. Les utilisateurs seront automatiquement enregistrés.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newLinkTitle}
+                  onChange={(e) => setNewLinkTitle(e.target.value)}
+                  placeholder="Titre du lien (ex: Promo Instagram Janvier)"
+                  className="flex-1 px-3 py-2 rounded-lg text-sm"
+                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                  data-testid="new-link-title"
+                />
+                <button
+                  onClick={generateShareableLink}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #d91cd2, #8b5cf6)', color: '#fff' }}
+                  data-testid="generate-link-btn"
+                >
+                  ✨ Générer
+                </button>
+              </div>
+            </div>
+
+            {/* Liste des liens générés */}
+            <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
+              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                📋 Liens générés ({chatLinks.length})
+              </h3>
+              {chatLinks.length === 0 ? (
+                <p className="text-white/50 text-sm text-center py-4">Aucun lien généré pour le moment</p>
+              ) : (
+                <div className="space-y-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {chatLinks.map(link => (
+                    <div 
+                      key={link.link_token}
+                      className="flex items-center justify-between gap-2 p-3 rounded-lg transition-all hover:bg-white/5"
+                      style={{ background: 'rgba(0,0,0,0.3)' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm font-medium truncate">{link.title || 'Lien sans titre'}</div>
+                        <div className="text-white/50 text-xs">
+                          {link.participant_count || 0} participant(s) • Mode: {link.is_ai_active ? '🤖 IA' : '👤 Humain'}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => copyLinkToClipboard(link.link_token)}
+                          className="px-3 py-1 rounded text-xs transition-all"
+                          style={{ 
+                            background: copiedLinkId === link.link_token ? 'rgba(34, 197, 94, 0.3)' : 'rgba(139, 92, 246, 0.3)',
+                            color: '#fff'
+                          }}
+                          data-testid={`copy-link-${link.link_token}`}
+                        >
+                          {copiedLinkId === link.link_token ? '✓ Copié !' : '📋 Copier'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Liste des conversations actives */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Panel gauche: Liste des sessions */}
+              <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  🗨️ Conversations actives ({chatSessions.length})
+                </h3>
+                {chatSessions.length === 0 ? (
+                  <p className="text-white/50 text-sm text-center py-8">Aucune conversation pour le moment</p>
+                ) : (
+                  <div className="space-y-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    {chatSessions.map(session => {
+                      const participantNames = session.participant_ids?.map(id => getParticipantName(id)).join(', ') || 'Aucun participant';
+                      const isSelected = selectedSession?.id === session.id;
+                      
+                      return (
+                        <div
+                          key={session.id}
+                          onClick={() => {
+                            setSelectedSession(session);
+                            loadSessionMessages(session.id);
+                          }}
+                          className={`p-3 rounded-lg cursor-pointer transition-all ${isSelected ? 'ring-2 ring-purple-500' : 'hover:bg-white/5'}`}
+                          style={{ background: isSelected ? 'rgba(139, 92, 246, 0.2)' : 'rgba(0,0,0,0.3)' }}
+                          data-testid={`session-${session.id}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-white text-sm font-medium truncate">{participantNames}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${session.is_ai_active ? 'bg-green-600/30 text-green-400' : 'bg-yellow-600/30 text-yellow-400'}`}>
+                              {session.is_ai_active ? '🤖 IA' : '👤 Humain'}
+                            </span>
+                          </div>
+                          <div className="text-white/50 text-xs">
+                            {session.title || getSourceLabel(chatParticipants.find(p => p.id === session.participant_ids?.[0])?.source)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Panel droit: Détail de la conversation */}
+              <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
+                {selectedSession ? (
+                  <>
+                    {/* Header session */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-white font-semibold">
+                          {selectedSession.participant_ids?.map(id => getParticipantName(id)).join(', ')}
+                        </h3>
+                        <p className="text-white/50 text-xs">
+                          {selectedSession.title || 'Conversation'}
+                        </p>
+                      </div>
+                      {/* Toggle IA/Humain */}
+                      <button
+                        onClick={() => toggleSessionAI(selectedSession.id)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all"
+                        style={{ 
+                          background: selectedSession.is_ai_active ? 'rgba(34, 197, 94, 0.3)' : 'rgba(234, 179, 8, 0.3)',
+                          color: '#fff'
+                        }}
+                        data-testid="toggle-ai-btn"
+                      >
+                        {selectedSession.is_ai_active ? (
+                          <>🤖 IA Active</>
+                        ) : (
+                          <>👤 Mode Humain</>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Messages */}
+                    <div 
+                      className="space-y-2 mb-4 p-3 rounded-lg"
+                      style={{ background: 'rgba(0,0,0,0.3)', maxHeight: '250px', overflowY: 'auto' }}
+                    >
+                      {sessionMessages.length === 0 ? (
+                        <p className="text-white/50 text-sm text-center py-4">Aucun message</p>
+                      ) : (
+                        sessionMessages.map(msg => (
+                          <div
+                            key={msg.id}
+                            className={`p-2 rounded-lg text-sm ${
+                              msg.sender_type === 'user' 
+                                ? 'bg-purple-600/20 ml-4' 
+                                : msg.sender_type === 'coach'
+                                ? 'bg-yellow-600/20 mr-4'
+                                : 'bg-green-600/20 mr-4'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-white/70 text-xs font-medium">
+                                {msg.sender_type === 'user' ? '👤' : msg.sender_type === 'coach' ? '🏋️' : '🤖'} {msg.sender_name}
+                              </span>
+                              <span className="text-white/40 text-xs">
+                                {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-white text-sm">{msg.content}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Input réponse coach (visible uniquement si IA désactivée) */}
+                    {!selectedSession.is_ai_active && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={coachMessage}
+                          onChange={(e) => setCoachMessage(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && sendCoachMessage()}
+                          placeholder="Votre réponse..."
+                          className="flex-1 px-3 py-2 rounded-lg text-sm"
+                          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                          data-testid="coach-message-input"
+                        />
+                        <button
+                          onClick={sendCoachMessage}
+                          disabled={!coachMessage.trim()}
+                          className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                          style={{ 
+                            background: coachMessage.trim() ? 'linear-gradient(135deg, #d91cd2, #8b5cf6)' : 'rgba(255,255,255,0.1)',
+                            color: '#fff',
+                            opacity: coachMessage.trim() ? 1 : 0.5
+                          }}
+                          data-testid="send-coach-message-btn"
+                        >
+                          📤 Envoyer
+                        </button>
+                      </div>
+                    )}
+
+                    {selectedSession.is_ai_active && (
+                      <div className="text-center text-white/50 text-xs py-2">
+                        💡 L'IA répond automatiquement. Cliquez sur le bouton ci-dessus pour passer en mode humain.
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full py-12">
+                    <span className="text-4xl mb-3">💬</span>
+                    <p className="text-white/50 text-sm">Sélectionnez une conversation</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Section CRM - Participants */}
+            <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
+              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                📇 Contacts CRM ({chatParticipants.length})
+              </h3>
+              {chatParticipants.length === 0 ? (
+                <p className="text-white/50 text-sm text-center py-4">Aucun contact enregistré via le chat</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-white/60 text-xs">
+                        <th className="text-left py-2 px-2">Nom</th>
+                        <th className="text-left py-2 px-2">Email</th>
+                        <th className="text-left py-2 px-2">WhatsApp</th>
+                        <th className="text-left py-2 px-2">Source</th>
+                        <th className="text-left py-2 px-2">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {chatParticipants.slice(0, 20).map(participant => (
+                        <tr key={participant.id} className="border-t border-white/10 text-white">
+                          <td className="py-2 px-2">{participant.name}</td>
+                          <td className="py-2 px-2 text-white/70">{participant.email || '-'}</td>
+                          <td className="py-2 px-2 text-white/70">{participant.whatsapp || '-'}</td>
+                          <td className="py-2 px-2">
+                            <span className="text-xs px-2 py-0.5 rounded bg-purple-600/30 text-purple-300">
+                              {getSourceLabel(participant.source)}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 text-white/50 text-xs">
+                            {new Date(participant.created_at).toLocaleDateString('fr-FR')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {chatParticipants.length > 20 && (
+                    <p className="text-white/40 text-xs text-center mt-2">
+                      + {chatParticipants.length - 20} autres contacts
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
