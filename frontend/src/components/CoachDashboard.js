@@ -6190,9 +6190,64 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
             {/* Section CRM - Participants avec scroll et suppression */}
             <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                📇 Contacts CRM ({filteredChatParticipants.length}{conversationSearch ? `/${chatParticipants.length}` : ''})
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  📇 Contacts CRM ({filteredChatParticipants.length}{conversationSearch ? `/${chatParticipants.length}` : ''})
+                </h3>
+                {/* Bouton Export CSV */}
+                <button
+                  onClick={() => {
+                    try {
+                      // Calculer le montant total des commandes par email
+                      const revenueByEmail = {};
+                      reservations.forEach(r => {
+                        if (r.userEmail) {
+                          revenueByEmail[r.userEmail] = (revenueByEmail[r.userEmail] || 0) + (r.totalPrice || 0);
+                        }
+                      });
+                      
+                      // Construire le CSV avec BOM UTF-8
+                      const BOM = '\uFEFF';
+                      const headers = ['Nom', 'Email', 'WhatsApp', 'Date inscription', 'Source', 'Montant commandes (CHF)'];
+                      const rows = chatParticipants.map(p => [
+                        p.name || '',
+                        p.email || '',
+                        p.whatsapp || '',
+                        p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '',
+                        p.source || '',
+                        revenueByEmail[p.email] || '0'
+                      ]);
+                      
+                      const csvContent = BOM + [
+                        headers.join(';'),
+                        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+                      ].join('\n');
+                      
+                      // Télécharger le fichier
+                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `contacts_crm_${new Date().toISOString().split('T')[0]}.csv`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                      
+                      console.log(`✅ Export CSV: ${chatParticipants.length} contacts exportés`);
+                    } catch (error) {
+                      console.error('Erreur export CSV:', error);
+                      alert('❌ Erreur lors de l\'export: ' + error.message);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff' }}
+                  title="Exporter tous les contacts en CSV"
+                  data-testid="export-crm-csv-btn"
+                >
+                  📥 Exporter CSV
+                </button>
+              </div>
               {filteredChatParticipants.length === 0 ? (
                 <p className="text-white/50 text-sm text-center py-4">
                   {conversationSearch ? 'Aucun contact correspondant' : 'Aucun contact enregistré via le chat'}
