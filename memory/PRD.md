@@ -801,6 +801,25 @@ Les fonctions d'envoi sont maintenant **au niveau module** (hors React) pour év
    - Toggle AI mode testé
    - Coach notification en mode human testée
 
+### Interface Coach Améliorée (21 Jan 2026)
+1. ✅ **Bouton Test Notification Push**:
+   - Bouton orange "🔔 Test Notif" dans l'en-tête Conversations
+   - Demande automatique de permission si nécessaire
+   - Enregistre le Service Worker et affiche une notification test
+   - Messages d'erreur clairs si non supporté ou bloqué
+
+2. ✅ **Export CSV des Contacts CRM**:
+   - Bouton violet "📥 Exporter CSV" dans la section CRM
+   - Colonnes: Nom, Email, WhatsApp, Date inscription, Source, Montant commandes
+   - Format UTF-8 BOM pour compatibilité Excel
+   - Nom de fichier automatique: `contacts_crm_YYYY-MM-DD.csv`
+
+3. ✅ **Guide Utilisateur**:
+   - Fichier `/public/guide-utilisateur.md` accessible en ligne
+   - Instructions pour activer les notifications (iPhone/Android)
+   - Guide pour télécharger les contacts CSV
+   - Explication des modes IA vs Humain
+
 ### P1 - À faire
 - [x] ~~**CRITICAL: Refactoring de App.js**~~ - ✅ COMPLÉTÉ - App.js réduit de 52%
 - [x] ~~**Notifications email après réservation**~~ - ✅ COMPLÉTÉ
