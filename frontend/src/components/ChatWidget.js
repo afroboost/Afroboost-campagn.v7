@@ -920,6 +920,8 @@ export const ChatWidget = () => {
                   >
                     {isCommunityMode 
                       ? '👥 Mode Communauté - Plusieurs participants' 
+                      : privateChatTarget
+                      ? `💬 Discussion privée avec ${privateChatTarget.name}`
                       : '👤 Mode Humain - Le coach vous répondra'}
                   </div>
                 )}
@@ -936,7 +938,14 @@ export const ChatWidget = () => {
                   }}
                 >
                   {messages.map((msg, idx) => (
-                    <MessageBubble key={idx} msg={msg} isUser={msg.type === 'user'} />
+                    <MessageBubble 
+                      key={idx} 
+                      msg={msg} 
+                      isUser={msg.type === 'user' && msg.senderId === participantId}
+                      onParticipantClick={startPrivateChat}
+                      isCommunity={isCommunityMode}
+                      currentUserId={participantId}
+                    />
                   ))}
                   
                   {isLoading && (
