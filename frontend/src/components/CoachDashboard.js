@@ -1243,44 +1243,60 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   };
 
-  // === FONCTION D'ENVOI MESSAGE COACH - INFAILLIBLE ===
+  // === FONCTION D'ENVOI MESSAGE COACH - RECONSTRUCTION COMPLÈTE ===
   const handleSendMessage = async () => {
-    // Vérifier le message
-    if (!coachMessage.trim()) return;
-    
-    // Forcer la session si elle est indéfinie
-    const sessionId = selectedSession?.id || chatSessions[0]?.id;
-    
-    if (!sessionId) {
-      console.error("Aucune session disponible");
-      return;
-    }
-    
-    // Remplacer les tags emoji par les images
-    let messageContent = coachMessage.trim();
-    for (const emoji of customEmojis) {
-      const tag = `[emoji:${emoji.id}]`;
-      if (messageContent.includes(tag)) {
-        messageContent = messageContent.replace(tag, `<img src="${emoji.image_data}" alt="${emoji.name}" style="width:24px;height:24px;display:inline;vertical-align:middle" />`);
-      }
-    }
-    
     try {
-      await axios.post(`${API}/chat/coach-response`, {
-        session_id: sessionId,
+      // 1. Vérifier le message
+      const msg = coachMessage?.trim();
+      if (!msg) {
+        alert('ERREUR: Le message est vide');
+        return;
+      }
+      
+      // 2. Récupérer la session (depuis selectedSession OU première session disponible)
+      const sid = selectedSession?.id || (chatSessions.length > 0 ? chatSessions[0].id : null);
+      if (!sid) {
+        alert('ERREUR: Aucune session disponible. Sessions = ' + chatSessions.length);
+        return;
+      }
+      
+      // 3. Préparer le message (emojis)
+      let messageContent = msg;
+      if (customEmojis && customEmojis.length > 0) {
+        for (const emoji of customEmojis) {
+          const tag = `[emoji:${emoji.id}]`;
+          if (messageContent.includes(tag)) {
+            messageContent = messageContent.replace(tag, `<img src="${emoji.image_data}" alt="${emoji.name}" style="width:24px;height:24px;display:inline;vertical-align:middle" />`);
+          }
+        }
+      }
+      
+      // 4. Envoi HTTP
+      const response = await axios.post(`${API}/chat/coach-response`, {
+        session_id: sid,
         message: messageContent,
         coach_name: user?.name || 'Coach'
       });
-      setCoachMessage('');
-      loadSessionMessages(sessionId);
       
-      // Auto-sélectionner la session si elle ne l'était pas
-      if (!selectedSession) {
-        const session = chatSessions.find(s => s.id === sessionId);
-        if (session) setSelectedSession(session);
+      // 5. Si succès, vider le champ et recharger
+      if (response.data && response.data.success) {
+        setCoachMessage(''); // VIDE LE CHAMP
+        loadSessionMessages(sid);
+        
+        // Auto-sélectionner la session si pas déjà fait
+        if (!selectedSession) {
+          const session = chatSessions.find(s => s.id === sid);
+          if (session) setSelectedSession(session);
+        }
+      } else {
+        alert('ERREUR SERVEUR: ' + JSON.stringify(response.data));
       }
+      
     } catch (err) {
-      console.error("Erreur envoi message:", err);
+      // 6. Afficher l'erreur exacte
+      const errorMsg = err?.response?.data?.detail || err?.message || 'Erreur inconnue';
+      alert('EXCEPTION: ' + errorMsg);
+      console.error('handleSendMessage error:', err);
     }
   };
 
