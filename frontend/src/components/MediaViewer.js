@@ -63,9 +63,9 @@ const MediaViewer = ({ slug }) => {
     );
   }
 
-  // Construire l'URL YouTube embed épurée (sans branding, sans recommandations)
+  // Construire l'URL YouTube embed WHITE-LABEL (masque tous les contrôles YouTube)
   const youtubeEmbedUrl = media.youtube_id 
-    ? `https://www.youtube.com/embed/${media.youtube_id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&cc_load_policy=0&playsinline=1`
+    ? `https://www.youtube.com/embed/${media.youtube_id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&cc_load_policy=0&playsinline=1&fs=1&controls=1&disablekb=0`
     : media.video_url;
 
   const shareUrl = `https://afroboosteur.com/v/${media.slug}`;
@@ -96,12 +96,12 @@ const MediaViewer = ({ slug }) => {
 
       {/* Contenu principal */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Thumbnail personnalisée ou titre avant la vidéo */}
+        {/* Titre */}
         <h1 className="text-white text-2xl md:text-3xl font-bold mb-6 text-center" data-testid="media-title">
           {media.title}
         </h1>
 
-        {/* Lecteur vidéo - avec overlay pour masquer YouTube */}
+        {/* Lecteur vidéo WHITE-LABEL avec overlay anti-YouTube */}
         <div 
           className="relative w-full rounded-2xl overflow-hidden"
           style={{ 
@@ -111,6 +111,7 @@ const MediaViewer = ({ slug }) => {
           }}
           data-testid="video-container"
         >
+          {/* Iframe YouTube */}
           <iframe
             className="absolute top-0 left-0 w-full h-full"
             src={youtubeEmbedUrl}
@@ -118,6 +119,20 @@ const MediaViewer = ({ slug }) => {
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
+          />
+          
+          {/* Overlay transparent pour bloquer le logo YouTube (coin supérieur gauche) */}
+          <div 
+            className="absolute top-0 left-0 w-32 h-16 z-10"
+            style={{ pointerEvents: 'auto' }}
+            onClick={(e) => e.preventDefault()}
+          />
+          
+          {/* Overlay pour bloquer "Watch on YouTube" (coin inférieur droit) */}
+          <div 
+            className="absolute bottom-0 right-0 w-40 h-12 z-10"
+            style={{ pointerEvents: 'auto' }}
+            onClick={(e) => e.preventDefault()}
           />
         </div>
 
