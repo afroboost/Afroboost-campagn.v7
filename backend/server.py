@@ -3619,7 +3619,8 @@ async def create_media_link(data: MediaLinkCreate):
         "media_link": {
             "id": media_link["id"],
             "slug": media_link["slug"],
-            "url": f"https://afroboosteur.com/v/{media_link['slug']}",
+            "url": f"https://afroboosteur.com/api/share/{media_link['slug']}",
+            "viewer_url": f"https://afroboosteur.com/v/{media_link['slug']}",
             "thumbnail": media_link["thumbnail"]
         }
     }
