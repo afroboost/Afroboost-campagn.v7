@@ -1243,8 +1243,18 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   };
 
-  const sendCoachMessage = async () => {
-    if (!selectedSession || !coachMessage.trim()) return;
+  // === FONCTION D'ENVOI MESSAGE COACH - INFAILLIBLE ===
+  const handleSendMessage = async () => {
+    // Vérifier le message
+    if (!coachMessage.trim()) return;
+    
+    // Forcer la session si elle est indéfinie
+    const sessionId = selectedSession?.id || chatSessions[0]?.id;
+    
+    if (!sessionId) {
+      console.error("Aucune session disponible");
+      return;
+    }
     
     // Remplacer les tags emoji par les images
     let messageContent = coachMessage.trim();
@@ -1257,14 +1267,20 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     
     try {
       await axios.post(`${API}/chat/coach-response`, {
-        session_id: selectedSession.id,
+        session_id: sessionId,
         message: messageContent,
         coach_name: user?.name || 'Coach'
       });
       setCoachMessage('');
-      loadSessionMessages(selectedSession.id);
+      loadSessionMessages(sessionId);
+      
+      // Auto-sélectionner la session si elle ne l'était pas
+      if (!selectedSession) {
+        const session = chatSessions.find(s => s.id === sessionId);
+        if (session) setSelectedSession(session);
+      }
     } catch (err) {
-      console.error("Error sending coach message:", err);
+      console.error("Erreur envoi message:", err);
     }
   };
 
