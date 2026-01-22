@@ -19,8 +19,8 @@ import {
 import { LandingSectionSelector } from "./SearchBar";
 import { playNotificationSound, linkifyText } from "../services/notificationService";
 
-// === API BACKEND URL ===
-const API = process.env.REACT_APP_BACKEND_URL || '';
+// === API BACKEND URL (UNIQUE) ===
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // ============================================================
 // === FONCTIONS AUTONOMES - ENVOI EMAIL VIA RESEND (BACKEND)
