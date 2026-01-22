@@ -121,18 +121,33 @@ const MediaViewer = ({ slug }) => {
             allowFullScreen
           />
           
-          {/* Overlay transparent pour bloquer le logo YouTube (coin supérieur gauche) */}
+          {/* Overlay COMPLET en bas pour bloquer "Watch on YouTube" */}
           <div 
-            className="absolute top-0 left-0 w-32 h-16 z-10"
-            style={{ pointerEvents: 'auto' }}
-            onClick={(e) => e.preventDefault()}
-          />
+            className="absolute bottom-0 left-0 right-0 h-14 z-20"
+            style={{ 
+              background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 50%, transparent 100%)',
+              pointerEvents: 'auto',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              paddingBottom: '8px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span style={{ 
+              color: 'rgba(255,255,255,0.4)', 
+              fontSize: '11px',
+              fontFamily: 'Arial, sans-serif'
+            }}>
+              Lecture via Afroboost
+            </span>
+          </div>
           
-          {/* Overlay pour bloquer "Watch on YouTube" (coin inférieur droit) */}
+          {/* Overlay coin supérieur gauche (logo YouTube) */}
           <div 
-            className="absolute bottom-0 right-0 w-40 h-12 z-10"
+            className="absolute top-0 left-0 w-20 h-14 z-20"
             style={{ pointerEvents: 'auto' }}
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
 
