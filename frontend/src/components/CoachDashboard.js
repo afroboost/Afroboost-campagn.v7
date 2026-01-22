@@ -1453,7 +1453,13 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   useEffect(() => {
     if (tab !== 'conversations') return;
     
-    const interval = setInterval(checkNewMessages, 5000);
+    const interval = setInterval(() => {
+      checkNewMessages();
+      // Rafraîchir aussi la liste des sessions
+      axios.get(`${API}/chat/sessions`).then(res => {
+        setChatSessions(res.data);
+      }).catch(() => {});
+    }, 5000);
     return () => clearInterval(interval);
   }, [tab, checkNewMessages]);
 
