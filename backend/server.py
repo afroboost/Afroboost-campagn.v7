@@ -3373,7 +3373,7 @@ async def notify_coach_new_message(participant_name: str, message_preview: str, 
             <p style="font-size: 12px; color: #aaaaaa; margin-bottom: 20px;">
                 Ce message nécessite votre réponse en mode humain.
             </p>
-            <a href="https://afroboost.ch/coach" 
+            <a href="https://afroboosteur.com/coach" 
                style="display: inline-block; background: linear-gradient(135deg, #d91cd2, #8b5cf6); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
                 Répondre maintenant
             </a>
