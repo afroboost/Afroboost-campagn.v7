@@ -5355,16 +5355,33 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               {/* Media Preview */}
               {newCampaign.mediaUrl && (
                 <div className="mb-4">
-                  <p className="text-white text-sm mb-2">Aperçu ({newCampaign.mediaFormat}):</p>
+                  <p className="text-white text-sm mb-2">
+                    Aperçu ({newCampaign.mediaFormat}):
+                    {newCampaign.mediaUrl.includes('/v/') && (
+                      <span className="ml-2 text-purple-400 text-xs">📎 Lien média interne détecté</span>
+                    )}
+                  </p>
                   <div className="flex justify-center">
                     <div style={{ 
                       width: newCampaign.mediaFormat === "9:16" ? '150px' : '280px',
                       height: newCampaign.mediaFormat === "9:16" ? '267px' : '158px',
                       background: '#000', borderRadius: '8px', overflow: 'hidden',
-                      border: '1px solid rgba(139, 92, 246, 0.3)'
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                      <img src={newCampaign.mediaUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                        onError={(e) => { e.target.style.display = 'none'; }} />
+                      {resolvedThumbnail ? (
+                        <img 
+                          src={resolvedThumbnail} 
+                          alt="Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          onError={(e) => { 
+                            e.target.style.display = 'none';
+                            e.target.parentNode.innerHTML = '<span style="color:#888;font-size:12px;">Aperçu non disponible</span>';
+                          }} 
+                        />
+                      ) : (
+                        <span style={{ color: '#888', fontSize: '12px' }}>Chargement...</span>
+                      )}
                     </div>
                   </div>
                 </div>
