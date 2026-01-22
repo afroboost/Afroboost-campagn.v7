@@ -3590,6 +3590,58 @@ async def get_media_link(slug: str):
     
     return media
 
+@api_router.get("/media/{slug}/og")
+async def get_media_opengraph(slug: str):
+    """
+    Retourne une page HTML avec les meta tags OpenGraph pour les previews WhatsApp/réseaux sociaux.
+    """
+    media = await db.media_links.find_one({"slug": slug.lower()}, {"_id": 0})
+    if not media:
+        raise HTTPException(status_code=404, detail="Média non trouvé")
+    
+    # Générer la page HTML avec meta tags
+    html = f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{media.get('title', 'Afroboost')}</title>
+    
+    <!-- OpenGraph pour WhatsApp/Facebook/LinkedIn -->
+    <meta property="og:title" content="{media.get('title', 'Afroboost')}" />
+    <meta property="og:description" content="{media.get('description', 'Découvrez cette vidéo exclusive Afroboost')[:200]}" />
+    <meta property="og:image" content="{media.get('thumbnail', '')}" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="720" />
+    <meta property="og:url" content="https://afroboosteur.com/v/{slug}" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:site_name" content="Afroboost" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{media.get('title', 'Afroboost')}" />
+    <meta name="twitter:description" content="{media.get('description', 'Découvrez cette vidéo exclusive Afroboost')[:200]}" />
+    <meta name="twitter:image" content="{media.get('thumbnail', '')}" />
+    
+    <!-- Redirection automatique vers la page React -->
+    <script>
+        window.location.href = "https://afroboosteur.com/v/{slug}";
+    </script>
+</head>
+<body style="background: #000; color: #fff; font-family: system-ui; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <div style="text-align: center;">
+        <h1 style="background: linear-gradient(135deg, #d91cd2, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            {media.get('title', 'Afroboost')}
+        </h1>
+        <p>Redirection en cours...</p>
+        <a href="https://afroboosteur.com/v/{slug}" style="color: #d91cd2;">Cliquez ici si la redirection ne fonctionne pas</a>
+    </div>
+</body>
+</html>"""
+    
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html, status_code=200)
+
 @api_router.get("/media")
 async def list_media_links():
     """Liste tous les liens média créés"""
