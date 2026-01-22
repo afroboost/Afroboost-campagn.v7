@@ -983,17 +983,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [instagramProfile, setInstagramProfile] = useState("afroboost"); // Profil Instagram par défaut
   const [messageCopied, setMessageCopied] = useState(false);
 
-  // === EMAILJS STATE ===
-  const [emailJSConfig, setEmailJSConfig] = useState(() => {
-    // Charger la config de manière synchrone depuis localStorage
-    const config = getEmailJSConfig();
-    return config;
-  });
-  const [showEmailJSConfig, setShowEmailJSConfig] = useState(false);
-  const [emailSendingProgress, setEmailSendingProgress] = useState(null); // {current, total, status, name}
-  const [emailSendingResults, setEmailSendingResults] = useState(null); // {sent, failed, errors}
+  // === EMAIL RESEND STATE (remplace EmailJS) ===
+  const [emailSendingProgress, setEmailSendingProgress] = useState(null);
+  const [emailSendingResults, setEmailSendingResults] = useState(null);
   const [testEmailAddress, setTestEmailAddress] = useState('');
-  const [testEmailStatus, setTestEmailStatus] = useState(null); // 'sending', 'success', 'error'
+  const [testEmailStatus, setTestEmailStatus] = useState(null);
 
   // === WHATSAPP API STATE ===
   const [whatsAppConfig, setWhatsAppConfig] = useState(() => getWhatsAppConfig());
@@ -1005,8 +999,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
   // === ENVOI GROUPÉ STATE ===
   const [bulkSendingInProgress, setBulkSendingInProgress] = useState(false);
-  const [bulkSendingProgress, setBulkSendingProgress] = useState(null); // {channel, current, total, name}
-  const [bulkSendingResults, setBulkSendingResults] = useState(null); // {email: {sent, failed}, whatsapp: {sent, failed}}
+  const [bulkSendingProgress, setBulkSendingProgress] = useState(null);
+  const [bulkSendingResults, setBulkSendingResults] = useState(null);
 
   // === IA WHATSAPP STATE ===
   const [aiConfig, setAiConfig] = useState({ enabled: false, systemPrompt: '', model: 'gpt-4o-mini', provider: 'openai', lastMediaUrl: '' });
