@@ -983,6 +983,19 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [instagramProfile, setInstagramProfile] = useState("afroboost"); // Profil Instagram par défaut
   const [messageCopied, setMessageCopied] = useState(false);
 
+  // === MÉDIA LINKS STATE (Lecteur Afroboost) ===
+  const [mediaLinks, setMediaLinks] = useState([]);
+  const [showMediaLinkForm, setShowMediaLinkForm] = useState(false);
+  const [newMediaLink, setNewMediaLink] = useState({
+    slug: '',
+    video_url: '',
+    title: '',
+    description: '',
+    custom_thumbnail: '',
+    cta_text: '',
+    cta_link: ''
+  });
+
   // === EMAIL RESEND STATE (remplace EmailJS) ===
   const [emailSendingProgress, setEmailSendingProgress] = useState(null);
   const [emailSendingResults, setEmailSendingResults] = useState(null);
