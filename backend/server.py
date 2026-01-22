@@ -3723,6 +3723,190 @@ async def delete_media_link(slug: str):
         raise HTTPException(status_code=404, detail="Média non trouvé")
     return {"success": True, "deleted": slug}
 
+# ==================== ENDPOINT DE PARTAGE AVEC OPENGRAPH ====================
+# Cet endpoint est ACCESSIBLE via /api/share/{slug} et sert les balises OG pour WhatsApp
+
+@api_router.get("/share/{slug}")
+async def share_media_with_opengraph(slug: str, request: Request):
+    """
+    URL DE PARTAGE PRINCIPALE pour WhatsApp/réseaux sociaux.
+    
+    IMPORTANT: Utilisez https://afroboosteur.com/api/share/{slug} pour partager !
+    Cette URL passe par le backend et sert les balises OpenGraph aux crawlers.
+    
+    Workflow:
+    1. WhatsApp/Facebook crawle cette URL
+    2. Le backend retourne les balises og:image, og:title, etc.
+    3. L'utilisateur qui clique est redirigé vers /v/{slug} (frontend React)
+    """
+    media = await db.media_links.find_one({"slug": slug.lower()}, {"_id": 0})
+    if not media:
+        raise HTTPException(status_code=404, detail="Média non trouvé")
+    
+    # Incrémenter les vues
+    await db.media_links.update_one({"slug": slug.lower()}, {"$inc": {"views": 1}})
+    
+    # Échapper les caractères spéciaux pour éviter XSS
+    title = (media.get('title', 'Afroboost') or 'Afroboost').replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+    description = (media.get('description', 'Découvrez cette vidéo exclusive Afroboost') or 'Découvrez cette vidéo exclusive Afroboost')[:200].replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+    thumbnail = media.get('custom_thumbnail') or media.get('thumbnail') or ''
+    youtube_id = media.get('youtube_id', '')
+    cta_text = media.get('cta_text', '')
+    cta_link = media.get('cta_link', '')
+    
+    # URL de partage et URL du viewer
+    share_url = f"https://afroboosteur.com/api/share/{slug}"
+    viewer_url = f"https://afroboosteur.com/v/{slug}"
+    
+    # Générer la page HTML avec meta tags OpenGraph COMPLETS
+    html = f"""<!DOCTYPE html>
+<html lang="fr" prefix="og: https://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} - Afroboost</title>
+    
+    <!-- ===== OPENGRAPH POUR WHATSAPP/FACEBOOK/LINKEDIN ===== -->
+    <meta property="og:type" content="video.other" />
+    <meta property="og:site_name" content="Afroboost" />
+    <meta property="og:title" content="{title}" />
+    <meta property="og:description" content="{description}" />
+    <meta property="og:url" content="{share_url}" />
+    
+    <!-- IMAGE - CRITIQUE POUR WHATSAPP -->
+    <meta property="og:image" content="{thumbnail}" />
+    <meta property="og:image:secure_url" content="{thumbnail}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="720" />
+    <meta property="og:image:alt" content="{title}" />
+    
+    <!-- VIDEO (optionnel mais aide WhatsApp) -->
+    {f'<meta property="og:video" content="https://www.youtube.com/embed/{youtube_id}" />' if youtube_id else ''}
+    {f'<meta property="og:video:secure_url" content="https://www.youtube.com/embed/{youtube_id}" />' if youtube_id else ''}
+    {f'<meta property="og:video:type" content="text/html" />' if youtube_id else ''}
+    {f'<meta property="og:video:width" content="1280" />' if youtube_id else ''}
+    {f'<meta property="og:video:height" content="720" />' if youtube_id else ''}
+    
+    <!-- TWITTER CARD -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@afroboost" />
+    <meta name="twitter:title" content="{title}" />
+    <meta name="twitter:description" content="{description}" />
+    <meta name="twitter:image" content="{thumbnail}" />
+    
+    <!-- WHATSAPP SPECIFIQUE -->
+    <meta property="al:web:url" content="{viewer_url}" />
+    
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            background: linear-gradient(180deg, #000 0%, #1a0a1f 100%);
+            min-height: 100vh;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }}
+        .container {{
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }}
+        .logo {{
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #d91cd2, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+        }}
+        .thumbnail {{
+            width: 100%;
+            max-width: 480px;
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(217, 28, 210, 0.4);
+            margin-bottom: 20px;
+        }}
+        h1 {{
+            font-size: 24px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }}
+        p {{
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }}
+        .cta {{
+            display: inline-block;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #d91cd2, #8b5cf6);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 18px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(217, 28, 210, 0.4);
+        }}
+        .cta:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(217, 28, 210, 0.6);
+        }}
+        .loader {{
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(217, 28, 210, 0.3);
+            border-top-color: #d91cd2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }}
+        @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+        .redirect-msg {{
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 30px;
+        }}
+    </style>
+    
+    <!-- REDIRECTION AUTOMATIQUE VERS LE LECTEUR -->
+    <script>
+        // Redirection après un court délai pour permettre aux crawlers de lire les meta tags
+        setTimeout(function() {{
+            window.location.href = "{viewer_url}";
+        }}, 1500);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎧 Afroboost</div>
+        
+        {f'<img src="{thumbnail}" alt="{title}" class="thumbnail" />' if thumbnail else ''}
+        
+        <h1>{title}</h1>
+        <p>{description}</p>
+        
+        <a href="{viewer_url}" class="cta">
+            ▶️ {cta_text if cta_text else 'Voir la vidéo'}
+        </a>
+        
+        <p class="redirect-msg">
+            <span class="loader" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px;"></span>
+            Redirection en cours...
+        </p>
+    </div>
+</body>
+</html>"""
+    
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html, status_code=200)
+
 # ==================== ROUTE RACINE /v/{slug} POUR OPENGRAPH ====================
 # Cette route est essentielle pour que WhatsApp puisse afficher les aperçus riches
 
