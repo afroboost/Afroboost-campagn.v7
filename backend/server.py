@@ -3444,14 +3444,20 @@ async def send_campaign_email(request: Request):
         thumbnail_url = None
         click_url = media_url
         
+        # Déterminer l'URL de base du frontend (production ou preview)
+        frontend_base = os.environ.get('FRONTEND_URL', 'https://afroboosteur.com')
+        # Si pas configuré, utiliser l'URL du backend sans /api
+        if not frontend_base or frontend_base == 'https://afroboosteur.com':
+            backend_url = os.environ.get('BACKEND_URL', '')
+            if 'preview.emergentagent.com' in backend_url:
+                frontend_base = backend_url
+        
         # Vérifier si c'est un lien média interne
-        # Formats supportés: /v/slug, /api/share/slug, afroboosteur.com/v/slug, afroboosteur.com/api/share/slug
+        # Formats supportés: /v/slug, /api/share/slug, afroboosteur.com/v/slug
         slug = None
         if '/api/share/' in media_url:
-            # Extraire le slug: afroboosteur.com/api/share/my-slug -> my-slug
             slug = media_url.split('/api/share/')[-1].split('?')[0].split('#')[0].strip('/')
         elif '/v/' in media_url:
-            # Extraire le slug: afroboosteur.com/v/my-slug -> my-slug
             slug = media_url.split('/v/')[-1].split('?')[0].split('#')[0].strip('/')
         
         if slug:
@@ -3459,8 +3465,8 @@ async def send_campaign_email(request: Request):
             media_link = await db.media_links.find_one({"slug": slug.lower()}, {"_id": 0})
             if media_link:
                 thumbnail_url = media_link.get("thumbnail") or media_link.get("custom_thumbnail")
-                click_url = f"https://afroboosteur.com/v/{slug}"  # URL du lecteur frontend
-                logger.info(f"Media link found for slug {slug}: thumbnail={thumbnail_url}")
+                click_url = f"{frontend_base}/v/{slug}"  # URL du lecteur frontend
+                logger.info(f"Media link found for slug {slug}: click_url={click_url}, thumbnail={thumbnail_url}")
             else:
                 logger.warning(f"Media link not found for slug: {slug}")
         else:
