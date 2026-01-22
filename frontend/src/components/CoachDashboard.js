@@ -33,9 +33,10 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
  * @param {string} recipientName - Nom du destinataire
  * @param {string} subject - Sujet de l'email
  * @param {string} text - Corps du message
+ * @param {string} mediaUrl - URL du visuel (optionnel, peut être un lien interne /v/slug)
  * @returns {Promise<{success: boolean, response?: any, error?: string}>}
  */
-const performEmailSend = async (destination, recipientName = 'Client', subject = 'Afroboost', text = '') => {
+const performEmailSend = async (destination, recipientName = 'Client', subject = 'Afroboost', text = '', mediaUrl = null) => {
   try {
     // Validation des paramètres
     if (!destination || !destination.includes('@')) {
@@ -52,6 +53,7 @@ const performEmailSend = async (destination, recipientName = 'Client', subject =
     console.log('RESEND_DEBUG: Envoi campagne via API');
     console.log('RESEND_DEBUG: Destination =', destination);
     console.log('RESEND_DEBUG: Sujet =', subject);
+    console.log('RESEND_DEBUG: Media URL =', mediaUrl || 'Aucun');
     console.log('========================================');
     
     // Appel API backend Resend
@@ -62,7 +64,8 @@ const performEmailSend = async (destination, recipientName = 'Client', subject =
         to_email: String(destination).trim(),
         to_name: String(recipientName || 'Client').trim(),
         subject: String(subject || 'Afroboost').trim(),
-        message: String(text).trim()
+        message: String(text).trim(),
+        media_url: mediaUrl ? String(mediaUrl).trim() : null
       })
     });
     
