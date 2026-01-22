@@ -5360,8 +5360,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 <div className="mb-4">
                   <p className="text-white text-sm mb-2">
                     Aperçu ({newCampaign.mediaFormat}):
-                    {newCampaign.mediaUrl.includes('/v/') && (
-                      <span className="ml-2 text-purple-400 text-xs">📎 Lien média interne détecté</span>
+                    {(newCampaign.mediaUrl.includes('/v/') || newCampaign.mediaUrl.includes('/api/share/')) && (
+                      <span className="ml-2 text-green-400 text-xs">✅ Lien média interne détecté</span>
                     )}
                   </p>
                   <div className="flex justify-center">
