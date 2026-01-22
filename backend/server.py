@@ -3467,47 +3467,43 @@ async def send_campaign_email(request: Request):
             # URL externe directe (image)
             thumbnail_url = media_url
         
-        # Générer le HTML de l'image cliquable
+        # Générer le HTML de l'image cliquable - SIMPLE et PROPRE
         if thumbnail_url:
-            media_html = f"""
-            <div style="margin-bottom: 25px; text-align: center;">
-                <a href="{click_url}" target="_blank" style="display: inline-block; text-decoration: none;">
-                    <img src="{thumbnail_url}" alt="Voir la vidéo" 
-                         style="max-width: 100%; width: 560px; height: auto; border-radius: 12px; 
-                                box-shadow: 0 4px 20px rgba(217, 28, 210, 0.3);
-                                border: 2px solid rgba(217, 28, 210, 0.5); display: block;" />
-                </a>
-                <p style="margin-top: 15px; margin-bottom: 0;">
-                    <a href="{click_url}" target="_blank" 
-                       style="display: inline-block; padding: 14px 28px; 
-                              background: linear-gradient(135deg, #d91cd2, #8b5cf6); 
-                              color: white; text-decoration: none; border-radius: 8px;
-                              font-weight: bold; font-size: 16px;">
-                        ▶️ Voir la vidéo
-                    </a>
-                </p>
-            </div>
-            """
+            media_html = f'''<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+<tr><td align="center">
+<a href="{click_url}" target="_blank"><img src="{thumbnail_url}" width="560" style="max-width:100%;height:auto;border-radius:8px;" alt=""></a>
+</td></tr>
+<tr><td align="center" style="padding-top:15px;">
+<a href="{click_url}" target="_blank" style="display:inline-block;padding:12px 24px;background:#d91cd2;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Voir la vidéo</a>
+</td></tr>
+</table>'''
     
-    # Template HTML stylisé avec média EN HAUT
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #d91cd2, #8b5cf6); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">Afroboost</h1>
-        </div>
-        <div style="background: #1a1a1a; padding: 30px; color: #ffffff; border-radius: 0 0 12px 12px;">
-            {media_html}
-            <div style="font-size: 16px; line-height: 1.6;">
-                {message.replace(chr(10), '<br>')}
-            </div>
-            <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-            <p style="font-size: 12px; color: #888; text-align: center;">
-                Cet email vous a été envoyé par Afroboost<br>
-                <a href="https://afroboosteur.com" style="color: #d91cd2;">afroboosteur.com</a>
-            </p>
-        </div>
-    </div>
-    """
+    # Template HTML SIMPLE pour emails
+    html_content = f'''<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#000000;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#000000;">
+<tr><td align="center" style="padding:20px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+<tr><td style="background:#d91cd2;padding:20px;text-align:center;border-radius:12px 12px 0 0;">
+<h1 style="margin:0;color:#ffffff;font-family:Arial,sans-serif;font-size:24px;">Afroboost</h1>
+</td></tr>
+<tr><td style="background:#1a1a1a;padding:30px;border-radius:0 0 12px 12px;">
+{media_html}
+<p style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;line-height:1.6;margin:0;">
+{message.replace(chr(10), '<br>')}
+</p>
+<hr style="border:none;border-top:1px solid #333;margin:20px 0;">
+<p style="color:#888888;font-family:Arial,sans-serif;font-size:12px;text-align:center;margin:0;">
+Afroboost - <a href="https://afroboosteur.com" style="color:#d91cd2;">afroboosteur.com</a>
+</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>'''
     
     try:
         params = {
