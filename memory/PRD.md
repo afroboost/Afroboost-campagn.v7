@@ -780,9 +780,11 @@ Les fonctions d'envoi sont maintenant **au niveau module** (hors React) pour év
    - Clés VAPID configurées dans backend/.env
    - Intégration avec `pywebpush` pour l'envoi serveur
 
-2. ✅ **Backup Email via Resend (Simulation)**:
+2. ✅ **Email via Resend (PRODUCTION - 22 Jan 2026)**:
+   - Clé API Resend configurée dans backend/.env
+   - Domaine vérifié: `afroboosteur.com`
+   - Adresse d'expédition: `notifications@afroboosteur.com`
    - Fonction `send_backup_email()` envoie un email si la notification push échoue
-   - Mode simulation quand RESEND_API_KEY non configuré (logs dans backend.err.log)
    - Template HTML stylisé avec branding Afroboost
    - Collection `push_subscriptions` pour stocker les souscriptions
 
@@ -790,8 +792,7 @@ Les fonctions d'envoi sont maintenant **au niveau module** (hors React) pour év
    - Fonction `notify_coach_new_message()` notifie le coach par email
    - Appelée automatiquement quand un message arrive en mode "human"
    - Flag `coach_notified: true` dans la réponse API
-   - Mode simulation avec logs `[SIMULATION COACH EMAIL]`
-   - Récupère l'email du coach depuis `coach_auth`
+   - Email envoyé à l'adresse du coach depuis `coach_auth`
 
 4. ✅ **Tests automatisés**:
    - iteration_31: 14/14 backend tests (100%)
