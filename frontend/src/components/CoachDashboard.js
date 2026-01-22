@@ -35,109 +35,68 @@ const EMAILJS_SERVICE_ID = "service_8mrmxim";
 const EMAILJS_TEMPLATE_ID = "template_3n1u86p";
 const EMAILJS_PUBLIC_KEY = "5LfgQSIEQoqq_XSqt";
 
-// === 2. ENVOI FRONTEND UNIQUEMENT - PAS DE BACKEND ===
-const envoyerEmailDirect = async (contactEmail, texteIA) => {
-  
-  // === 3. LIAISON IA - Texte de l'Agent IA injecté dans 'message' ===
-  const messageIA = String(texteIA || "");
-  
-  // === 4. BYPASS TOTAL - Try/catch pour ignorer DataCloneError ===
-  try {
-    const response = await emailjs.send(
-      "service_8mrmxim",
-      "template_3n1u86p",
-      { message: messageIA, to_email: contactEmail },
-      "5LfgQSIEQoqq_XSqt"
-    );
-    
-    // === 5. PREUVE - Alerte si status 200 ===
-    if (response.status === 200) {
-      window.alert("L'IA A ENVOYÉ L'EMAIL EN DIRECT !");
-    }
-    return true;
-    
-  } catch (e) {
-    console.log("ERREUR EMAILJS:", e);
-    if (e?.name === 'DataCloneError') {
-      window.alert("L'IA A ENVOYÉ L'EMAIL EN DIRECT !");
-      return true;
-    }
-    return false;
-  }
-};
+// === API BACKEND URL ===
+const API = process.env.REACT_APP_BACKEND_URL || '';
 
 // ============================================================
-// === FONCTIONS AUTONOMES - ISOLÉES DE LA GESTION D'ÉTAT ===
+// === FONCTIONS AUTONOMES - ENVOI EMAIL VIA RESEND (BACKEND)
 // ============================================================
 
 /**
- * FONCTION AUTONOME D'ENVOI EMAIL
- * Séparée de React pour éviter les conflits avec PostHog/state
+ * FONCTION D'ENVOI EMAIL VIA RESEND (API BACKEND)
+ * Remplace EmailJS pour un contrôle total côté serveur
  * @param {string} destination - Email du destinataire
  * @param {string} recipientName - Nom du destinataire
  * @param {string} subject - Sujet de l'email
  * @param {string} text - Corps du message
  * @returns {Promise<{success: boolean, response?: any, error?: string}>}
  */
-/**
- * FONCTION AUTONOME D'ENVOI EMAIL - CONNEXION TECHNIQUE EMAILJS
- * 
- * IDENTIFIANTS FIXES (NE PAS MODIFIER):
- * - Service ID : service_8mrmxim
- * - Template ID : template_3n1u86p
- * - Public Key : 5LfgQSIEQoqq_XSqt
- * 
- * Le texte IA est injecté dans la variable {{message}} d'EmailJS
- */
 const performEmailSend = async (destination, recipientName = 'Client', subject = 'Afroboost', text = '') => {
-  
-  // === SUPPRESSION DU CRASH - TRY/CATCH GLOBAL ===
-  // L'erreur DataCloneError ne doit plus stopper l'envoi
   try {
-    
     // Validation des paramètres
     if (!destination || !destination.includes('@')) {
-      console.error('EMAILJS_DEBUG: Email invalide -', destination);
+      console.error('RESEND_DEBUG: Email invalide -', destination);
       return { success: false, error: 'Email invalide' };
     }
     
     if (!text || text.trim() === '') {
-      console.error('EMAILJS_DEBUG: Message vide');
+      console.error('RESEND_DEBUG: Message vide');
       return { success: false, error: 'Message vide' };
     }
     
-    // === INJECTION IA ===
-    // Le texte généré par l'IA (Prompt Système) est transmis à {{message}}
-    const params = {
-      to_email: String(destination).trim(),
-      to_name: String(recipientName || 'Client').trim(),
-      subject: String(subject || 'Afroboost').trim(),
-      message: String(text).trim()  // {{message}} dans le template EmailJS
-    };
-    
     console.log('========================================');
-    console.log('EMAILJS_DEBUG: Tentative d\'envoi');
-    console.log('EMAILJS_DEBUG: Destination =', params.to_email);
-    console.log('EMAILJS_DEBUG: Service =', EMAILJS_SERVICE_ID);
-    console.log('EMAILJS_DEBUG: Template =', EMAILJS_TEMPLATE_ID);
-    console.log('EMAILJS_DEBUG: Message (100 chars) =', params.message.substring(0, 100));
+    console.log('RESEND_DEBUG: Envoi campagne via API');
+    console.log('RESEND_DEBUG: Destination =', destination);
+    console.log('RESEND_DEBUG: Sujet =', subject);
     console.log('========================================');
     
-    // === LIAISON RÉELLE - APPEL EMAILJS ===
-    const response = await emailjs.send(
-      EMAILJS_SERVICE_ID,   // service_8mrmxim
-      EMAILJS_TEMPLATE_ID,  // template_3n1u86p
-      params,               // {to_email, to_name, subject, message}
-      EMAILJS_PUBLIC_KEY    // 5LfgQSIEQoqq_XSqt
-    );
+    // Appel API backend Resend
+    const response = await fetch(`${API}/api/campaigns/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to_email: String(destination).trim(),
+        to_name: String(recipientName || 'Client').trim(),
+        subject: String(subject || 'Afroboost').trim(),
+        message: String(text).trim()
+      })
+    });
     
-    // === DEBUG SUCCÈS ===
-    console.log('EMAILJS_DEBUG: SUCCÈS - Status =', response.status);
-    console.log('EMAILJS_DEBUG: Response text =', response.text);
+    const result = await response.json();
     
-    return { 
-      success: true, 
-      response,
+    if (result.success) {
+      console.log('RESEND_DEBUG: SUCCÈS - Email ID =', result.email_id);
+      return { success: true, response: result };
+    } else {
+      console.error('RESEND_DEBUG: ÉCHEC -', result.error);
+      return { success: false, error: result.error };
+    }
+    
+  } catch (error) {
+    console.error('RESEND_DEBUG: Exception -', error);
+    return { success: false, error: error.message };
+  }
+};
       debug: `EMAILJS_DEBUG: OK - ${response.status}`
     };
     
