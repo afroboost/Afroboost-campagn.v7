@@ -3656,6 +3656,122 @@ async def delete_media_link(slug: str):
         raise HTTPException(status_code=404, detail="Média non trouvé")
     return {"success": True, "deleted": slug}
 
+# ==================== ROUTE RACINE /v/{slug} POUR OPENGRAPH ====================
+# Cette route est essentielle pour que WhatsApp puisse afficher les aperçus riches
+
+@app.get("/v/{slug}")
+async def serve_media_opengraph_page(slug: str, request: Request):
+    """
+    Sert une page HTML avec les meta tags OpenGraph pour les previews WhatsApp.
+    WhatsApp/Facebook crawle cette URL et récupère les balises og:.
+    La page redirige ensuite vers le frontend React pour l'affichage.
+    """
+    media = await db.media_links.find_one({"slug": slug.lower()}, {"_id": 0})
+    if not media:
+        raise HTTPException(status_code=404, detail="Média non trouvé")
+    
+    # Échapper les caractères spéciaux pour éviter XSS
+    title = (media.get('title', 'Afroboost') or 'Afroboost').replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+    description = (media.get('description', 'Découvrez cette vidéo exclusive Afroboost') or '')[:200].replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+    thumbnail = media.get('thumbnail', '') or ''
+    
+    # Déterminer l'URL du frontend (production ou preview)
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://afroboosteur.com')
+    viewer_url = f"{frontend_url}/v/{slug}"
+    
+    # Générer la page HTML avec meta tags
+    html = f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    
+    <!-- OpenGraph pour WhatsApp/Facebook/LinkedIn -->
+    <meta property="og:title" content="{title}" />
+    <meta property="og:description" content="{description}" />
+    <meta property="og:image" content="{thumbnail}" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="720" />
+    <meta property="og:url" content="https://afroboosteur.com/v/{slug}" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:site_name" content="Afroboost" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{title}" />
+    <meta name="twitter:description" content="{description}" />
+    <meta name="twitter:image" content="{thumbnail}" />
+    
+    <style>
+        body {{
+            background: linear-gradient(180deg, #000 0%, #1a0a1f 100%);
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }}
+        .container {{
+            text-align: center;
+            max-width: 400px;
+        }}
+        h1 {{
+            background: linear-gradient(135deg, #d91cd2, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }}
+        .loader {{
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(217, 28, 210, 0.3);
+            border-top-color: #d91cd2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }}
+        @keyframes spin {{
+            to {{ transform: rotate(360deg); }}
+        }}
+        a {{
+            color: #d91cd2;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
+        }}
+    </style>
+    
+    <!-- Redirection automatique -->
+    <script>
+        // Rediriger vers le frontend React après un court délai
+        // Ce délai permet aux crawlers de lire les meta tags
+        setTimeout(function() {{
+            window.location.href = "{viewer_url}";
+        }}, 100);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <h1>{title}</h1>
+        <p>Chargement de la vidéo...</p>
+        <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+            <a href="{viewer_url}">Cliquez ici si vous n'êtes pas redirigé</a>
+        </p>
+    </div>
+</body>
+</html>"""
+    
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html, status_code=200)
+
 # Include router
 app.include_router(api_router)
 
