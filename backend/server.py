@@ -3510,52 +3510,53 @@ async def send_campaign_email(request: Request):
     # Preheader invisible pour la délivrabilité (apparaît dans l'aperçu Gmail)
     preheader_text = f"Salut {first_name}, découvre notre nouvelle vidéo exclusive !"
     
+    # LOG pour debug - vérifier l'URL de clic
+    logger.info(f"Email click_url FINAL: {click_url}")
+    
     html_content = f'''<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="x-apple-disable-message-reformatting">
-<title>Afroboost</title>
+<title>Message Afroboost</title>
 </head>
-<body style="margin:0;padding:0;background-color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
 
-<!-- PREHEADER INVISIBLE (Anti-Promotions) -->
-<div style="display:none;font-size:1px;color:#1a1a1a;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+<!-- PREHEADER INVISIBLE -->
+<div style="display:none;font-size:1px;color:#f5f5f5;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
 {preheader_text}
-&#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847;
 </div>
 
-<!-- SALUTATION TEXTE BRUT (Anti-Promotions) - Avant le design -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a1a;">
-<tr><td align="center" style="padding:20px 15px 5px 15px;">
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
-<tr><td style="color:#cccccc;font-size:14px;line-height:1.5;font-family:Arial,sans-serif;">
-Salut {first_name},
+<!-- WRAPPER -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f5f5;">
+<tr><td align="center" style="padding:20px 10px;">
+
+<!-- ========== TEXTE BRUT ANTI-PROMOTIONS (3 lignes AVANT le design) ========== -->
+<table width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+<tr><td style="color:#333333;font-size:14px;line-height:1.6;font-family:Arial,sans-serif;padding-bottom:15px;">
+Salut {first_name},<br><br>
+J'ai une nouvelle vidéo à te partager. Je pense qu'elle va te plaire !<br>
+Clique sur le bouton ci-dessous pour la découvrir.
 </td></tr>
 </table>
-</td></tr>
-</table>
 
-<!-- CARD PRINCIPALE -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a1a;">
-<tr><td align="center" style="padding:10px 15px 30px 15px;">
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#111111;border-radius:12px;overflow:hidden;">
+<!-- ========== CARD PRINCIPALE (taille réduite 480px) ========== -->
+<table width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background-color:#111111;border-radius:10px;overflow:hidden;">
 
-<!-- HEADER VIOLET GRADIENT -->
-<tr><td align="center" style="background:linear-gradient(135deg, #9333EA 0%, #A855F7 50%, #C084FC 100%);padding:20px 30px;">
-<a href="https://afroboosteur.com" style="color:#ffffff;font-size:26px;font-weight:bold;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:1px;">Afroboost</a>
+<!-- HEADER VIOLET -->
+<tr><td align="center" style="background-color:#9333EA;padding:16px 20px;">
+<a href="https://afroboosteur.com" style="color:#ffffff;font-size:22px;font-weight:bold;text-decoration:none;font-family:Arial,sans-serif;">Afroboost</a>
 </td></tr>
 
-<!-- CONTENU PRINCIPAL -->
-<tr><td style="padding:25px 30px;">
+<!-- CONTENU -->
+<tr><td style="padding:20px;">
 
 <!-- IMAGE + BOUTON -->
 {media_html}
 
-<!-- TEXTE DESCRIPTION (4-5 lignes minimum pour ratio texte/image) -->
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:25px;">
-<tr><td style="color:#ffffff;font-size:15px;line-height:1.7;font-family:Arial,sans-serif;text-align:left;">
+<!-- MESSAGE -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;">
+<tr><td style="color:#ffffff;font-size:14px;line-height:1.6;font-family:Arial,sans-serif;">
 {message.replace(chr(10), '<br>')}
 </td></tr>
 </table>
@@ -3563,14 +3564,14 @@ Salut {first_name},
 </td></tr>
 
 <!-- FOOTER -->
-<tr><td align="center" style="padding:20px 30px;border-top:1px solid #333333;">
-<p style="color:#888888;font-size:12px;margin:0;font-family:Arial,sans-serif;">
-Cet email vous a été envoyé par Afroboost<br>
-<a href="https://afroboosteur.com" style="color:#A855F7;text-decoration:none;">afroboosteur.com</a>
+<tr><td align="center" style="padding:15px 20px;border-top:1px solid #333333;">
+<p style="color:#888888;font-size:11px;margin:0;font-family:Arial,sans-serif;">
+<a href="https://afroboosteur.com" style="color:#9333EA;text-decoration:none;">afroboosteur.com</a>
 </p>
 </td></tr>
 
 </table>
+
 </td></tr>
 </table>
 
