@@ -1,64 +1,29 @@
 /**
- * MediaViewer - Lecteur Afroboost Mode Cinéma V3
- * Player HTML5 natif sans marquage externe
- * Spécification: Design cinéma, bouton CTA #E91E63, AUCUN logo tiers
+ * MediaViewer - Lecteur Afroboost Mode Cinéma FINAL
+ * Lecture vidéo Google Drive via iframe /preview (seule méthode fiable)
+ * Design cinéma, bouton CTA #E91E63
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
-// Détecte si l'URL est une vidéo directe (MP4, WebM, Google Drive, etc.)
-const isDirectVideoUrl = (url) => {
-  if (!url) return false;
-  const lowerUrl = url.toLowerCase();
-  
-  // Extensions vidéo directes
-  const videoExtensions = ['.mp4', '.webm', '.mov', '.m4v', '.ogv', '.ogg'];
-  if (videoExtensions.some(ext => lowerUrl.includes(ext))) return true;
-  
-  // Google Drive links
-  if (lowerUrl.includes('drive.google.com')) return true;
-  
-  // Autres hébergeurs vidéo directs
-  if (lowerUrl.includes('cloudinary.com') && lowerUrl.includes('/video/')) return true;
-  
-  return false;
-};
-
-// Convertit un lien Google Drive en URL de streaming
-const getVideoStreamUrl = (url) => {
-  if (!url) return url;
-  
-  // Google Drive: extraire l'ID et créer un lien preview (streaming via iframe)
-  if (url.includes('drive.google.com')) {
-    // Format: https://drive.google.com/file/d/{FILE_ID}/view
-    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-      // Utiliser le format preview pour le streaming vidéo (iframe)
-      return `https://drive.google.com/file/d/${match[1]}/preview`;
-    }
-    // Format: https://drive.google.com/uc?export=download&id={FILE_ID}
-    const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (idMatch && idMatch[1]) {
-      return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
-    }
-  }
-  
-  return url;
-};
-
-// Vérifie si c'est un lien Google Drive (nécessite iframe)
-const isGoogleDriveUrl = (url) => {
-  return url && url.toLowerCase().includes('drive.google.com');
+// Extrait l'ID Google Drive d'une URL
+const extractGoogleDriveId = (url) => {
+  if (!url) return null;
+  // Format: https://drive.google.com/file/d/{FILE_ID}/view
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) return match[1];
+  // Format: https://drive.google.com/uc?...&id={FILE_ID}
+  const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch && idMatch[1]) return idMatch[1];
+  return null;
 };
 
 const MediaViewer = ({ slug }) => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef(null);
 
   useEffect(() => {
     const loadMedia = async () => {
@@ -77,12 +42,7 @@ const MediaViewer = ({ slug }) => {
     if (slug) loadMedia();
   }, [slug]);
 
-  // Gérer le play
-  const handlePlayClick = () => {
-    setIsPlaying(true);
-  };
-
-  // État de chargement - Mode Cinéma
+  // État de chargement
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
@@ -102,7 +62,7 @@ const MediaViewer = ({ slug }) => {
     );
   }
 
-  // Protection: vérifier que media existe
+  // Protection
   if (!media) {
     return (
       <div style={styles.errorContainer}>
@@ -112,10 +72,9 @@ const MediaViewer = ({ slug }) => {
     );
   }
 
-  // Détermine le type de lecteur à utiliser
-  const hasDirectVideo = isDirectVideoUrl(media.video_url);
-  const isGoogleDrive = isGoogleDriveUrl(media.video_url);
-  const videoStreamUrl = getVideoStreamUrl(media.video_url);
+  // Extraire l'ID Google Drive
+  const driveId = extractGoogleDriveId(media.video_url);
+  const embedUrl = driveId ? `https://drive.google.com/file/d/${driveId}/preview` : null;
   const thumbnailUrl = media.thumbnail || (media.youtube_id ? `https://img.youtube.com/vi/${media.youtube_id}/maxresdefault.jpg` : null);
 
   return (
@@ -130,108 +89,45 @@ const MediaViewer = ({ slug }) => {
 
       {/* Main Content */}
       <main style={styles.main}>
-        {/* Titre - Au-dessus de la vidéo */}
-        <h1 style={styles.title} data-testid="media-title">{media.title || 'Sans titre'}</h1>
+        {/* Titre */}
+        <h1 style={styles.title} data-testid="media-title">{media.title || 'Vidéo Afroboost'}</h1>
 
-        {/* Lecteur Vidéo - Mode Cinéma 16:9 */}
+        {/* Lecteur Vidéo - iframe Google Drive */}
         <div style={styles.videoWrapper} data-testid="video-container">
-          {isGoogleDrive ? (
-            /* Player HTML5 natif pour Google Drive - ZÉRO MARQUAGE */
-            !isPlaying ? (
-              <>
-                <div 
-                  style={{
-                    ...styles.thumbnailContainer,
-                    backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : 'linear-gradient(135deg, #1a1a2e 0%, #0c0014 100%)',
-                  }}
-                >
-                  <div style={styles.thumbnailOverlay}></div>
-                  <button 
-                    onClick={handlePlayClick}
-                    style={styles.playButton}
-                    data-testid="play-button"
-                    aria-label="Lire la vidéo"
-                  >
-                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                      <circle cx="40" cy="40" r="38" fill="#E91E63" fillOpacity="0.95"/>
-                      <path d="M32 25L58 40L32 55V25Z" fill="white"/>
-                    </svg>
-                  </button>
-                </div>
-              </>
-            ) : (
-              /* Google Drive via iframe (pas de CORS, lecture fiable) */
-              <iframe
-                src={videoStreamUrl}
-                title={media.title || 'Vidéo Afroboost'}
-                style={styles.videoIframe}
-                frameBorder="0"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                data-testid="google-drive-iframe"
-              />
-            )
-          ) : hasDirectVideo ? (
-            /* Player HTML5 natif pour vidéos directes (MP4, WebM) */
-            <video
-              ref={videoRef}
-              src={media.video_url}
-              poster={thumbnailUrl}
-              style={styles.videoPlayer}
-              controls
-              controlsList="nodownload noremoteplayback"
-              playsInline
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              data-testid="html5-video"
-            >
-              Votre navigateur ne supporte pas la lecture vidéo.
-            </video>
+          {embedUrl ? (
+            <iframe
+              src={embedUrl}
+              title={media.title || 'Vidéo Afroboost'}
+              style={styles.videoIframe}
+              frameBorder="0"
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              data-testid="google-drive-player"
+            />
           ) : (
-            /* Player YouTube avec thumbnail personnalisée */
-            <>
-              {!isPlaying ? (
-                <div 
-                  style={{
-                    ...styles.thumbnailContainer,
-                    backgroundImage: `url(${thumbnailUrl})`,
-                  }}
-                >
-                  <div style={styles.thumbnailOverlay}></div>
-                  <button 
-                    onClick={handlePlayClick}
-                    style={styles.playButton}
-                    data-testid="play-button"
-                    aria-label="Lire la vidéo"
-                  >
-                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                      <circle cx="40" cy="40" r="38" fill="#E91E63" fillOpacity="0.95"/>
-                      <path d="M32 25L58 40L32 55V25Z" fill="white"/>
-                    </svg>
-                  </button>
+            /* Fallback: image avec lien vers la vidéo originale */
+            <a href={media.video_url} target="_blank" rel="noopener noreferrer" style={styles.fallbackLink}>
+              <div style={{...styles.thumbnailContainer, backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : 'none'}}>
+                <div style={styles.playOverlay}>
+                  <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                    <circle cx="40" cy="40" r="38" fill="#E91E63" fillOpacity="0.95"/>
+                    <path d="M32 25L58 40L32 55V25Z" fill="white"/>
+                  </svg>
+                  <p style={{color: '#fff', marginTop: 10}}>Cliquez pour voir la vidéo</p>
                 </div>
-              ) : (
-                <iframe
-                  src={`https://www.youtube.com/embed/${media.youtube_id}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&controls=1&playsinline=1&showinfo=0`}
-                  title={media.title || 'Vidéo Afroboost'}
-                  style={styles.videoIframe}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                  allowFullScreen
-                />
-              )}
-            </>
+              </div>
+            </a>
           )}
         </div>
 
-        {/* Description - En dessous de la vidéo, supporte les sauts de ligne */}
+        {/* Description */}
         {media.description && media.description.trim() !== '' && (
           <p style={styles.description} data-testid="media-description">
             {media.description}
           </p>
         )}
 
-        {/* Bouton CTA ROSE #E91E63 - Point focal principal */}
+        {/* Bouton CTA ROSE #E91E63 */}
         {media.cta_text && media.cta_link && (
           <div style={styles.ctaContainer} data-testid="cta-section">
             <a
@@ -246,11 +142,12 @@ const MediaViewer = ({ slug }) => {
           </div>
         )}
 
-        {/* Section Partage */}
+        {/* Partage */}
         <div style={styles.shareSection}>
           <button
             onClick={() => {
-              navigator.clipboard.writeText(`https://afroboosteur.com/v/${media.slug}`);
+              const shareUrl = `https://afroboosteur.com/#/v/${media.slug}`;
+              navigator.clipboard.writeText(shareUrl);
               alert('Lien copié !');
             }}
             style={styles.shareButton}
@@ -259,7 +156,7 @@ const MediaViewer = ({ slug }) => {
             📋 Copier le lien
           </button>
           <a
-            href={`https://wa.me/?text=${encodeURIComponent((media.title || 'Vidéo') + '\nhttps://afroboosteur.com/v/' + media.slug)}`}
+            href={`https://wa.me/?text=${encodeURIComponent((media.title || 'Vidéo') + '\nhttps://afroboosteur.com/#/v/' + media.slug)}`}
             target="_blank"
             rel="noopener noreferrer"
             style={styles.whatsappButton}
@@ -278,9 +175,8 @@ const MediaViewer = ({ slug }) => {
   );
 };
 
-// Styles V3 - Mode Cinéma avec Player HTML5 natif
+// Styles - Mode Cinéma avec CTA #E91E63
 const styles = {
-  // Page - Fond sombre "cinéma"
   page: {
     minHeight: '100vh',
     backgroundColor: '#0c0014',
@@ -289,8 +185,6 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
   },
-  
-  // Loading
   loadingContainer: {
     minHeight: '100vh',
     backgroundColor: '#0c0014',
@@ -312,8 +206,6 @@ const styles = {
     marginTop: '15px',
     fontSize: '16px',
   },
-  
-  // Error
   errorContainer: {
     minHeight: '100vh',
     backgroundColor: '#0c0014',
@@ -332,8 +224,6 @@ const styles = {
     color: '#E91E63',
     textDecoration: 'none',
   },
-  
-  // Header - Rose Afroboost
   header: {
     backgroundColor: '#E91E63',
     padding: '12px 20px',
@@ -353,8 +243,6 @@ const styles = {
     fontSize: '20px',
     fontWeight: 'bold',
   },
-  
-  // Main
   main: {
     flex: 1,
     maxWidth: '900px',
@@ -362,8 +250,6 @@ const styles = {
     margin: '0 auto',
     padding: '25px 15px',
   },
-  
-  // Title - Texte blanc
   title: {
     fontSize: '24px',
     fontWeight: 'bold',
@@ -372,8 +258,6 @@ const styles = {
     lineHeight: '1.3',
     color: '#FFFFFF',
   },
-  
-  // Video - Mode Cinéma 16:9
   videoWrapper: {
     position: 'relative',
     width: '100%',
@@ -383,52 +267,6 @@ const styles = {
     overflow: 'hidden',
     boxShadow: '0 0 30px rgba(233, 30, 99, 0.3)',
   },
-  
-  // Player HTML5 natif
-  videoPlayer: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    backgroundColor: '#000',
-  },
-  
-  // Thumbnail container pour YouTube
-  thumbnailContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-  },
-  
-  // Overlay sombre sur la thumbnail
-  thumbnailOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  
-  // Bouton Play personnalisé
-  playButton: {
-    position: 'relative',
-    zIndex: 10,
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'transform 0.2s ease',
-    padding: 0,
-  },
-  
-  // iframe YouTube (caché jusqu'au clic)
   videoIframe: {
     position: 'absolute',
     top: 0,
@@ -437,8 +275,24 @@ const styles = {
     height: '100%',
     border: 'none',
   },
-  
-  // Description - Texte blanc, supporte les sauts de ligne
+  fallbackLink: {
+    display: 'block',
+    width: '100%',
+    height: '100%',
+  },
+  thumbnailContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundColor: '#1a1a2e',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playOverlay: {
+    textAlign: 'center',
+  },
   description: {
     fontSize: '16px',
     lineHeight: '1.7',
@@ -449,8 +303,6 @@ const styles = {
     whiteSpace: 'pre-wrap',
     padding: '0 10px',
   },
-  
-  // CTA Button - ROSE #E91E63 - Point focal
   ctaContainer: {
     textAlign: 'center',
     marginBottom: '35px',
@@ -464,13 +316,10 @@ const styles = {
     borderRadius: '50px',
     fontSize: '18px',
     fontWeight: 'bold',
-    transition: 'transform 0.2s, box-shadow 0.2s',
     boxShadow: '0 6px 25px rgba(233, 30, 99, 0.5)',
     textTransform: 'uppercase',
     letterSpacing: '1px',
   },
-  
-  // Share
   shareSection: {
     display: 'flex',
     justifyContent: 'center',
@@ -496,8 +345,6 @@ const styles = {
     borderRadius: '8px',
     fontSize: '14px',
   },
-  
-  // Footer
   footer: {
     textAlign: 'center',
     padding: '20px',
