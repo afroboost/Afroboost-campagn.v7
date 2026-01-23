@@ -2065,11 +2065,26 @@ function App() {
   const [lastClickTime, setLastClickTime] = useState(0);
 
   // Check for /validate/:code URL and /v/:slug URL on mount
+  // SUPPORTE AUSSI LE HASH ROUTING: /#/v/{slug} (fonctionne sans config serveur)
   useEffect(() => {
     const path = window.location.pathname;
+    const hash = window.location.hash;
     console.log('App.js - Current path:', path);
+    console.log('App.js - Current hash:', hash);
     console.log('App.js - Full URL:', window.location.href);
     
+    // === HASH ROUTING (PRIORITAIRE) - Fonctionne à 100% côté client ===
+    // Format: https://afroboosteur.com/#/v/{slug}
+    if (hash.startsWith('#/v/')) {
+      const slug = hash.replace('#/v/', '').split('/')[0].split('?')[0].trim();
+      console.log('App.js - Hash routing - Media slug detected:', slug);
+      if (slug && slug.length > 0) {
+        setMediaSlug(slug.toLowerCase());
+        return;
+      }
+    }
+    
+    // === PATH ROUTING (backup si serveur configuré) ===
     if (path.startsWith('/validate/')) {
       const code = path.replace('/validate/', '').toUpperCase();
       if (code) {
@@ -2077,16 +2092,32 @@ function App() {
         setShowCoachLogin(true);
       }
     }
-    // Check for /v/:slug URL (Media Viewer) - PRIORITAIRE
+    // Check for /v/:slug URL (Media Viewer)
     if (path.startsWith('/v/')) {
       const slug = path.replace('/v/', '').split('/')[0].split('?')[0].split('#')[0].trim();
-      console.log('App.js - Media slug detected:', slug);
+      console.log('App.js - Path routing - Media slug detected:', slug);
       if (slug && slug.length > 0) {
         setMediaSlug(slug.toLowerCase());
-        // Ne pas continuer si on a un slug valide
         return;
       }
     }
+  }, []);
+
+  // Écouter les changements de hash pour le routing dynamique
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      console.log('App.js - Hash changed:', hash);
+      if (hash.startsWith('#/v/')) {
+        const slug = hash.replace('#/v/', '').split('/')[0].split('?')[0].trim();
+        if (slug && slug.length > 0) {
+          setMediaSlug(slug.toLowerCase());
+        }
+      }
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   // PWA Install Prompt State
