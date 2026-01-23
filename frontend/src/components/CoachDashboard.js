@@ -5621,8 +5621,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 )}
               </div>
               
-              <button type="submit" className="btn-primary px-6 py-3 rounded-lg w-full md:w-auto">
-                🚀 Créer la campagne
+              <button type="submit" className={`px-6 py-3 rounded-lg w-full md:w-auto ${editingCampaignId ? 'bg-green-600 hover:bg-green-700' : 'btn-primary'}`}>
+                {editingCampaignId ? '💾 Enregistrer les modifications' : '🚀 Créer la campagne'}
               </button>
             </form>
             
