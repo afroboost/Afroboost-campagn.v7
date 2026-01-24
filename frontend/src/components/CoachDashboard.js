@@ -1087,6 +1087,25 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     setCampaignLogs(prev => [logEntry, ...prev].slice(0, 100)); // Keep last 100 logs
   };
 
+  // === SCHEDULER HEALTH CHECK (toutes les 30 secondes) ===
+  useEffect(() => {
+    const checkSchedulerHealth = async () => {
+      try {
+        const res = await axios.get(`${API}/scheduler/health`);
+        setSchedulerHealth(res.data);
+      } catch (err) {
+        setSchedulerHealth({ status: "stopped", last_run: null });
+      }
+    };
+    
+    // Vérifier immédiatement puis toutes les 30 secondes
+    if (tab === "campaigns") {
+      checkSchedulerHealth();
+      const interval = setInterval(checkSchedulerHealth, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [tab]);
+
   // Load campaigns
   useEffect(() => {
     const loadCampaigns = async () => {
