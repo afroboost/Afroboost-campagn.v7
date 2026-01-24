@@ -1814,11 +1814,13 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       // Fallback vers l'ancienne méthode si le nouvel endpoint n'est pas disponible
       console.warn('[NOTIFICATIONS] Erreur polling:', err);
     }
-  }, [tab, chatSessions, addToastNotification]);
+  }, [tab, chatSessions, addToastNotification, notifyOnAiResponse]);
   
   // Polling des notifications toutes les 10 secondes
   useEffect(() => {
     if (tab !== 'conversations') return;
+    
+    console.log('[NOTIFICATIONS] Polling activé (interval 10s)');
     
     // Vérifier immédiatement
     checkUnreadNotifications();
@@ -1828,7 +1830,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       checkUnreadNotifications();
     }, 10000);
     
-    return () => clearInterval(interval);
+    // Cleanup important pour éviter les fuites mémoire
+    return () => {
+      console.log('[NOTIFICATIONS] Polling désactivé');
+      clearInterval(interval);
+    };
   }, [tab, checkUnreadNotifications]);
 
   // === POLLING LEGACY pour les sessions en mode humain ===
