@@ -2127,6 +2127,7 @@ Si tu ne connais pas la réponse, oriente vers le contact: contact.artboost@gmai
     model: str = "gpt-4o-mini"
     provider: str = "openai"
     lastMediaUrl: str = ""
+    twintPaymentUrl: str = ""  # Lien de paiement Twint direct pour les ventes
 
 class AIConfigUpdate(BaseModel):
     enabled: Optional[bool] = None
@@ -2134,6 +2135,7 @@ class AIConfigUpdate(BaseModel):
     model: Optional[str] = None
     provider: Optional[str] = None
     lastMediaUrl: Optional[str] = None
+    twintPaymentUrl: Optional[str] = None  # Lien de paiement Twint direct
 
 class AILog(BaseModel):
     model_config = ConfigDict(extra="ignore")
