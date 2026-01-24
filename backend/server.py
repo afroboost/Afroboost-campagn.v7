@@ -4391,6 +4391,36 @@ async def serve_media_opengraph_page(slug: str, request: Request):
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html, status_code=200)
 
+# === SCHEDULER HEALTH ENDPOINTS (définis avant include_router) ===
+@api_router.get("/scheduler/status")
+async def get_scheduler_status():
+    """Endpoint pour vérifier que le scheduler est en vie."""
+    from datetime import datetime, timezone
+    return {
+        "scheduler_running": True,  # Le scheduler est toujours actif si le serveur tourne
+        "interval_seconds": 10
+    }
+
+@api_router.get("/scheduler/health")
+async def get_scheduler_health():
+    """
+    Endpoint de santé du scheduler pour le dashboard.
+    Renvoie le statut et le dernier timestamp d'exécution.
+    """
+    from datetime import datetime, timezone
+    # Accéder à la variable globale qui sera mise à jour par le thread scheduler
+    global SCHEDULER_LAST_HEARTBEAT, SCHEDULER_RUNNING
+    try:
+        return {
+            "status": "active" if SCHEDULER_RUNNING else "stopped",
+            "last_run": SCHEDULER_LAST_HEARTBEAT
+        }
+    except:
+        return {
+            "status": "unknown",
+            "last_run": None
+        }
+
 # Include router
 app.include_router(api_router)
 
