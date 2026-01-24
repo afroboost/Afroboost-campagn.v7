@@ -168,6 +168,13 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - Le coach peut configurer un lien Twint dans Dashboard > Conversations > Agent IA > "Lien de paiement Twint"
   - L'IA propose automatiquement ce lien quand un client veut acheter
   - Si le lien est vide, l'IA redirige vers le coach
+- [x] **CRM Avancé - Historique Conversations** (24 Jan 2026) - NOUVEAU ✅
+  - Endpoint `GET /api/conversations` avec pagination (page, limit) et recherche (query)
+  - Frontend avec Infinite Scroll (charge à 80% du scroll)
+  - Barre de recherche avec debounce 300ms
+  - Badges de date (Aujourd'hui, Hier, date complète)
+  - Timestamps précis sur chaque message
+  - Séparateurs de date dans l'historique des conversations
 
 ### P1 - À faire
 - [ ] **Gérer les articles dans le Dashboard** : Interface CRUD pour créer/modifier/supprimer des articles
