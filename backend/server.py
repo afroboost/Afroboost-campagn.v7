@@ -3170,6 +3170,107 @@ async def soft_delete_message(message_id: str):
     )
     return {"success": True, "message": "Message marqué comme supprimé"}
 
+# ==================== NOTIFICATIONS (SONORES ET VISUELLES) ====================
+
+@api_router.get("/notifications/unread")
+async def get_unread_notifications(
+    target: str = "coach",  # "coach" ou "client"
+    session_id: Optional[str] = None
+):
+    """
+    Récupère les messages non notifiés pour le coach ou un client.
+    
+    Paramètres:
+    - target: "coach" pour tous les messages user non notifiés, "client" pour les réponses
+    - session_id: Optionnel, pour filtrer par session (utile côté client)
+    
+    Retourne:
+    - count: Nombre de messages non notifiés
+    - messages: Liste des messages non notifiés (max 20)
+    """
+    query = {
+        "is_deleted": {"$ne": True},
+        "notified": {"$ne": True}
+    }
+    
+    if target == "coach":
+        # Messages des utilisateurs destinés au coach
+        query["sender_type"] = "user"
+    else:
+        # Messages de l'IA ou du coach destinés aux clients
+        query["sender_type"] = {"$in": ["ai", "coach"]}
+    
+    if session_id:
+        query["session_id"] = session_id
+    
+    # Compter le nombre total
+    count = await db.chat_messages.count_documents(query)
+    
+    # Récupérer les derniers messages non notifiés (max 20)
+    messages = await db.chat_messages.find(
+        query, 
+        {"_id": 0}
+    ).sort("created_at", -1).limit(20).to_list(20)
+    
+    return {
+        "count": count,
+        "messages": messages,
+        "target": target
+    }
+
+@api_router.put("/notifications/mark-read")
+async def mark_notifications_read(request: Request):
+    """
+    Marque des messages comme notifiés.
+    
+    Body:
+    - message_ids: Liste des IDs de messages à marquer comme notifiés
+    - all_for_target: "coach" ou "client" pour marquer tous les messages non lus
+    - session_id: Optionnel, pour limiter à une session
+    """
+    body = await request.json()
+    message_ids = body.get("message_ids", [])
+    all_for_target = body.get("all_for_target")
+    session_id = body.get("session_id")
+    
+    update_count = 0
+    
+    if message_ids:
+        # Marquer des messages spécifiques
+        result = await db.chat_messages.update_many(
+            {"id": {"$in": message_ids}},
+            {"$set": {"notified": True}}
+        )
+        update_count = result.modified_count
+    
+    elif all_for_target:
+        # Marquer tous les messages pour un target
+        query = {
+            "is_deleted": {"$ne": True},
+            "notified": {"$ne": True}
+        }
+        
+        if all_for_target == "coach":
+            query["sender_type"] = "user"
+        else:
+            query["sender_type"] = {"$in": ["ai", "coach"]}
+        
+        if session_id:
+            query["session_id"] = session_id
+        
+        result = await db.chat_messages.update_many(
+            query,
+            {"$set": {"notified": True}}
+        )
+        update_count = result.modified_count
+    
+    logger.info(f"[NOTIFICATIONS] Marqué {update_count} messages comme lus (target: {all_for_target})")
+    
+    return {
+        "success": True,
+        "marked_count": update_count
+    }
+
 # --- Shareable Links (Liens Partageables) ---
 @api_router.post("/chat/generate-link")
 async def generate_shareable_link(request: Request):
