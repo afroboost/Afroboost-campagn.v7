@@ -46,6 +46,20 @@ RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 if RESEND_AVAILABLE and RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
 
+# ==================== TWILIO CONFIGURATION (PRIORITÉ .ENV) ====================
+# Les variables .env sont PRIORITAIRES sur la config en base de données
+# Cela garantit que le numéro de production ne sera jamais écrasé par le sandbox
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
+
+# Log de la configuration Twilio au démarrage
+if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER:
+    print(f"[WHATSAPP-PROD] ✅ Configuration Twilio chargée depuis .env")
+    print(f"[WHATSAPP-PROD] 📱 Numéro de production: {TWILIO_FROM_NUMBER}")
+else:
+    print(f"[WHATSAPP-PROD] ⚠️ Configuration Twilio incomplète dans .env - utilisation de la config en base")
+
 # MongoDB connection - with fallback for production environments
 mongo_url = os.environ.get('MONGO_URL')
 if not mongo_url:
