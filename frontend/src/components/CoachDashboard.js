@@ -6598,6 +6598,118 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         {/* ========== ONGLET CONVERSATIONS ========== */}
         {tab === "conversations" && (
           <div className="space-y-6">
+            {/* === BANNER PERMISSION NOTIFICATIONS === */}
+            {showPermissionBanner && notificationPermission === 'default' && (
+              <div 
+                className="flex items-center justify-between p-4 rounded-xl animate-pulse"
+                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(217, 28, 210, 0.2))', border: '1px solid rgba(139, 92, 246, 0.5)' }}
+                data-testid="notification-permission-banner"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔔</span>
+                  <div>
+                    <p className="text-white font-medium">Activez les notifications</p>
+                    <p className="text-white/60 text-sm">Recevez une alerte sonore et visuelle à chaque nouveau message client.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowPermissionBanner(false)}
+                    className="px-3 py-2 text-white/60 hover:text-white text-sm"
+                  >
+                    Plus tard
+                  </button>
+                  <button
+                    onClick={requestNotificationAccess}
+                    className="px-4 py-2 rounded-lg text-white font-medium transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+                    data-testid="enable-notifications-btn"
+                  >
+                    ✅ Activer
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* === BANNER NOTIFICATIONS BLOQUÉES === */}
+            {notificationPermission === 'denied' && (
+              <div 
+                className="flex items-center justify-between p-3 rounded-xl"
+                style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">⚠️</span>
+                  <div>
+                    <p className="text-white/90 text-sm">Notifications bloquées - Les alertes visuelles apparaîtront ici à la place.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    alert('Pour activer les notifications:\n\n1. Cliquez sur l\'icône 🔒 dans la barre d\'adresse\n2. Trouvez "Notifications"\n3. Changez de "Bloquer" à "Autoriser"\n4. Rafraîchissez la page');
+                  }}
+                  className="px-3 py-1 text-xs rounded bg-white/10 text-white/70 hover:text-white"
+                >
+                  Comment activer ?
+                </button>
+              </div>
+            )}
+            
+            {/* === TOASTS NOTIFICATIONS FALLBACK (en haut à droite) === */}
+            {toastNotifications.length > 0 && (
+              <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm" data-testid="notification-toasts">
+                {toastNotifications.map(toast => (
+                  <div
+                    key={toast.id}
+                    onClick={() => handleToastClick(toast)}
+                    className="p-4 rounded-xl shadow-2xl cursor-pointer transform transition-all hover:scale-102 animate-slideIn"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(217, 28, 210, 0.9))',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}
+                    data-testid={`toast-${toast.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium text-sm flex items-center gap-2">
+                          💬 {toast.senderName}
+                        </p>
+                        <p className="text-white/80 text-sm mt-1 truncate">
+                          {toast.content.substring(0, 60)}{toast.content.length > 60 ? '...' : ''}
+                        </p>
+                        <p className="text-white/50 text-xs mt-1">Cliquez pour répondre</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); dismissToast(toast.id); }}
+                        className="text-white/60 hover:text-white p-1"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Statut notifications (petit badge) */}
+            <div className="flex items-center gap-2 text-xs text-white/40">
+              {notificationPermission === 'granted' && (
+                <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-600/20 text-green-400">
+                  🔔 Notifications actives
+                </span>
+              )}
+              {notificationPermission === 'denied' && (
+                <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-600/20 text-red-400">
+                  🔕 Notifications en mode toast
+                </span>
+              )}
+              {unreadCount > 0 && (
+                <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-600/20 text-purple-400">
+                  📬 {unreadCount} non lu(s)
+                </span>
+              )}
+            </div>
+
             {/* Header avec recherche globale */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
