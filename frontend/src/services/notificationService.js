@@ -168,23 +168,43 @@ export const playPushNotificationSound = async () => {
 
 /**
  * Demande la permission pour les notifications browser
+ * @returns {Promise<'granted'|'denied'|'default'|'unsupported'>} Status de la permission
  */
 export const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
-    console.log('Notifications not supported');
-    return false;
+    console.log('[NOTIFICATIONS] Browser notifications not supported');
+    return 'unsupported';
   }
   
   if (Notification.permission === 'granted') {
-    return true;
+    return 'granted';
   }
   
-  if (Notification.permission !== 'denied') {
+  if (Notification.permission === 'denied') {
+    console.log('[NOTIFICATIONS] Permission was denied previously');
+    return 'denied';
+  }
+  
+  // Permission is 'default' - ask user
+  try {
     const permission = await Notification.requestPermission();
-    return permission === 'granted';
+    console.log('[NOTIFICATIONS] Permission result:', permission);
+    return permission;
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Error requesting permission:', err);
+    return 'denied';
   }
-  
-  return false;
+};
+
+/**
+ * Vérifie l'état actuel de la permission de notification
+ * @returns {'granted'|'denied'|'default'|'unsupported'}
+ */
+export const getNotificationPermissionStatus = () => {
+  if (!('Notification' in window)) {
+    return 'unsupported';
+  }
+  return Notification.permission;
 };
 
 /**
@@ -192,34 +212,51 @@ export const requestNotificationPermission = async () => {
  * @param {string} title - Titre de la notification
  * @param {string} body - Corps du message
  * @param {object} options - Options supplémentaires
+ * @returns {Promise<{notification: Notification|null, fallbackNeeded: boolean}>}
  */
 export const showBrowserNotification = async (title, body, options = {}) => {
-  const hasPermission = await requestNotificationPermission();
+  // Vérifier le support et la permission
+  if (!('Notification' in window)) {
+    console.log('[NOTIFICATIONS] Browser not supported - fallback needed');
+    return { notification: null, fallbackNeeded: true, reason: 'unsupported' };
+  }
   
-  if (!hasPermission) {
-    console.log('Notification permission not granted');
-    return null;
+  if (Notification.permission !== 'granted') {
+    console.log('[NOTIFICATIONS] Permission not granted - fallback needed');
+    return { notification: null, fallbackNeeded: true, reason: 'permission_denied' };
   }
 
-  const notification = new Notification(title, {
-    body,
-    icon: options.icon || '/favicon.ico',
-    badge: options.badge || '/favicon.ico',
-    tag: options.tag || 'afroboost-chat',
-    requireInteraction: options.requireInteraction || false,
-    silent: false, // Permet le son système
-    ...options
-  });
+  try {
+    const notification = new Notification(title, {
+      body,
+      icon: options.icon || '/favicon.ico',
+      badge: options.badge || '/favicon.ico',
+      tag: options.tag || 'afroboost-chat',
+      requireInteraction: options.requireInteraction || false,
+      silent: false, // Permet le son système
+      ...options
+    });
 
-  // Fermer automatiquement après 5 secondes
-  setTimeout(() => notification.close(), 5000);
+    // Fermer automatiquement après 8 secondes (plus long pour plus de visibilité)
+    setTimeout(() => notification.close(), 8000);
 
-  // Callback au clic
-  if (options.onClick) {
-    notification.onclick = options.onClick;
+    // Callback au clic - Focus la fenêtre et exécuter le callback
+    notification.onclick = (event) => {
+      event.preventDefault();
+      window.focus();
+      notification.close();
+      if (options.onClick) {
+        options.onClick(event);
+      }
+    };
+
+    console.log('[NOTIFICATIONS] Browser notification shown:', title);
+    return { notification, fallbackNeeded: false };
+    
+  } catch (err) {
+    console.error('[NOTIFICATIONS] Error showing notification:', err);
+    return { notification: null, fallbackNeeded: true, reason: 'error' };
   }
-
-  return notification;
 };
 
 /**
