@@ -1560,15 +1560,37 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     if (!window.confirm("⚠️ Supprimer cette conversation ?\n\nLa conversation sera archivée (suppression logique).")) return;
     
     try {
+      console.log('DELETE_DEBUG: Suppression session:', sessionId);
       await axios.put(`${API}/chat/sessions/${sessionId}`, { is_deleted: true });
-      setChatSessions(prev => prev.filter(s => s.id !== sessionId));
+      console.log('DELETE_DEBUG: API OK, mise à jour du state...');
+      
+      // Mettre à jour TOUS les states qui contiennent cette session
+      setChatSessions(prev => {
+        const filtered = prev.filter(s => s.id !== sessionId);
+        console.log('DELETE_DEBUG: chatSessions filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      setEnrichedConversations(prev => {
+        const filtered = prev.filter(c => c.id !== sessionId);
+        console.log('DELETE_DEBUG: enrichedConversations filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      setChatLinks(prev => {
+        const filtered = prev.filter(l => l.id !== sessionId);
+        console.log('DELETE_DEBUG: chatLinks filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      
+      // Si c'était la session sélectionnée, la désélectionner
       if (selectedSession?.id === sessionId) {
         setSelectedSession(null);
         setSessionMessages([]);
       }
+      
+      console.log('DELETE_DEBUG: Suppression terminée ✅');
     } catch (err) {
-      console.error("Error deleting session:", err);
-      alert("Erreur lors de la suppression de la conversation");
+      console.error("DELETE_DEBUG: ERREUR:", err);
+      alert("Erreur lors de la suppression de la conversation: " + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -1577,6 +1599,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     if (!window.confirm("⚠️ Supprimer ce lien de partage ?\n\nLe lien ne sera plus accessible. Cette action est irréversible.")) return;
     
     try {
+      console.log('DELETE_DEBUG: Suppression lien:', linkId);
       await axios.delete(`${API}/chat/links/${linkId}`);
       setChatLinks(prev => prev.filter(l => l.id !== linkId && l.link_token !== linkId));
       // Aussi supprimer des sessions enrichies
