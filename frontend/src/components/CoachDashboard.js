@@ -5217,9 +5217,10 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
         {/* === CAMPAIGNS TAB === */}
         {tab === "campaigns" && (
-          <div className="card-gradient rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-semibold text-white" style={{ fontSize: '20px' }}>📢 Gestionnaire de Campagnes</h2>
+          <div className="card-gradient rounded-xl p-4 sm:p-6">
+            {/* Header responsive */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+              <h2 className="font-semibold text-white text-lg sm:text-xl">📢 Gestionnaire de Campagnes</h2>
               
               {/* === BADGE DE SANTÉ DU SCHEDULER === */}
               {(() => {
@@ -5246,22 +5247,24 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               })()}
             </div>
             
-            {/* === COMPTEUR DE CLIENTS CIBLÉS === */}
+            {/* === COMPTEUR DE CLIENTS CIBLÉS (Responsive) === */}
             <div className="mb-6 p-4 rounded-xl glass border border-purple-500/30">
-              <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-white font-semibold text-lg">
-                    👥 Nombre de clients ciblés : <span className="text-pink-400">{contactStats.total}</span>
+                  <h3 className="text-white font-semibold text-base sm:text-lg">
+                    👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span>
                   </h3>
-                  <p className="text-sm text-white/60 mt-1">
-                    📧 {contactStats.withEmail} avec email • 📱 {contactStats.withPhone} avec WhatsApp
+                  <p className="text-xs sm:text-sm text-white/60 mt-1">
+                    📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp
                   </p>
                 </div>
-                <div className="flex gap-2">
+                {/* Bouton envoi direct - responsive */}
+                <div className="w-full sm:w-auto">
                   <button 
                     type="button"
                     onClick={() => setDirectSendMode(!directSendMode)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${directSendMode ? 'bg-pink-600 text-white' : 'glass text-white border border-purple-500/30'}`}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all ${directSendMode ? 'bg-pink-600 text-white' : 'glass text-white border border-purple-500/30'}`}
+                    data-testid="direct-send-mode-btn"
                   >
                     {directSendMode ? '✓ Mode Envoi Direct' : '🚀 Envoi Direct'}
                   </button>
