@@ -4843,6 +4843,17 @@ async def get_scheduler_status():
         "twilio_from_number": TWILIO_FROM_NUMBER
     }
 
+@api_router.get("/scheduler/health")
+async def get_scheduler_health():
+    """
+    Endpoint de santé du scheduler pour le dashboard.
+    Renvoie le statut et le dernier timestamp d'exécution.
+    """
+    return {
+        "status": "active" if SCHEDULER_RUNNING else "stopped",
+        "last_run": SCHEDULER_LAST_HEARTBEAT
+    }
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     global SCHEDULER_RUNNING
