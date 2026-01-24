@@ -4764,41 +4764,60 @@ def scheduler_loop():
                                 fail_count += 1
                                 continue  # PASSER AU CONTACT SUIVANT
                     
-                    # TOUJOURS marquer les dates comme traitées (même en cas d'échec)
-                    new_sent_dates = list(set(sent_dates + dates_to_process))
-                    all_dates_done = set(new_sent_dates) >= set(scheduled_dates)
-                    
-                    # Déterminer le statut final
-                    # Vérifier si c'est un échec de quota email
+                    # Vérifier si c'est un échec de quota email (pour le retry automatique)
                     has_quota_error = any(
                         r.get("error") and ("quota" in r.get("error", "").lower() or "limit" in r.get("error", "").lower())
                         for r in results
                     )
                     
-                    if fail_count > 0 and success_count == 0:
-                        if has_quota_error:
-                            new_status = "failed_quota"  # Statut spécial pour quota épuisé
-                        else:
-                            new_status = "failed"
-                    elif all_dates_done:
-                        new_status = "completed"
+                    # LOGIQUE DE REPRISE SUR QUOTA:
+                    # - Si quota épuisé: NE PAS marquer la date comme traitée → retry automatique demain
+                    # - Si autre erreur ou succès: marquer normalement
+                    if has_quota_error and success_count == 0:
+                        # QUOTA ÉPUISÉ: Laisser en attente pour retry automatique
+                        new_status = "pending_quota"
+                        # NE PAS ajouter la date à sentDates → sera retraitée au prochain cycle
+                        new_sent_dates = sent_dates  # Garder les dates existantes sans ajouter
+                        
+                        scheduler_db.campaigns.update_one(
+                            {"id": campaign_id},
+                            {"$set": {
+                                "status": new_status,
+                                "results": results,
+                                "sentDates": new_sent_dates,
+                                "updatedAt": now.isoformat(),
+                                "lastQuotaError": now.isoformat()  # Timestamp du dernier échec quota
+                            }}
+                        )
+                        
+                        logger.info(f"[SCHEDULER] 🟠 {campaign_name}: QUOTA ÉPUISÉ → En attente de retry automatique")
+                        print(f"[SCHEDULER] 🟠 Campagne '{campaign_name}' → pending_quota (retry automatique demain)")
                     else:
-                        new_status = "scheduled"
-                    
-                    scheduler_db.campaigns.update_one(
-                        {"id": campaign_id},
-                        {"$set": {
-                            "status": new_status,
-                            "results": results,
-                            "sentDates": new_sent_dates,
-                            "updatedAt": now.isoformat(),
-                            "lastProcessedAt": now.isoformat()
-                        }}
-                    )
-                    
-                    status_emoji = "🟢" if new_status == "completed" else ("🟠" if new_status == "failed_quota" else "🔴")
-                    logger.info(f"[SCHEDULER] {status_emoji} {campaign_name}: {new_status} (✓{success_count}/✗{fail_count})")
-                    print(f"[SCHEDULER] {status_emoji} Campagne '{campaign_name}' → {new_status} (✓{success_count}/✗{fail_count})")
+                        # Traitement normal (succès ou échec non-quota)
+                        new_sent_dates = list(set(sent_dates + dates_to_process))
+                        all_dates_done = set(new_sent_dates) >= set(scheduled_dates)
+                        
+                        if fail_count > 0 and success_count == 0:
+                            new_status = "failed"
+                        elif all_dates_done:
+                            new_status = "completed"
+                        else:
+                            new_status = "scheduled"
+                        
+                        scheduler_db.campaigns.update_one(
+                            {"id": campaign_id},
+                            {"$set": {
+                                "status": new_status,
+                                "results": results,
+                                "sentDates": new_sent_dates,
+                                "updatedAt": now.isoformat(),
+                                "lastProcessedAt": now.isoformat()
+                            }}
+                        )
+                        
+                        status_emoji = "🟢" if new_status == "completed" else "🔴"
+                        logger.info(f"[SCHEDULER] {status_emoji} {campaign_name}: {new_status} (✓{success_count}/✗{fail_count})")
+                        print(f"[SCHEDULER] {status_emoji} Campagne '{campaign_name}' → {new_status} (✓{success_count}/✗{fail_count})")
                     
                 except Exception as campaign_error:
                     logger.error(f"[SCHEDULER] ❌ Erreur campagne {campaign.get('id')}: {campaign_error}")
