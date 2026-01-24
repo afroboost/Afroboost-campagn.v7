@@ -6691,6 +6691,79 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               </div>
             )}
             
+            {/* === BOUTON DE TEST NOTIFICATIONS (TOUJOURS VISIBLE) === */}
+            <div 
+              className="p-4 rounded-xl"
+              style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1))', border: '1px solid rgba(34, 197, 94, 0.4)' }}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔔</span>
+                  <div>
+                    <p className="text-white font-medium text-sm">Test des notifications</p>
+                    <p className="text-white/60 text-xs">
+                      Statut: <span className={notificationPermission === 'granted' ? 'text-green-400' : notificationPermission === 'denied' ? 'text-red-400' : 'text-yellow-400'}>
+                        {notificationPermission === 'granted' ? '✅ Autorisées' : notificationPermission === 'denied' ? '❌ Bloquées' : '⏳ Non demandées'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    console.log('NOTIF_DEBUG: Bouton test cliqué');
+                    
+                    try {
+                      // 1. Demander la permission
+                      console.log('NOTIF_DEBUG: Demande de permission...');
+                      const permission = await Notification.requestPermission();
+                      console.log('NOTIF_DEBUG: Permission résultat:', permission);
+                      setNotificationPermission(permission);
+                      
+                      // 2. Jouer le son
+                      console.log('NOTIF_DEBUG: Tentative de jouer le son...');
+                      const { playNotificationSound } = await import('../services/notificationService');
+                      await playNotificationSound('user');
+                      console.log('NOTIF_DEBUG: Son joué!');
+                      
+                      // 3. Afficher notification
+                      if (permission === 'granted') {
+                        console.log('NOTIF_DEBUG: Création notification browser...');
+                        const notif = new Notification('🎉 Test réussi - Afroboost', {
+                          body: 'Les notifications fonctionnent! Vous serez alerté des nouveaux messages.',
+                          icon: '/favicon.ico',
+                          tag: 'afroboost-test'
+                        });
+                        notif.onclick = () => { window.focus(); notif.close(); };
+                        setTimeout(() => notif.close(), 5000);
+                        console.log('NOTIF_DEBUG: Notification affichée!');
+                        alert('✅ Test réussi! Notification envoyée.');
+                      } else if (permission === 'denied') {
+                        console.log('NOTIF_DEBUG: Permission refusée, fallback alert');
+                        alert('⚠️ Notifications bloquées par le navigateur.\n\nPour activer:\n1. Cliquez sur 🔒 dans la barre d\'adresse\n2. Autorisez les notifications\n3. Rafraîchissez la page');
+                        // Afficher toast fallback
+                        addToastNotification({
+                          id: Date.now().toString(),
+                          sender_name: 'Test',
+                          content: 'Les notifications browser sont bloquées. Ce toast est le mode fallback.',
+                          session_id: null
+                        });
+                      } else {
+                        alert('⏳ Permission en attente. Cliquez à nouveau pour autoriser.');
+                      }
+                    } catch (err) {
+                      console.error('NOTIF_DEBUG: ERREUR:', err);
+                      alert('❌ Erreur: ' + err.message);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg text-white font-medium transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #d91cd2)' }}
+                  data-testid="test-notifications-btn"
+                >
+                  🔔 Tester maintenant
+                </button>
+              </div>
+            </div>
+            
             {/* Statut notifications (petit badge) */}
             <div className="flex items-center gap-2 text-xs text-white/40">
               {notificationPermission === 'granted' && (
