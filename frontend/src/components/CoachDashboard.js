@@ -6998,10 +6998,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                           {copiedLinkId === link.link_token ? '✓ Copié' : '📋'}
                         </button>
                         <button
-                          onClick={() => deleteChatSession(link.session_id || link.id)}
+                          onClick={() => deleteChatLink(link.id || link.link_token)}
                           className="px-2 py-1 rounded text-xs transition-all hover:bg-red-600/30"
                           style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
-                          title="Supprimer"
+                          title="Supprimer ce lien"
+                          data-testid={`delete-link-${link.link_token}`}
                         >
                           🗑️
                         </button>
