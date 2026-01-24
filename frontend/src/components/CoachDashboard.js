@@ -3069,7 +3069,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     { id: "courses", label: t('courses') }, { id: "offers", label: t('offers') },
     { id: "payments", label: t('payments') }, { id: "codes", label: t('promoCodes') },
     { id: "campaigns", label: "📢 Campagnes" }, { id: "media", label: "🎬 Médias" },
-    { id: "conversations", label: "💬 Conversations" }
+    { id: "conversations", label: unreadCount > 0 ? `💬 Conversations (${unreadCount})` : "💬 Conversations" }
   ];
 
   return (
