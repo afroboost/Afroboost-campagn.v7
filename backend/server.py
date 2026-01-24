@@ -3418,6 +3418,16 @@ async def get_ai_response_with_session(request: Request):
     except:
         pass  # Pas de promos = silencieux
     
+    # === SECTION 5: LIEN DE PAIEMENT TWINT ===
+    twint_payment_url = ai_config.get("twintPaymentUrl", "")
+    if twint_payment_url and twint_payment_url.strip():
+        context += f"\n\n💳 LIEN DE PAIEMENT TWINT:\n"
+        context += f"  URL: {twint_payment_url}\n"
+        context += "  → Quand un client confirme vouloir acheter, propose-lui ce lien de paiement sécurisé Twint.\n"
+        logger.info(f"[CHAT-AI-RESPONSE] ✅ Lien Twint injecté: {twint_payment_url[:50]}...")
+    else:
+        logger.info(f"[CHAT-AI-RESPONSE] ⚠️ Pas de lien Twint configuré")
+    
     # === HISTORIQUE DE CONVERSATION ===
     try:
         recent_messages = await db.chat_messages.find(
@@ -3435,7 +3445,8 @@ async def get_ai_response_with_session(request: Request):
         logger.warning(f"[CHAT-AI-RESPONSE] Erreur récupération historique: {e}")
     
     # === RÈGLES STRICTES POUR L'IA ===
-    context += """
+    # Règles de base
+    rules = """
 
 ========== RÈGLES STRICTES ==========
 1. Tu es l'assistant d'Afroboost, expert en fitness et danse afro.
@@ -3443,8 +3454,20 @@ async def get_ai_response_with_session(request: Request):
 3. N'INVENTE JAMAIS de cours, prix, ou articles qui ne sont pas listés.
 4. Si le client demande quelque chose qui n'est pas dans le contexte, dis : "Je n'ai pas cette information. Contacte directement le coach via WhatsApp ou email."
 5. Mets en avant les NOUVEAUTÉS et les articles récents si pertinent.
-6. Sois chaleureux, utilise des emojis 🎉 et le prénom du client.
+6. Sois chaleureux, utilise des emojis 🎉 et le prénom du client."""
+    
+    # Règle conditionnelle pour Twint
+    if twint_payment_url and twint_payment_url.strip():
+        rules += f"""
+7. PAIEMENT TWINT: Si le client confirme vouloir acheter un produit ou un cours, propose-lui de payer via ce lien Twint sécurisé: {twint_payment_url}
+   Exemple de réponse: "Pour régler ton achat, clique sur ce lien Twint: {twint_payment_url} 💳"
 ========================================"""
+    else:
+        rules += """
+7. PAIEMENT: Si le client veut acheter, oriente-le vers le coach via WhatsApp ou email pour finaliser le paiement.
+========================================"""
+    
+    context += rules
     
     # Combiner le prompt système avec le contexte
     full_system_prompt = ai_config.get("systemPrompt", "Tu es l'assistant IA d'Afroboost, une application de réservation de cours de fitness.") + context
