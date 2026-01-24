@@ -5369,6 +5369,23 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     />
                   </div>
 
+                  {/* Lien de paiement Twint */}
+                  <div className="p-4 rounded-lg bg-green-900/20 border border-green-500/30">
+                    <label className="block mb-2 text-white text-sm">💳 Lien de paiement Twint</label>
+                    <input 
+                      type="url"
+                      value={aiConfig.twintPaymentUrl || ''}
+                      onChange={e => setAiConfig({...aiConfig, twintPaymentUrl: e.target.value})}
+                      className="w-full px-4 py-3 rounded-lg neon-input text-sm"
+                      placeholder="https://twint.ch/pay/... ou votre lien de paiement"
+                      data-testid="twint-payment-url-input"
+                    />
+                    <p className="text-xs mt-2 text-white/50">
+                      L'IA proposera ce lien aux clients souhaitant acheter un produit ou un cours.
+                      {!aiConfig.twintPaymentUrl && <span className="text-yellow-400"> ⚠️ Non configuré : l'IA redirigera vers le coach.</span>}
+                    </p>
+                  </div>
+
                   {/* Model Selection */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
