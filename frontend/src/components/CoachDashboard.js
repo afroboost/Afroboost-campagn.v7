@@ -1547,11 +1547,18 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     if (!window.confirm("⚠️ Supprimer ce contact du CRM ?\n\nCette action est irréversible.")) return;
     
     try {
+      console.log('DELETE_DEBUG: Suppression participant:', participantId);
       await axios.delete(`${API}/chat/participants/${participantId}`);
-      setChatParticipants(prev => prev.filter(p => p.id !== participantId));
+      console.log('DELETE_DEBUG: API OK pour participant');
+      setChatParticipants(prev => {
+        const filtered = prev.filter(p => p.id !== participantId);
+        console.log('DELETE_DEBUG: chatParticipants filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      console.log('DELETE_DEBUG: Suppression participant terminée ✅');
     } catch (err) {
-      console.error("Error deleting participant:", err);
-      alert("Erreur lors de la suppression du contact");
+      console.error("DELETE_DEBUG: ERREUR participant:", err);
+      alert("Erreur lors de la suppression du contact: " + (err.response?.data?.detail || err.message));
     }
   };
 
