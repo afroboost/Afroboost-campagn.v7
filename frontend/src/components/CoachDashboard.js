@@ -3500,16 +3500,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               </div>
               {reservationsSearch && (
                 <p className="text-xs text-purple-400 mt-1">
-                  {reservations.filter(r => {
-                    const q = reservationsSearch.toLowerCase();
-                    const dateStr = new Date(r.datetime).toLocaleDateString('fr-FR');
-                    return r.userName?.toLowerCase().includes(q) ||
-                           r.userEmail?.toLowerCase().includes(q) ||
-                           r.userWhatsapp?.includes(q) ||
-                           r.reservationCode?.toLowerCase().includes(q) ||
-                           dateStr.includes(q) ||
-                           r.courseName?.toLowerCase().includes(q);
-                  }).length} résultat(s)
+                  {filteredReservations.length} résultat(s)
                 </p>
               )}
             </div>
