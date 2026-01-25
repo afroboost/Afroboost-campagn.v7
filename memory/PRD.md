@@ -237,12 +237,12 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 
 - [x] **Scroll et Filtrage Réservations** (25 Jan 2026) - NOUVEAU ✅
   - **Scroll interne** : Zone scrollable de 600px max pour desktop et mobile
-  - **En-têtes fixes** : `sticky top-0` sur le thead du tableau desktop
-  - **Filtrage multi-critères** : Recherche par nom, email, WhatsApp, date, code de réservation, nom du cours
-  - **Message "Aucune réservation correspondante"** : Affiché quand la recherche ne trouve rien
-  - **Compteur de résultats** : `X résultat(s)` sous la barre de recherche
-  - **Vue mobile optimisée** : Cards avec scroll et filtrage identiques
-  - Test report: `/app/test_reports/iteration_39.json` - 100% passed
+  - **En-têtes fixes** : `sticky top-0` sur le thead du tableau desktop + `position: relative` sur conteneur
+  - **Filtrage optimisé avec useMemo** : `filteredReservations` basé sur `[reservations, reservationsSearch]`
+  - **Critères de recherche** : nom, email, WhatsApp, date, code de réservation, nom du cours
+  - **Compteur de résultats** : `{filteredReservations.length} résultat(s)` sous la barre de recherche
+  - **Message "Aucune réservation correspondante"** : Affiché quand filteredReservations est vide
+  - Test report: `/app/test_reports/iteration_41.json` - 100% passed
 
 - [x] **Scanner QR Réparé** (25 Jan 2026) - NOUVEAU ✅
   - CDN Html5Qrcode ajouté dans index.html (ligne 52)
@@ -252,10 +252,10 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - Test report: `/app/test_reports/iteration_40.json` - 100% passed
 
 - [x] **Suppressions avec mise à jour UI instantanée** (25 Jan 2026) - VÉRIFIÉ ✅
+  - **Logs DELETE_UI** : Tracent les transitions d'état (`Réservations filtrées: 2 -> 1`)
   - Réservations : `setReservations(prev => prev.filter(r => r.id !== id))`
   - Conversations : `setChatSessions`, `setEnrichedConversations`, `setChatLinks` tous mis à jour
-  - Logs DELETE_DEBUG confirment les changements d'état (ex: `chatSessions 2->1`)
-  - Test report: `/app/test_reports/iteration_40.json` - 100% passed
+  - Test report: `/app/test_reports/iteration_41.json` - 100% passed
 
 ### P1 - À faire
 - [ ] **Gérer les articles dans le Dashboard** : Interface CRUD pour créer/modifier/supprimer des articles
