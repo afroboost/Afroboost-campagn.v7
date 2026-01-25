@@ -3543,17 +3543,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             
             {/* === MOBILE VIEW: Cards === */}
             <div className="block md:hidden space-y-3 max-h-[600px] overflow-y-auto scrollbar-thin pr-2">
-              {reservations.filter(r => {
-                if (!reservationsSearch) return true;
-                const q = reservationsSearch.toLowerCase();
-                const dateStr = new Date(r.datetime).toLocaleDateString('fr-FR');
-                return r.userName?.toLowerCase().includes(q) ||
-                       r.userEmail?.toLowerCase().includes(q) ||
-                       r.userWhatsapp?.includes(q) ||
-                       r.reservationCode?.toLowerCase().includes(q) ||
-                       dateStr.includes(q) ||
-                       r.courseName?.toLowerCase().includes(q);
-              }).map(r => {
+              {filteredReservations.map(r => {
                 const dt = new Date(r.datetime);
                 const isProduct = r.selectedVariants || r.trackingNumber || r.shippingStatus !== 'pending';
                 return (
