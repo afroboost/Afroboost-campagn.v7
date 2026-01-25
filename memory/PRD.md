@@ -235,6 +235,20 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - Service amélioré avec `getNotificationPermissionStatus()` et `fallbackNeeded`
   - Badge de statut (🔔 actives / 🔕 mode toast)
 
+- [x] **Scroll et Filtrage Réservations** (25 Jan 2026) - NOUVEAU ✅
+  - **Scroll interne** : Zone scrollable de 600px max pour desktop et mobile
+  - **En-têtes fixes** : `sticky top-0` sur le thead du tableau desktop
+  - **Filtrage multi-critères** : Recherche par nom, email, WhatsApp, date, code de réservation, nom du cours
+  - **Message "Aucune réservation correspondante"** : Affiché quand la recherche ne trouve rien
+  - **Compteur de résultats** : `X résultat(s)` sous la barre de recherche
+  - **Vue mobile optimisée** : Cards avec scroll et filtrage identiques
+  - Test report: `/app/test_reports/iteration_39.json` - 100% passed
+
+- [x] **Scanner QR Réparé** (25 Jan 2026) - NOUVEAU ✅
+  - Import `QRScannerModal` vérifié (ligne 21 de CoachDashboard.js)
+  - Modal s'ouvre correctement sans erreur ReferenceError
+  - Options caméra et saisie manuelle fonctionnelles
+
 ### P1 - À faire
 - [ ] **Gérer les articles dans le Dashboard** : Interface CRUD pour créer/modifier/supprimer des articles
 - [ ] **Activation numéro WhatsApp Suisse (+41)** : En attente approbation Meta (config Twilio bloquée)
