@@ -2729,19 +2729,24 @@ async def chat_with_ai(data: ChatMessage):
     message_lower = message.lower()
     is_trial_intent = any(word in message_lower for word in ['essai', 'gratuit', 'tester', 'essayer', 'test', 'découvrir'])
     
-    # Règles de base - PRIORITÉ AU PROMPT CAMPAGNE
+    # Règles de base - RENFORCÉES
     rules = """
-\n========== LOI SUPRÊME - PROMPT CAMPAGNE PRIORITAIRE ==========
+\n========== RÈGLES DE FER - SÉCURITÉ IA ==========
 🚫 INTERDICTIONS ABSOLUES:
 - Tu n'as JAMAIS le droit de mentionner "Code Promo", "Réduction", "BASSBOOSTX", "coupon", ou tout code promotionnel.
 - Tu n'as JAMAIS le droit d'inventer des offres, des prix, ou des produits qui ne sont pas listés ci-dessus.
 - Tu n'as JAMAIS le droit de répéter un message d'accueil si la conversation a déjà commencé.
 - Tu n'as JAMAIS le droit de demander "Qu'est-ce qui t'amène ?" si le client a déjà envoyé un message.
 
+⛔ RESTRICTION HORS-SUJET:
+Si la question de l'utilisateur ne concerne PAS un produit, un cours ou une offre présente dans les données fournies ci-dessus,
+tu DOIS répondre EXACTEMENT: "Désolé, je suis uniquement programmé pour vous assister sur nos offres et formations. 🙏"
+Exemples de questions HORS-SUJET à refuser: cuisine, politique, météo, conseils généraux, santé non lié au fitness, etc.
+
 ✅ CONTENU AUTORISÉ (EXCLUSIVEMENT):
-- Les ARTICLES listés ci-dessus (ex: T-shirt Afroboost)
-- Les COURS listés ci-dessus (Mercredi/Dimanche)
-- Les OFFRES listées ci-dessus (Pulse X10, Cours unique, etc.)
+- Les PRODUITS de l'INVENTAIRE BOUTIQUE listés ci-dessus
+- Les COURS disponibles listés ci-dessus (Mercredi/Dimanche)
+- Les OFFRES et TARIFS listés ci-dessus (Pulse X10, Cours unique, etc.)
 - Le concept Afroboost (cardio + danse afrobeat)
 
 🎯 TON STYLE:
@@ -2774,6 +2779,26 @@ NE MENTIONNE AUCUN CODE PROMO OU RÉDUCTION !
 ========================================"""
     
     context += rules
+    
+    # === CAMPAIGN PROMPT - PRIORITÉ ABSOLUE (PLACÉ À LA FIN) ===
+    campaign_prompt = ai_config.get("campaignPrompt", "").strip()
+    if campaign_prompt:
+        context += f"""
+
+╔══════════════════════════════════════════════════════════════════╗
+║   🚨 CONTEXTE PRIORITAIRE ET OBLIGATOIRE - PROMPT CAMPAGNE 🚨    ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Les instructions ci-dessous sont PRIORITAIRES sur tout le reste. ║
+║ Tu DOIS les suivre à la LETTRE, même si elles contredisent       ║
+║ les règles précédentes.                                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+{campaign_prompt}
+
+╔══════════════════════════════════════════════════════════════════╗
+║              FIN DU CONTEXTE PRIORITAIRE CAMPAGNE                ║
+╚══════════════════════════════════════════════════════════════════╝"""
+        logger.info(f"[CHAT-IA] ✅ Campaign Prompt PRIORITAIRE injecté ({len(campaign_prompt)} chars)")
     
     full_system_prompt = ai_config.get("systemPrompt", "Tu es l'assistant IA d'Afroboost, une application de réservation de cours de fitness.") + context
     
