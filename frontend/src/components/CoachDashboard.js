@@ -1052,7 +1052,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [bulkSendingResults, setBulkSendingResults] = useState(null);
 
   // === IA WHATSAPP STATE ===
-  const [aiConfig, setAiConfig] = useState({ enabled: false, systemPrompt: '', model: 'gpt-4o-mini', provider: 'openai', lastMediaUrl: '', twintPaymentUrl: '' });
+  const [aiConfig, setAiConfig] = useState({ enabled: false, systemPrompt: '', model: 'gpt-4o-mini', provider: 'openai', lastMediaUrl: '', twintPaymentUrl: '', campaignPrompt: '' });
   const [showAIConfig, setShowAIConfig] = useState(false);
   const [aiLogs, setAiLogs] = useState([]);
   const [aiTestMessage, setAiTestMessage] = useState('');
