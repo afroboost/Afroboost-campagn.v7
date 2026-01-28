@@ -3689,7 +3689,7 @@ async def get_ai_response_with_session(request: Request):
     # CONTEXTE DYNAMIQUE COMPLET (IDENTIQUE À /api/chat)
     # Récupère TOUS les produits, offres, cours et articles depuis MongoDB
     # =====================================================================
-    logger.info(f"[CHAT-AI-RESPONSE] 🔄 Construction du contexte pour {participant_name}...")
+    logger.info("[CHAT-AI-RESPONSE] 🔄 Construction du contexte...")
     
     context = "\n\n========== CONNAISSANCES DU SITE AFROBOOST ==========\n"
     context += "Utilise EXCLUSIVEMENT ces informations pour répondre sur les produits, cours, offres et articles.\n"
