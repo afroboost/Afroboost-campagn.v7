@@ -2817,20 +2817,71 @@ async def chat_with_ai(data: ChatMessage):
     # === FIN DES SECTIONS VENTE (uniquement en mode STANDARD) ===
     
     # === RÈGLES STRICTES POUR L'IA ===
-    # Récupérer le lien de paiement Twint (toujours, pour le SECURITY_PROMPT)
-    twint_payment_url = ai_config.get("twintPaymentUrl", "")
+    # Récupérer le lien de paiement Twint UNIQUEMENT en mode STANDARD
+    twint_payment_url = ""
+    if not use_strict_mode:
+        twint_payment_url = ai_config.get("twintPaymentUrl", "")
     
     # Détecter intention essai gratuit
     message_lower = message.lower()
     is_trial_intent = any(word in message_lower for word in ['essai', 'gratuit', 'tester', 'essayer', 'test', 'découvrir'])
     
     # =====================================================================
-    # ARCHITECTURE DE PROMPT AUDITÉE (BASE → SECURITY → CAMPAIGN)
-    # Structure pyramidale avec surcharge: CAMPAIGN écrase tout le reste
+    # ARCHITECTURE DE PROMPT - LOGIQUE DE REMPLACEMENT TOTAL
+    # MODE STRICT: custom_prompt REMPLACE BASE_PROMPT (pas d'ajout)
+    # MODE STANDARD: BASE + SECURITY + CAMPAIGN (flux habituel)
     # =====================================================================
     
-    # --- 1. BASE_PROMPT : Limite l'IA aux produits/cours ---
-    BASE_PROMPT = """
+    if use_strict_mode:
+        # =====================================================================
+        # MODE STRICT : CONTEXTE MINIMALISTE SANS AUCUNE INFO DE VENTE
+        # =====================================================================
+        # Le custom_prompt REMPLACE ENTIÈREMENT le BASE_PROMPT
+        # AUCUNE donnée de prix, tarif, boutique, Twint n'est injectée
+        
+        STRICT_SYSTEM_PROMPT = """
+╔══════════════════════════════════════════════════════════════════════╗
+║        🔒🔒🔒 MODE STRICT - PARTENARIAT / COLLABORATION 🔒🔒🔒        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+⛔⛔⛔ INTERDICTIONS ABSOLUES ⛔⛔⛔
+
+Tu as INTERDICTION ABSOLUE de:
+- Citer un PRIX, un TARIF, un COÛT ou un MONTANT (CHF, EUR, $)
+- Mentionner un LIEN DE PAIEMENT (Twint, Stripe, etc.)
+- Parler de COURS, SESSIONS, ABONNEMENTS ou RÉSERVATIONS
+- Orienter vers l'ACHAT ou l'INSCRIPTION
+- Donner des informations sur la BOUTIQUE ou les PRODUITS à vendre
+
+Si on te demande un prix, un tarif ou "combien ça coûte", TU DOIS répondre:
+"Je vous invite à en discuter directement lors de notre échange, je m'occupe uniquement de la partie collaboration."
+
+Si on insiste, répète cette phrase. Ne donne JAMAIS de prix.
+
+🎯 TON RÔLE UNIQUE:
+Tu t'occupes UNIQUEMENT de la COLLABORATION et du PARTENARIAT.
+Tu peux parler du CONCEPT Afroboost (cardio + danse afrobeat + casques audio immersifs).
+Tu ne connais AUCUN prix, AUCUN tarif, AUCUN lien de paiement.
+
+"""
+        # Ajouter le custom_prompt comme instructions exclusives
+        STRICT_SYSTEM_PROMPT += "\n═══════════════════════════════════════════════════════════════\n"
+        STRICT_SYSTEM_PROMPT += "📋 INSTRUCTIONS EXCLUSIVES DU LIEN:\n"
+        STRICT_SYSTEM_PROMPT += "═══════════════════════════════════════════════════════════════\n\n"
+        STRICT_SYSTEM_PROMPT += CUSTOM_PROMPT
+        STRICT_SYSTEM_PROMPT += "\n\n═══════════════════════════════════════════════════════════════\n"
+        
+        # Injecter le prompt STRICT (remplace tout)
+        context += STRICT_SYSTEM_PROMPT
+        logger.info("[CHAT-IA] 🔒 Mode STRICT activé - Aucune donnée de vente/prix/Twint injectée")
+        
+    else:
+        # =====================================================================
+        # MODE STANDARD : FLUX HABITUEL AVEC TOUTES LES DONNÉES DE VENTE
+        # =====================================================================
+        
+        # --- 1. BASE_PROMPT : Limite l'IA aux produits/cours ---
+        BASE_PROMPT = """
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    BASE_PROMPT - IDENTITÉ IA                     ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -2853,8 +2904,8 @@ Tu ne parles QUE du catalogue Afroboost (produits, cours, offres listés ci-dess
 - Réponses courtes et percutantes
 """
 
-    # --- 2. SECURITY_PROMPT : Règle non négociable ---
-    SECURITY_PROMPT = """
+        # --- 2. SECURITY_PROMPT : Règle non négociable ---
+        SECURITY_PROMPT = """
 ╔══════════════════════════════════════════════════════════════════╗
 ║              SECURITY_PROMPT - RÈGLE NON NÉGOCIABLE              ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -2871,33 +2922,47 @@ Si la question ne concerne pas un produit ou un cours Afroboost, réponds:
 - N'invente JAMAIS d'offres ou de prix
 """
 
-    # Ajout de règles contextuelles
-    if is_trial_intent:
-        SECURITY_PROMPT += """
+        # Ajout de règles contextuelles
+        if is_trial_intent:
+            SECURITY_PROMPT += """
 
 🆓 FLOW ESSAI GRATUIT:
 1. "Super ! 🔥 Les 10 premiers peuvent tester gratuitement !"
 2. "Tu préfères Mercredi ou Dimanche ?"
 3. Attends sa réponse avant de demander ses coordonnées.
 """
-    
-    if twint_payment_url and twint_payment_url.strip():
-        SECURITY_PROMPT += f"""
+        
+        # Lien Twint UNIQUEMENT en mode STANDARD
+        if twint_payment_url and twint_payment_url.strip():
+            SECURITY_PROMPT += f"""
 
 💳 PAIEMENT: Propose ce lien Twint: {twint_payment_url}
 """
-    else:
-        SECURITY_PROMPT += """
+        else:
+            SECURITY_PROMPT += """
 
 💳 PAIEMENT: Oriente vers le coach WhatsApp ou email pour finaliser.
 """
 
-    # --- 3. PROMPT PAR LIEN : UTILISATION DU MODE DÉJÀ DÉTECTÉ ---
-    # La variable use_strict_mode a été définie en amont (section 2.5)
-    # Pas de re-détection, on utilise directement CUSTOM_PROMPT et use_strict_mode
-    
-    FINAL_PROMPT = CUSTOM_PROMPT if use_strict_mode else ""
-    prompt_source = "custom_prompt (lien)" if use_strict_mode else "none"
+        # --- 3. CAMPAIGN_PROMPT : Récupéré de la config globale ---
+        CAMPAIGN_PROMPT = ai_config.get("campaignPrompt", "").strip()
+        
+        # GARDE-FOU: Limite à 2000 caractères
+        MAX_CAMPAIGN_LENGTH = 2000
+        if len(CAMPAIGN_PROMPT) > MAX_CAMPAIGN_LENGTH:
+            logger.warning("[CHAT-IA] ⚠️ CAMPAIGN_PROMPT tronqué")
+            CAMPAIGN_PROMPT = CAMPAIGN_PROMPT[:MAX_CAMPAIGN_LENGTH] + "... [TRONQUÉ]"
+        
+        # Injection MODE STANDARD: BASE + SECURITY + CAMPAIGN
+        context += BASE_PROMPT
+        context += SECURITY_PROMPT
+        if CAMPAIGN_PROMPT:
+            context += "\n\n--- INSTRUCTIONS PRIORITAIRES DE LA CAMPAGNE ACTUELLE ---\n"
+            context += CAMPAIGN_PROMPT
+            context += "\n--- FIN DES INSTRUCTIONS ---\n"
+            logger.info("[CHAT-IA] ✅ Mode STANDARD - Campaign Prompt injecté (len: " + str(len(CAMPAIGN_PROMPT)) + ")")
+        else:
+            logger.info("[CHAT-IA] ✅ Mode STANDARD - Pas de Campaign Prompt")
     
     # Fallback sur campaignPrompt global (uniquement en mode STANDARD)
     if not FINAL_PROMPT and not use_strict_mode:
