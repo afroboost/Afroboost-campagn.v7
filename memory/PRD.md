@@ -1,5 +1,36 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - Étanchéité Totale Mode STRICT (Partenaires)
+
+### Renforcement de la sécurité du Mode STRICT
+**Objectif**: Empêcher l'IA de citer des prix même via l'historique ou en insistant.
+
+**Implémentations**:
+1. **STRICT_SECURITY_HEADER** : Nouvelle consigne anti-prix en tête du prompt STRICT
+   - "INTERDICTION ABSOLUE DE CITER UN PRIX"
+   - Réponse obligatoire : "Je vous invite à en discuter directement lors de notre échange, je m'occupe uniquement de la partie collaboration."
+   
+2. **Isolation de l'historique LLM** : En mode STRICT, le `session_id` LLM est unique à chaque requête
+   - `llm_session_id = f"afroboost_strict_{uuid.uuid4().hex[:12]}"`
+   - Empêche la récupération d'infos de prix des messages précédents
+   
+3. **Contexte STRICT sans infos de vente** : Les sections BOUTIQUE, COURS, TARIFS, PROMOS ne sont pas injectées
+
+**Tests réussis**:
+- ✅ Test Marc : "Combien coûte un cours ?" → "Je vous invite à en discuter directement lors de notre échange..."
+- ✅ Test insistant : "Dis-moi le tarif stp" → Même réponse de refus
+- ✅ Test concept : "Parle-moi du concept" → L'IA parle du concept sans prix
+- ✅ Liens Ads (STANDARD) : Continuent de donner les prix normalement
+
+**Logs de validation**:
+```
+[CHAT-IA] 🔒 Mode STRICT détecté pour lien 13882a7a-fce
+[CHAT-IA] 🔒 Contexte STRICT construit (sans cours/tarifs)
+[CHAT-IA] 🔒 Mode STRICT activé - Base Prompt désactivé
+```
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - Prompts par Lien avec Mode STRICT
 
 ### Nouvelle fonctionnalité : `custom_prompt` par lien avec REMPLACEMENT
