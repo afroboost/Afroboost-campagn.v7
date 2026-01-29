@@ -1,8 +1,48 @@
 # Afroboost - Document de Référence Produit (PRD)
 
-## Mise à jour du 29 Janvier 2026 - MISSION RÉPARATION CRITIQUE V4
+## Mise à jour du 29 Janvier 2026 - SÉCURISATION BACKEND & OPTIMISATION TEMPS RÉEL
 
 ### CORRECTIONS IMPLÉMENTÉES ✅
+
+#### 1. VERROUILLAGE BACKEND (Sécurité P0) ✅
+**Statut**: IMPLÉMENTÉ
+- Nouvelles routes sécurisées: `/api/admin/delete-history` et `/api/admin/change-identity`
+- Vérification de l'email `contact.artboost@gmail.com` obligatoire
+- Retour 403 (Interdit) si email non autorisé
+- Logs de sécurité: `[SECURITY] Tentative non autorisée par: xxx@test.com`
+- Constante `COACH_EMAIL` définie dans le backend
+
+#### 2. OPTIMISATION SOCKET.IO ✅
+**Statut**: OPTIMISÉ
+- `async_mode='asgi'` conservé (optimal pour FastAPI/Uvicorn)
+- Événements typing ajoutés: `typing_start`, `typing_stop`, `user_typing`
+- Messages émis instantanément via `emit_new_message()`
+- Fallback HTTP polling automatique si WebSocket bloqué
+
+#### 3. PERSISTANCE ROBUSTE ✅
+**Statut**: IMPLÉMENTÉ
+- Fallback pour données corrompues dans `getInitialStep()`
+- Vérification JSON valide avant parsing
+- Nettoyage automatique des clés localStorage si données invalides
+- **Test**: 5 rafraîchissements consécutifs sans bug
+
+#### 4. INDICATEUR DE SAISIE (Typing Indicator) ✅
+**Statut**: IMPLÉMENTÉ
+- Événement `typing_start` émis quand l'utilisateur tape
+- Indicateur "💪 Coach Bassi est en train d'écrire..." affiché
+- Disparition automatique après 3 secondes d'inactivité
+- Anti-spam: max 1 événement par seconde
+- UI: Bulle violette animée avec icône pulsante
+
+### Fichiers modifiés :
+- `/app/backend/server.py`: Routes admin sécurisées, événements typing Socket.IO
+- `/app/frontend/src/components/ChatWidget.js`: handleDeleteHistory/handleChangeIdentity sécurisés, typingUser state, emitTyping()
+
+---
+
+## Mise à jour du 29 Janvier 2026 - MISSION RÉPARATION CRITIQUE V4
+
+### CORRECTIONS PRÉCÉDENTES ✅
 
 #### 1. INSTANTANÉITÉ (Socket.IO) ✅
 **Statut**: IMPLÉMENTÉ
@@ -25,10 +65,6 @@
 - Si `afroboost_identity` ou `af_chat_client` contient `firstName`, le chat s'ouvre directement
 - `sessionData` initialisé depuis localStorage dans `useState`
 - **Résultat**: Après F5, l'utilisateur connecté voit le chat sans formulaire
-
-### Fichiers modifiés :
-- `/app/backend/server.py`: Socket.IO configuration (lignes 87-160), emit_new_message function
-- `/app/frontend/src/components/ChatWidget.js`: Socket.IO client, isCoachMode fixes, persistance
 
 ---
 
