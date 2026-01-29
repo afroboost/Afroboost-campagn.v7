@@ -495,75 +495,9 @@ export const ChatWidget = () => {
     };
   }, [sessionData, step, pollForNewMessages]);
 
-  // === MÉMORISATION CLIENT: Charger les données au démarrage ===
+  // === MÉMORISATION CLIENT: Charger la session et configurer le chat ===
   useEffect(() => {
-    // Vérifier d'abord la clé unifiée 'afroboost_identity'
-    const savedIdentity = localStorage.getItem(AFROBOOST_IDENTITY_KEY);
-    const savedClient = localStorage.getItem(CHAT_CLIENT_KEY);
     const savedSession = localStorage.getItem(CHAT_SESSION_KEY);
-    
-    // Priorité à 'afroboost_identity' (nouvelle clé unifiée)
-    if (savedIdentity) {
-      try {
-        const identity = JSON.parse(savedIdentity);
-        if (identity.firstName) {
-          setLeadData({
-            firstName: identity.firstName,
-            email: identity.email || '',
-            whatsapp: identity.whatsapp || ''
-          });
-          setIsReturningClient(true);
-          if (identity.participantId) {
-            setParticipantId(identity.participantId);
-          }
-          // Vérifier si c'est le coach
-          if (identity.email && identity.email.toLowerCase() === COACH_EMAIL.toLowerCase()) {
-            setIsCoachMode(true);
-            console.log('🏋️ Mode Coach activé depuis afroboost_identity');
-          }
-          console.log(`🎉 Identité retrouvée: ${identity.firstName} (via afroboost_identity)`);
-          // Migrer vers l'ancien format aussi pour compatibilité
-          localStorage.setItem(CHAT_CLIENT_KEY, JSON.stringify({
-            firstName: identity.firstName,
-            email: identity.email || '',
-            whatsapp: identity.whatsapp || '',
-            participantId: identity.participantId
-          }));
-        }
-      } catch (err) {
-        console.error('Error loading afroboost_identity:', err);
-        localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
-      }
-    } else if (savedClient) {
-      // Fallback sur l'ancienne clé
-      try {
-        const clientData = JSON.parse(savedClient);
-        if (clientData.firstName && clientData.email) {
-          setLeadData(clientData);
-          setIsReturningClient(true);
-          if (clientData.participantId) {
-            setParticipantId(clientData.participantId);
-          }
-          // Vérifier si c'est le coach
-          if (clientData.email.toLowerCase() === COACH_EMAIL.toLowerCase()) {
-            setIsCoachMode(true);
-            console.log('🏋️ Mode Coach activé depuis le widget');
-          }
-          console.log(`🎉 Client reconnu: ${clientData.firstName}`);
-          // Migrer vers la nouvelle clé unifiée
-          localStorage.setItem(AFROBOOST_IDENTITY_KEY, JSON.stringify({
-            firstName: clientData.firstName,
-            email: clientData.email,
-            whatsapp: clientData.whatsapp || '',
-            participantId: clientData.participantId,
-            savedAt: new Date().toISOString()
-          }));
-        }
-      } catch (err) {
-        console.error('Error loading saved client:', err);
-        localStorage.removeItem(CHAT_CLIENT_KEY);
-      }
-    }
 
     if (savedSession) {
       try {
