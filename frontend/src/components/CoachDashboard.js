@@ -6212,7 +6212,32 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, instagram: e.target.checked}})} />
                     📸 Instagram
                   </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="checkbox" checked={newCampaign.channels.group || false}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, group: e.target.checked}})} />
+                    💬 Groupe Afroboost
+                  </label>
                 </div>
+                
+                {/* Sélecteur de groupe si canal groupe activé */}
+                {newCampaign.channels.group && (
+                  <div className="mt-3 p-3 rounded-lg border border-purple-500/30 bg-purple-900/20">
+                    <label className="block mb-2 text-purple-400 text-xs">Groupe cible</label>
+                    <select 
+                      value={newCampaign.targetGroupId || 'community'}
+                      onChange={e => setNewCampaign({...newCampaign, targetGroupId: e.target.value})}
+                      className="w-full px-3 py-2 rounded-lg neon-input text-sm"
+                    >
+                      <option value="community">🌍 Communauté Générale</option>
+                      <option value="vip">⭐ Groupe VIP</option>
+                      <option value="promo">🎁 Offres Spéciales</option>
+                    </select>
+                    <p className="text-xs text-gray-400 mt-2">
+                      💡 Le message sera envoyé par "💪 Coach Bassi" dans le chat de groupe.
+                      La variable {'{prénom}'} sera remplacée par "Communauté" pour les envois groupés.
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Scheduling - Multi-date support */}
