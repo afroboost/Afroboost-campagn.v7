@@ -1067,6 +1067,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [sessionMessages, setSessionMessages] = useState([]);
   const [coachMessage, setCoachMessage] = useState('');
   const [newLinkTitle, setNewLinkTitle] = useState('');
+  const [newLinkCustomPrompt, setNewLinkCustomPrompt] = useState('');  // Prompt spécifique au lien
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [copiedLinkId, setCopiedLinkId] = useState(null);
   const [conversationSearch, setConversationSearch] = useState(''); // Recherche globale conversations
