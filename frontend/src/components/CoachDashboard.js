@@ -7176,11 +7176,12 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    value={newLinkTitle}
-                    onChange={(e) => setNewLinkTitle(e.target.value)}
+                    value={newCommunityName}
+                    onChange={(e) => setNewCommunityName(e.target.value)}
                     placeholder="Nom du groupe"
                     className="flex-1 px-3 py-2 rounded-lg text-sm"
                     style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    data-testid="new-community-name"
                   />
                   <button
                     onClick={createCommunityChat}
