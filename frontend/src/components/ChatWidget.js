@@ -1054,8 +1054,8 @@ export const ChatWidget = () => {
                   {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
                 </button>
               )}
-              {/* Menu burger */}
-              {step === 'chat' && (
+              {/* Menu burger - VISIBLE UNIQUEMENT POUR LE COACH/ADMIN */}
+              {step === 'chat' && isCoachMode && (
                 <div className="relative">
                   <button
                     onClick={() => setShowMenu(!showMenu)}
@@ -1077,7 +1077,7 @@ export const ChatWidget = () => {
                     ⋮
                   </button>
                   
-                  {/* Menu déroulant */}
+                  {/* Menu déroulant - ADMIN ONLY */}
                   {showMenu && (
                     <div
                       style={{
