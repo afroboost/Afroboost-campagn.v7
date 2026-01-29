@@ -573,6 +573,33 @@ class ChatLinkResponse(BaseModel):
     share_url: str
     session_id: str
 
+# === MESSAGERIE PRIVÉE (MP) - Isolation totale de l'IA ===
+class PrivateMessage(BaseModel):
+    """Message privé entre deux participants - INVISIBLE pour l'IA"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str  # ID unique de la conversation MP
+    sender_id: str
+    sender_name: str
+    recipient_id: str
+    recipient_name: str
+    content: str
+    is_read: bool = False
+    is_deleted: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class PrivateConversation(BaseModel):
+    """Conversation privée entre deux participants"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    participant_1_id: str
+    participant_1_name: str
+    participant_2_id: str
+    participant_2_name: str
+    last_message: Optional[str] = None
+    last_message_at: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ==================== ROUTES ====================
 
 @api_router.get("/")
