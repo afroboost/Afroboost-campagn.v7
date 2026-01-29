@@ -1,5 +1,45 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - CORRECTION RADICALE & VERROUILLAGE
+
+### PREUVES DE VALIDATION ✅
+
+#### 1. SÉCURITÉ ADMIN ABSOLUE ✅
+**Test Client "Papou" (papou@client.com)**:
+- Menu (⋮): **0 éléments dans le DOM**
+- Bouton Supprimer: **0 éléments dans le DOM**
+- Bouton Changer identité: **0 éléments dans le DOM**
+- Condition: `{(step === 'chat' || step === 'coach') && isCoachMode && (`
+- Backend: Retourne "Accès refusé" pour emails non-coach
+
+#### 2. TEMPS RÉEL WEBSOCKET ✅
+**Configuration Socket.IO optimisée**:
+```javascript
+transports: ['websocket'],  // WebSocket prioritaire
+reconnectionAttempts: 3,
+timeout: 5000,
+upgrade: false
+```
+- Fallback automatique vers polling si WebSocket échoue
+
+#### 3. PERSISTANCE "RECONNEXION AUTO" ✅
+**Test F5**: 5/5 réussis (100%)
+- `getInitialStep()` vérifie localStorage au montage
+- Si `firstName` existe → Chat direct
+- Pas de formulaire login
+
+#### 4. RENDU EMOJIS ✅
+**Test visuel**: 🔥 💪 ❤️ visibles dans les messages
+- Fonction: `parseEmojis()` avec fallback natif
+- JAMAIS de texte `[emoji:...]` visible
+
+### GARDE-FOUS VÉRIFIÉS ✅
+- Prix CHF 10.-: INTACT
+- TWINT: INTACT
+- VISA: INTACT
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - VERROUILLAGE "CONVERSION ADS"
 
 ### CRITÈRES DE RÉUSSITE - TOUS VALIDÉS ✅
