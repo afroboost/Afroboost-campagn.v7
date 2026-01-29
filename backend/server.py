@@ -3621,7 +3621,7 @@ async def get_unread_notifications(
     }
 
 # === EMOJIS PERSONNALISÉS DU COACH ===
-@api_router.get("/emojis/list")
+@api_router.get("/custom-emojis/list")
 async def list_custom_emojis():
     """
     Liste tous les emojis personnalisés disponibles dans /uploads/emojis/
@@ -3642,7 +3642,7 @@ async def list_custom_emojis():
     
     return {"emojis": emojis, "count": len(emojis)}
 
-@api_router.post("/emojis/upload")
+@api_router.post("/custom-emojis/upload")
 async def upload_custom_emoji(request: Request):
     """
     Upload un emoji personnalisé (pour le coach).
