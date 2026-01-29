@@ -4129,8 +4129,8 @@ Tu ne parles QUE du catalogue Afroboost (produits, cours, offres listés ci-dess
 - Réponses courtes et percutantes
 """
 
-    # --- 2. SECURITY_PROMPT : Règle non négociable ---
-    SECURITY_PROMPT = """
+        # --- 2. SECURITY_PROMPT : Règle non négociable ---
+        SECURITY_PROMPT = """
 ╔══════════════════════════════════════════════════════════════════╗
 ║              SECURITY_PROMPT - RÈGLE NON NÉGOCIABLE              ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -4147,57 +4147,48 @@ Si la question ne concerne pas un produit ou un cours Afroboost, réponds:
 - N'invente JAMAIS d'offres ou de prix
 """
 
-    # Ajout de règles contextuelles
-    if is_trial_intent:
-        SECURITY_PROMPT += """
+        # Ajout de règles contextuelles
+        if is_trial_intent:
+            SECURITY_PROMPT += """
 
 🆓 FLOW ESSAI GRATUIT:
 1. "Super ! 🔥 Les 10 premiers peuvent tester gratuitement !"
 2. "Tu préfères Mercredi ou Dimanche ?"
 3. Attends sa réponse avant de demander ses coordonnées.
 """
-    
-    if twint_payment_url and twint_payment_url.strip():
-        SECURITY_PROMPT += f"""
+        
+        # Twint UNIQUEMENT en mode STANDARD
+        twint_payment_url = ai_config.get("twintPaymentUrl", "")
+        if twint_payment_url and twint_payment_url.strip():
+            SECURITY_PROMPT += f"""
 
 💳 PAIEMENT: Propose ce lien Twint: {twint_payment_url}
 """
-    else:
-        SECURITY_PROMPT += """
+        else:
+            SECURITY_PROMPT += """
 
 💳 PAIEMENT: Oriente vers le coach WhatsApp ou email pour finaliser.
 """
 
-    # --- 3. PROMPT PAR LIEN : LOGIQUE DE REMPLACEMENT (NON-CONCATÉNATION) ---
-    # RÈGLE CRITIQUE:
-    # - SI custom_prompt existe → IGNORER BASE_PROMPT, utiliser UNIQUEMENT SECURITY + CUSTOM
-    # - SINON → Utiliser BASE_PROMPT + CAMPAIGN_PROMPT (flux habituel)
-    
-    FINAL_PROMPT = ""
-    prompt_source = "none"
-    use_strict_mode = False  # Mode strict = custom_prompt actif, BASE_PROMPT désactivé
-    
-    # Vérifier si la session a un custom_prompt
-    session_custom_prompt = session.get("custom_prompt") if session else None
-    if session_custom_prompt and isinstance(session_custom_prompt, str) and session_custom_prompt.strip():
-        FINAL_PROMPT = session_custom_prompt.strip()
-        prompt_source = "custom_prompt (lien)"
-        use_strict_mode = True  # ACTIVER MODE STRICT
-        logger.info("[CHAT-AI-RESPONSE] 🔒 Mode STRICT : Prompt de lien activé, Base Prompt DÉSACTIVÉ")
-    else:
-        # Fallback sur campaignPrompt global (mode standard)
-        FINAL_PROMPT = ai_config.get("campaignPrompt", "").strip()
-        if FINAL_PROMPT:
-            prompt_source = "campaignPrompt (global)"
-    
-    # GARDE-FOU: Limite à 2000 caractères pour éviter de saturer le contexte OpenAI
-    MAX_CAMPAIGN_LENGTH = 2000
-    if len(FINAL_PROMPT) > MAX_CAMPAIGN_LENGTH:
-        logger.warning("[CHAT-AI-RESPONSE] ⚠️ PROMPT tronqué (dépassement " + str(MAX_CAMPAIGN_LENGTH) + " chars)")
-        FINAL_PROMPT = FINAL_PROMPT[:MAX_CAMPAIGN_LENGTH] + "... [TRONQUÉ]"
-    
-    # --- INJECTION FINALE : LOGIQUE DE REMPLACEMENT ---
-    if use_strict_mode:
+        # --- 3. CAMPAIGN_PROMPT : Récupéré de la config globale ---
+        CAMPAIGN_PROMPT = ai_config.get("campaignPrompt", "").strip()
+        
+        # GARDE-FOU: Limite à 2000 caractères
+        MAX_CAMPAIGN_LENGTH = 2000
+        if len(CAMPAIGN_PROMPT) > MAX_CAMPAIGN_LENGTH:
+            logger.warning("[CHAT-AI-RESPONSE] ⚠️ CAMPAIGN_PROMPT tronqué")
+            CAMPAIGN_PROMPT = CAMPAIGN_PROMPT[:MAX_CAMPAIGN_LENGTH] + "... [TRONQUÉ]"
+        
+        # Injection MODE STANDARD: BASE + SECURITY + CAMPAIGN
+        context += BASE_PROMPT
+        context += SECURITY_PROMPT
+        if CAMPAIGN_PROMPT:
+            context += "\n\n--- INSTRUCTIONS PRIORITAIRES DE LA CAMPAGNE ACTUELLE ---\n"
+            context += CAMPAIGN_PROMPT
+            context += "\n--- FIN DES INSTRUCTIONS ---\n"
+            logger.info("[CHAT-AI-RESPONSE] ✅ Mode STANDARD - Campaign Prompt injecté (len: " + str(len(CAMPAIGN_PROMPT)) + ")")
+        else:
+            logger.info("[CHAT-AI-RESPONSE] ✅ Mode STANDARD - Pas de Campaign Prompt")
         # MODE STRICT: custom_prompt actif → BASE_PROMPT IGNORÉ
         # RENFORCEMENT SÉCURITÉ: Consigne anti-prix en tête du prompt
         STRICT_SECURITY_HEADER = """
