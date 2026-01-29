@@ -1,5 +1,42 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - VERROUILLAGE "CONVERSION ADS"
+
+### CRITÈRES DE RÉUSSITE - TOUS VALIDÉS ✅
+
+#### 1. SÉCURITÉ ADMIN RADICALE ✅
+**Test**: Client "Papou" (papou@client.com)
+- Menu admin (⋮): **ABSENT du DOM** (0 éléments)
+- Bouton Supprimer: **ABSENT du DOM** (0 éléments)
+- Bouton Changer identité: **ABSENT du DOM** (0 éléments)
+- Condition: `(step === 'chat' || step === 'coach') && isCoachMode`
+
+#### 2. TEMPS RÉEL "ZERO LATENCE" ✅
+**Configuration Socket.IO optimisée**:
+- `transports: ['websocket']` - WebSocket prioritaire
+- `reconnectionAttempts: 3`, `timeout: 5000ms`
+- Fallback polling automatique si WebSocket échoue
+- Gestion erreur avec log clair
+
+#### 3. RENDU EMOJIS PROFESSIONNEL ✅
+**Test visuel**: `[emoji:fire.svg]` → 🔥
+- Fonction `parseMessageContent()` appelée systématiquement
+- Fallback emoji natif via `EMOJI_FALLBACK_MAP`
+- JAMAIS de texte technique visible
+
+#### 4. PERSISTANCE "SMOOTH" ✅
+**Test F5**: 5/5 rafraîchissements réussis
+- Chat direct sans formulaire
+- localStorage: `af_chat_client`, `afroboost_identity`
+
+### GARDE-FOUS VÉRIFIÉS ✅
+- Prix CHF 10.- : INTACT
+- Logo Twint : INTACT
+- Logo Visa : INTACT
+- Module paiement : NON MODIFIÉ
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - FINALISATION CRITIQUE CHAT DE GROUPE
 
 ### TESTS PASSÉS (6/6) ✅
