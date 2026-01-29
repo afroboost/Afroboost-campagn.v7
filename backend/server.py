@@ -3620,6 +3620,69 @@ async def get_unread_notifications(
         "target": target
     }
 
+# === EMOJIS PERSONNALISÉS DU COACH ===
+@api_router.get("/emojis/list")
+async def list_custom_emojis():
+    """
+    Liste tous les emojis personnalisés disponibles dans /uploads/emojis/
+    """
+    emojis = []
+    try:
+        emoji_files = list(EMOJIS_DIR.glob("*.*"))
+        for f in emoji_files:
+            if f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+                emojis.append({
+                    "name": f.stem,
+                    "url": f"/api/emojis/{f.name}",
+                    "filename": f.name
+                })
+        logger.info(f"[EMOJIS] {len(emojis)} emojis trouvés")
+    except Exception as e:
+        logger.error(f"[EMOJIS] Erreur listing: {e}")
+    
+    return {"emojis": emojis, "count": len(emojis)}
+
+@api_router.post("/emojis/upload")
+async def upload_custom_emoji(request: Request):
+    """
+    Upload un emoji personnalisé (pour le coach).
+    Accepte une image en base64 avec un nom.
+    """
+    import base64
+    
+    body = await request.json()
+    name = body.get("name", "emoji")
+    image_data = body.get("image")  # base64 encoded
+    file_extension = body.get("extension", "png")
+    
+    if not image_data:
+        raise HTTPException(status_code=400, detail="Image data required")
+    
+    try:
+        # Décoder le base64
+        image_bytes = base64.b64decode(image_data.split(",")[-1] if "," in image_data else image_data)
+        
+        # Sauvegarder le fichier
+        filename = f"{name.replace(' ', '_').lower()}.{file_extension}"
+        filepath = EMOJIS_DIR / filename
+        
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+        
+        logger.info(f"[EMOJIS] Emoji uploadé: {filename}")
+        
+        return {
+            "success": True,
+            "emoji": {
+                "name": name,
+                "url": f"/api/emojis/{filename}",
+                "filename": filename
+            }
+        }
+    except Exception as e:
+        logger.error(f"[EMOJIS] Erreur upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.put("/notifications/mark-read")
 async def mark_notifications_read(request: Request):
     """
