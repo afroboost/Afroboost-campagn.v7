@@ -1393,7 +1393,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   // Créer un chat communautaire (sans IA)
   const createCommunityChat = async () => {
     try {
-      const title = newLinkTitle.trim() || 'Chat Communauté Afroboost';
+      const title = newCommunityName.trim() || 'Chat Communauté Afroboost';
       // Créer une session avec mode communauté
       const sessionRes = await axios.post(`${API}/chat/sessions`, {
         mode: 'community',
@@ -1403,7 +1403,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       
       // Mettre à jour les listes
       setChatSessions(prev => [sessionRes.data, ...prev]);
-      setNewLinkTitle('');
+      setNewCommunityName('');  // Reset le nom du groupe
       
       // Copier automatiquement le lien
       if (sessionRes.data.link_token) {
