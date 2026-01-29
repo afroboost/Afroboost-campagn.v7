@@ -2643,66 +2643,68 @@ async def chat_with_ai(data: ChatMessage):
         except Exception as e:
             logger.warning(f"[CHAT-IA] Erreur récupération concept: {e}")
     
-    # === SECTION 1: INVENTAIRE BOUTIQUE (PRODUITS PHYSIQUES) ===
-    try:
-        # Récupérer TOUS les éléments de la collection offers
-        all_offers = await db.offers.find({"visible": {"$ne": False}}, {"_id": 0}).to_list(50)
-        
-        # LOG DE DIAGNOSTIC (PRINT EXPLICITE)
-        print(f"[DEBUG IA CONTEXT] ====== DÉBUT DIAGNOSTIC ======")
-        print(f"[DEBUG IA CONTEXT] Nombre d'offres récupérées: {len(all_offers)}")
-        for o in all_offers:
-            print(f"[DEBUG IA CONTEXT] - {o.get('name')}: {o.get('price')} CHF (isProduct: {o.get('isProduct', False)})")
-        
-        # Séparer les PRODUITS des SERVICES
-        products = [o for o in all_offers if o.get('isProduct') == True]
-        services = [o for o in all_offers if not o.get('isProduct')]
-        
-        print(f"[DEBUG IA CONTEXT] Produits boutique: {len(products)}")
-        print(f"[DEBUG IA CONTEXT] Services/Offres: {len(services)}")
-        
-        # === PRODUITS BOUTIQUE (café, vêtements, accessoires...) ===
-        if products:
-            context += "\n\n🛒 INVENTAIRE BOUTIQUE (Produits en vente):\n"
-            for p in products[:15]:  # Max 15 produits
-                name = p.get('name', 'Produit')
-                price = p.get('price', 0)
-                desc = p.get('description', '')[:150] if p.get('description') else ''
-                category = p.get('category', '')
-                stock = p.get('stock', -1)
-                
-                context += f"  ★ {name.upper()} : {price} CHF"
-                if category:
-                    context += f" (Catégorie: {category})"
-                if stock > 0:
-                    context += f" - En stock: {stock}"
-                context += "\n"
-                if desc:
-                    context += f"    Description: {desc}\n"
-            context += "  → Si un client demande un de ces produits, CONFIRME qu'il est disponible !\n"
-            print(f"[DEBUG IA CONTEXT] ✅ Section INVENTAIRE BOUTIQUE ajoutée avec {len(products)} produits")
-        else:
-            context += "\n\n🛒 INVENTAIRE BOUTIQUE: Aucun produit en vente actuellement.\n"
-            print(f"[DEBUG IA CONTEXT] ⚠️ Aucun produit trouvé!")
-        
-        # === SERVICES ET OFFRES (abonnements, cours à l'unité...) ===
-        if services:
-            context += "\n\n💰 OFFRES ET TARIFS (Services):\n"
-            for s in services[:10]:
-                name = s.get('name', 'Offre')
-                price = s.get('price', 0)
-                desc = s.get('description', '')[:100] if s.get('description') else ''
-                
-                context += f"  • {name} : {price} CHF"
-                if desc:
-                    context += f" - {desc}"
-                context += "\n"
-        else:
-            context += "\n\n💰 OFFRES: Aucune offre spéciale actuellement.\n"
+    # === SECTIONS VENTE (UNIQUEMENT en mode STANDARD, pas en mode STRICT) ===
+    if not use_strict_mode:
+        # === SECTION 1: INVENTAIRE BOUTIQUE (PRODUITS PHYSIQUES) ===
+        try:
+            # Récupérer TOUS les éléments de la collection offers
+            all_offers = await db.offers.find({"visible": {"$ne": False}}, {"_id": 0}).to_list(50)
             
-    except Exception as e:
-        logger.error(f"[CHAT-IA] ❌ Erreur récupération offres/produits: {e}")
-        context += "\n\n🛒 BOUTIQUE: Informations temporairement indisponibles.\n"
+            # LOG DE DIAGNOSTIC (PRINT EXPLICITE)
+            print(f"[DEBUG IA CONTEXT] ====== DÉBUT DIAGNOSTIC ======")
+            print(f"[DEBUG IA CONTEXT] Nombre d'offres récupérées: {len(all_offers)}")
+            for o in all_offers:
+                print(f"[DEBUG IA CONTEXT] - {o.get('name')}: {o.get('price')} CHF (isProduct: {o.get('isProduct', False)})")
+            
+            # Séparer les PRODUITS des SERVICES
+            products = [o for o in all_offers if o.get('isProduct') == True]
+            services = [o for o in all_offers if not o.get('isProduct')]
+            
+            print(f"[DEBUG IA CONTEXT] Produits boutique: {len(products)}")
+            print(f"[DEBUG IA CONTEXT] Services/Offres: {len(services)}")
+            
+            # === PRODUITS BOUTIQUE (café, vêtements, accessoires...) ===
+            if products:
+                context += "\n\n🛒 INVENTAIRE BOUTIQUE (Produits en vente):\n"
+                for p in products[:15]:  # Max 15 produits
+                    name = p.get('name', 'Produit')
+                    price = p.get('price', 0)
+                    desc = p.get('description', '')[:150] if p.get('description') else ''
+                    category = p.get('category', '')
+                    stock = p.get('stock', -1)
+                    
+                    context += f"  ★ {name.upper()} : {price} CHF"
+                    if category:
+                        context += f" (Catégorie: {category})"
+                    if stock > 0:
+                        context += f" - En stock: {stock}"
+                    context += "\n"
+                    if desc:
+                        context += f"    Description: {desc}\n"
+                context += "  → Si un client demande un de ces produits, CONFIRME qu'il est disponible !\n"
+                print(f"[DEBUG IA CONTEXT] ✅ Section INVENTAIRE BOUTIQUE ajoutée avec {len(products)} produits")
+            else:
+                context += "\n\n🛒 INVENTAIRE BOUTIQUE: Aucun produit en vente actuellement.\n"
+                print(f"[DEBUG IA CONTEXT] ⚠️ Aucun produit trouvé!")
+            
+            # === SERVICES ET OFFRES (abonnements, cours à l'unité...) ===
+            if services:
+                context += "\n\n💰 OFFRES ET TARIFS (Services):\n"
+                for s in services[:10]:
+                    name = s.get('name', 'Offre')
+                    price = s.get('price', 0)
+                    desc = s.get('description', '')[:100] if s.get('description') else ''
+                    
+                    context += f"  • {name} : {price} CHF"
+                    if desc:
+                        context += f" - {desc}"
+                    context += "\n"
+            else:
+                context += "\n\n💰 OFFRES: Aucune offre spéciale actuellement.\n"
+                
+        except Exception as e:
+            logger.error(f"[CHAT-IA] ❌ Erreur récupération offres/produits: {e}")
+            context += "\n\n🛒 BOUTIQUE: Informations temporairement indisponibles.\n"
     
     # === SECTION 2: COURS DISPONIBLES ===
     try:
