@@ -6186,6 +6186,99 @@ def scheduler_send_whatsapp_sync(to_phone, message, media_url=None):
     except Exception as e:
         return False, str(e), None
 
+def scheduler_send_group_message_sync(scheduler_db, target_group_id, message_text):
+    """
+    Envoie un message dans le groupe de chat via API interne.
+    Le message est envoyé en tant que "💪 Coach Bassi".
+    Remplace {prénom} par "Communauté" pour les messages de groupe.
+    """
+    import requests
+    
+    try:
+        # Remplacer {prénom} par "Communauté" pour les envois groupés
+        processed_message = message_text.replace("{prénom}", "Communauté").replace("{prenom}", "Communauté")
+        
+        # Trouver ou créer la session de chat de groupe (mode "community")
+        # Chercher une session communautaire active
+        community_session = scheduler_db.chat_sessions.find_one({
+            "mode": "community",
+            "is_deleted": {"$ne": True}
+        }, {"_id": 0})
+        
+        if not community_session:
+            # Créer une nouvelle session communautaire si elle n'existe pas
+            import uuid as uuid_module
+            from datetime import datetime, timezone
+            new_session_id = str(uuid_module.uuid4())
+            new_session = {
+                "id": new_session_id,
+                "participant_ids": [],
+                "mode": "community",
+                "is_ai_active": False,
+                "is_deleted": False,
+                "link_token": str(uuid_module.uuid4())[:12],
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "title": "💬 Communauté Afroboost"
+            }
+            scheduler_db.chat_sessions.insert_one(new_session)
+            session_id = new_session_id
+            print(f"[SCHEDULER-GROUP] ✅ Nouvelle session communautaire créée: {session_id}")
+        else:
+            session_id = community_session.get("id")
+        
+        # Créer le message du Coach
+        import uuid as uuid_module
+        from datetime import datetime, timezone
+        coach_message = {
+            "id": str(uuid_module.uuid4()),
+            "session_id": session_id,
+            "sender_id": "coach",
+            "sender_name": "💪 Coach Bassi",
+            "sender_type": "coach",
+            "content": processed_message,
+            "mode": "community",
+            "is_deleted": False,
+            "notified": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Insérer le message dans la base de données
+        scheduler_db.chat_messages.insert_one(coach_message)
+        
+        print(f"[SCHEDULER-GROUP] ✅ Message inséré dans la DB pour session {session_id}")
+        print(f"[SCHEDULER-GROUP] 📝 Message: {processed_message[:50]}...")
+        
+        # Note: L'émission Socket.IO sera faite via l'API HTTP
+        # Car le scheduler tourne dans un thread séparé sans accès au event loop asyncio
+        response = requests.post(
+            "http://localhost:8001/api/scheduler/emit-group-message",
+            json={
+                "session_id": session_id,
+                "message": {
+                    "id": coach_message["id"],
+                    "type": "coach",
+                    "text": processed_message,
+                    "sender": "💪 Coach Bassi",
+                    "senderId": "coach",
+                    "sender_type": "coach",
+                    "created_at": coach_message["created_at"]
+                }
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            print(f"[SCHEDULER-GROUP] ✅ Socket.IO émission OK")
+            return True, None, session_id
+        else:
+            print(f"[SCHEDULER-GROUP] ⚠️ Socket.IO émission échouée (HTTP {response.status_code})")
+            # Le message est quand même en DB, donc on considère ça comme un succès partiel
+            return True, "Message saved but Socket.IO emission failed", session_id
+            
+    except Exception as e:
+        print(f"[SCHEDULER-GROUP] ❌ Exception: {e}")
+        return False, str(e), None
+
 def scheduler_loop():
     """Boucle principale du scheduler - tourne en arrière-plan."""
     global SCHEDULER_RUNNING, SCHEDULER_LAST_HEARTBEAT
