@@ -579,75 +579,60 @@ export const ChatWidget = () => {
 
   // === SOCKET.IO pour les MP - Remplace le polling ===
   useEffect(() => {
-    if (!socketRef.current || !activePrivateChat) return;
+    if (!socketRef.current) return;
     
     const socket = socketRef.current;
     
-    // Écouter les messages privés en temps réel
+    // Handler principal pour les messages privés
     const handlePrivateMessage = (data) => {
       console.log('[SOCKET.IO] 📩 Message privé reçu:', data);
-      
-      // Vérifier que c'est pour notre conversation active
-      if (data.conversation_id !== activePrivateChat.id) {
-        // Message pour une autre conversation -> incrémenter compteur non lu
-        setUnreadPrivateCount(prev => prev + 1);
-        playNotificationSound('coach'); // Son distinct pour MP
-        return;
-      }
-      
-      // Ne pas dupliquer nos propres messages
-      if (data.senderId === participantId) return;
-      
-      // Ajouter le message à la liste
-      setPrivateMessages(prev => {
-        // Éviter les doublons
-        const exists = prev.some(m => m.id === data.id);
-        if (exists) return prev;
-        
-        return [...prev, {
-          id: data.id,
-          text: data.text,
-          sender: data.sender,
-          senderId: data.senderId,
-          isMine: false,
-          createdAt: data.created_at
-        }];
-      });
-      
-      // Jouer un son de notification
-      playNotificationSound('message');
-      
-      // Marquer comme lu
-      axios.put(`${API}/private/messages/read/${activePrivateChat.id}?reader_id=${participantId}`).catch(() => {});
-    };
-    
-    // Écouter aussi quand AUCUNE conversation n'est active
-    const handleGlobalPrivateMessage = (data) => {
-      console.log('[SOCKET.IO] 📩 Message privé global reçu:', data);
       
       // Ne pas compter nos propres messages
       if (data.senderId === participantId) return;
       
-      // Si pas de conversation active ou conversation différente
-      if (!activePrivateChat || data.conversation_id !== activePrivateChat.id) {
+      // Vérifier si c'est pour notre conversation active
+      if (activePrivateChat && data.conversation_id === activePrivateChat.id) {
+        // Message dans la conversation ouverte -> ajouter à la liste
+        setPrivateMessages(prev => {
+          const exists = prev.some(m => m.id === data.id);
+          if (exists) return prev;
+          
+          return [...prev, {
+            id: data.id,
+            text: data.text,
+            sender: data.sender,
+            senderId: data.senderId,
+            isMine: false,
+            createdAt: data.created_at
+          }];
+        });
+        
+        // Son de notification (fenêtre déjà ouverte)
+        playNotificationSound('message');
+        
+        // Marquer comme lu
+        axios.put(`${API}/private/messages/read/${activePrivateChat.id}?reader_id=${participantId}`).catch(() => {});
+      } else {
+        // Message pour une autre conversation ou pas de conversation ouverte
+        // -> NOTIFICATION COMPLÈTE (son + titre clignotant + badge)
         setUnreadPrivateCount(prev => prev + 1);
-        playNotificationSound('coach');
+        notifyPrivateMessage(data.sender || 'Quelqu\'un');
       }
     };
     
-    socket.on('private_message_received', activePrivateChat ? handlePrivateMessage : handleGlobalPrivateMessage);
+    socket.on('private_message_received', handlePrivateMessage);
     
     return () => {
       socket.off('private_message_received', handlePrivateMessage);
-      socket.off('private_message_received', handleGlobalPrivateMessage);
     };
   }, [activePrivateChat, participantId]);
 
   // === DÉMARRER UNE DISCUSSION PRIVÉE (COMPAT ANCIEN CODE) ===
   const startPrivateChat = async (targetId, targetName) => {
     // Utilise la nouvelle fonction openPrivateChat avec fenêtre flottante
-    // Réinitialiser le compteur quand on ouvre une conversation
+    // Réinitialiser le compteur et arrêter le clignotement quand on ouvre une conversation
     setUnreadPrivateCount(0);
+    stopTitleFlash();
     openPrivateChat(targetId, targetName);
   };
 
