@@ -1,136 +1,154 @@
-<analysis>**original_problem_statement:**
-L'utilisateur a initié plusieurs missions de développement distinctes après la résolution des bugs critiques de la session précédente.
+<analysis>An analysis of the user's requests and the AI's actions has been performed. Here is the summary:
 
-1.  **Amélioration du Widget de Chat Client ()** :
-    *   Afficher le nom de l'expéditeur au-dessus de chaque bulle de message.
-    *   Appliquer un style distinctif pour le Coach (bulle violette, badge 🏋️ Coach).
-    *   Assurer un alignement correct des messages (envoyés à droite, reçus à gauche).
+**original_problem_statement:**
+L'utilisateur a initié une mission en plusieurs étapes pour sécuriser de manière drastique le comportement de l'assistant IA de l'application. L'objectif était de s'assurer que l'IA respecte les règles métier, ne révèle pas d'informations sensibles et que son comportement soit prédictible et contrôlé par le Prompt Campagne défini dans le tableau de bord.
 
-2.  **Correction d'un Bug d'Affichage (UX Mobile)** :
-    *   Un bouton Son, provenant de la vidéo de fond de la page d'accueil, apparaissait par-dessus le widget de chat, obstruant la vue. Il devait être repositionné ou son  corrigé.
-    *   L'utilisateur a également signalé une erreur de syntaxe présumée dans  qui devait être corrigée.
-
-3.  **Restriction Radicale du Comportement de l'IA ()** :
-    *   L'IA doit cesser d'inventer des codes promotionnels et des réductions.
-    *   Le Prompt Campagne défini dans le dashboard doit être la seule source de vérité pour les offres.
-    *   L'IA ne doit parler que du contenu existant sur le site (Articles, Cours, Offres).
-    *   Un flux spécifique doit être déclenché pour les demandes d'essai gratuit (Mercredi ou Dimanche ?).
+Les exigences ont été affinées au cours de plusieurs itérations, incluant :
+1.  **Restriction du Contenu** : L'IA doit répondre uniquement aux questions concernant les produits, cours et offres du site. Toute question hors sujet doit recevoir une réponse de refus standard.
+2.  **Priorité Absolue du Prompt Campagne** : Le Prompt Campagne récupéré de la base de données doit prévaloir sur toutes les autres instructions de base de l'IA. Ceci a été implémenté via une construction hiérarchique du prompt système ( +  + ).
+3.  **Masquage des Codes Promotionnels** : L'IA doit être informée de l'existence d'une remise pour calculer les prix, mais ne doit jamais voir ou révéler le code promotionnel textuel. Celui-ci doit être masqué et remplacé par .
+4.  **Robustesse et Sécurité (Production-Ready)** : L'implémentation devait être sécurisée contre les erreurs de formatage (caractères spéciaux dans le prompt), les pannes dues à des données manquantes (utilisation de ), et ne devait pas exposer de données utilisateur sensibles dans les logs serveur.
+5.  **Isolation de l'Historique** : L'historique des conversations devait être purgé ou réinitialisé si l'identifiant de la campagne () changeait entre deux messages.
 
 **User's preferred language**: Français
 
 **what currently exists?**
-L'application full-stack (React/FastAPI/MongoDB) est fonctionnelle. Les bugs critiques de la session précédente (notamment la suppression d'éléments sans mise à jour de l'UI) sont considérés comme résolus. Les nouvelles fonctionnalités demandées dans cette session (amélioration de l'UI du chat, correction du z-index et restriction de l'IA) ont été implémentées. Cependant, la base de code conserve une architecture monolithique avec  et  comme fichiers centraux.
+L'application full-stack (React/FastAPI/MongoDB) est fonctionnelle. Une série de modifications importantes a été apportée au backend, principalement dans le fichier , pour sécuriser l'assistant IA. Le frontend a également été mis à jour dans  pour permettre la saisie du Prompt Campagne.
+
+Les nouvelles règles incluent une construction de prompt hiérarchique, une restriction stricte du périmètre de connaissance de l'IA, le masquage des codes promotionnels, et des mesures de robustesse (gestion des erreurs, nettoyage des logs, limitation de la longueur du prompt).
 
 **Last working item**:
--   **Last item agent was working:** L'agent venait de valider pour la deuxième fois que les restrictions sur le comportement de l'IA étaient bien en place. L'utilisateur a répété sa demande, et l'agent a re-confirmé via des tests  que les réponses de l'IA étaient conformes aux nouvelles règles (pas de codes promo, respect du flux essai gratuit).
+-   **Last item agent was working:** L'agent effectuait le nettoyage et verrouillage final des fonctionnalités de sécurité de l'IA. Cela comprenait le nettoyage des logs pour supprimer les données utilisateur sensibles, l'ajout d'une limite de 2000 caractères pour le  afin d'éviter la saturation du contexte OpenAI, et la confirmation que la variable de contexte était bien réinitialisée à chaque appel API.
 -   **Status:** USER VERIFICATION PENDING
 -   **Agent Testing Done:** Y
--   **Which testing method agent to use?** N/A (L'agent a déjà testé via . La prochaine étape est la validation par l'utilisateur).
+-   **Which testing method agent to use?** N/A (L'agent a terminé les tests . La prochaine étape est la validation par l'utilisateur).
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0) Validation par l'utilisateur des développements récents.**
-    -   **Description:** Il est crucial d'obtenir une confirmation explicite de l'utilisateur que les trois missions de cette session sont accomplies à sa satisfaction : 1) L'UI du widget de chat, 2) la disparition du bouton Son au-dessus du chat, et 3) le comportement restreint de l'IA.
-    -   **Next debug checklist:** Demander à l'utilisateur de tester et de confirmer que tout fonctionne comme attendu.
-    -   **Why fix this issue and what will be achieved with the fix?** Restaurer la confiance et valider la fin d'un cycle de développement avant de passer à autre chose.
+-   **Issue 1: (P0) Isolation de l'historique par  non implémentée.**
+-   **Issue 2: (P0) Validation par l'utilisateur de la mission de sécurisation de l'IA.**
+-   **Issue 3: (P2) Investigation des erreurs de syntaxe persistantes dans .**
+
+**Issues Detail:**
+-   **Issue 1: Isolation de l'historique par  non implémentée.**
+    -   **Attempted fixes:** L'agent a vérifié que le contexte était réinitialisé à chaque appel API, mais n'a pas implémenté la logique requise : comparer le  de la session actuelle avec celui du dernier message de l'historique et, en cas de différence, injecter un message système pour forcer l'IA à oublier le contexte précédent.
+    -   **Next debug checklist:**
+        1.  Modifier les fonctions de chat ( et ) dans .
+        2.  Avant de construire l'historique de la conversation, récupérer le  du dernier message de la base de données.
+        3.  Le comparer au  de la session en cours.
+        4.  Si différent, soit ne pas charger l'historique, soit envoyer un message système invisible à l'IA comme demandé : .
+    -   **Why fix this issue and what will be achieved with the fix?** Empêcher la fuite d'informations et d'instructions d'une campagne à l'autre, ce qui est un point de sécurité et de cohérence métier critique demandé par l'utilisateur.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Backend
+    -   **Blocked on other issue:** None
+
+-   **Issue 2: Validation par l'utilisateur de la mission de sécurisation de l'IA.**
+    -   **Next debug checklist:** Demander à l'utilisateur de tester et de confirmer que le comportement de l'IA (refus hors-sujet, priorité campagne, masquage de code) correspond à ses attentes.
+    -   **Why fix this issue and what will be achieved with the fix?** Valider l'achèvement d'une tâche majeure et restaurer la confiance de l'utilisateur.
     -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** N/A
 
--   **Issue 2: (P1) Investigation des erreurs persistantes signalées par l'utilisateur.**
-    -   **Description:** L'utilisateur a mentionné à plusieurs reprises une erreur de syntaxe dans  (ligne 6645) et un crash du scanner QR. L'agent n'a pas réussi à reproduire ces erreurs (le build passe et l'import du scanner est présent).
+-   **Issue 3: Investigation des erreurs de syntaxe persistantes dans .**
+    -   **Description:** L'utilisateur a signalé de manière récurrente une erreur de syntaxe ou de build dans  (ligne 6645) et un crash du scanner QR. L'agent n'a pas réussi à reproduire ces erreurs.
     -   **Next debug checklist:**
-        1.  Informer l'utilisateur que le build est fonctionnel.
-        2.  Demander les étapes exactes ou une capture d'écran/vidéo pour reproduire le problème s'il persiste de son côté.
-    -   **Why fix this issue and what will be achieved with the fix?** Résoudre une préoccupation récurrente de l'utilisateur et assurer la stabilité de toutes les fonctionnalités.
+        1.  Informer l'utilisateur que le build est fonctionnel côté serveur.
+        2.  Demander les étapes exactes, le message d'erreur précis, ou une capture d'écran/vidéo pour reproduire le problème s'il persiste de son côté.
+    -   **Why fix this issue and what will be achieved with the fix?** Résoudre une préoccupation de l'utilisateur et assurer la stabilité de toutes les fonctionnalités.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Frontend
 
 **In progress Task List**:
-*   Aucune. Les tâches de la session ont été complétées.
+*   Aucune.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P1)** Gérer les articles dans le Dashboard : Créer une interface CRUD pour la collection .
-    *   **(P1)** Finaliser la configuration WhatsApp : Guider l'utilisateur pour activer son numéro Twilio (action externe requise par l'utilisateur).
-    *   **(P1)** Valider l'export CSV des contacts CRM.
+    *   (P1) Gérer les articles dans le Dashboard : Créer une interface CRUD pour la collection .
+    *   (P1) Finaliser la configuration WhatsApp : Guider l'utilisateur pour activer son numéro Twilio.
+    *   (P1) Valider l'export CSV des contacts CRM.
 *   **Future Tasks:**
-    *   **(P2)** Refactoring de  : Décomposer le composant monolithique de plus de 7800 lignes.
-    *   **(P2)** Ajouter un tableau de bord analytique.
+    *   (P2) Refactoring de  : Décomposer le composant monolithique.
+    *   (P2) Ajouter un tableau de bord analytique.
 
 **Completed work in this session**
--   **Amélioration de l'UI du Widget Chat**: Ajout des noms d'expéditeurs, des couleurs et badges basés sur les rôles (Coach, Assistant, Membre), et correction de l'alignement des messages de l'utilisateur actuel. Fichier modifié : .
--   **Correction du Bug de Superposition (z-index)**: Le  du widget de chat a été augmenté pour qu'il s'affiche correctement au-dessus du bouton Son de la page d'accueil. Fichier modifié : .
--   **Restriction du Comportement de l'IA**: Le code backend a été modifié sur deux endpoints ( et ) pour supprimer toute logique de code promo et forcer l'IA à suivre strictement le Prompt Campagne et le catalogue de produits du site. Fichier modifié : .
+-   **Sécurisation Complète de l'IA (, ):**
+    -   Ajout d'un champ  sur le frontend et le backend.
+    -   Implémentation d'une construction de prompt hiérarchique et sécurisée ( +  + ) sur les deux endpoints de chat (, ).
+    -   Implémentation d'une règle stricte de refus pour les questions hors-sujet.
+    -   Mise en place d'un masquage robuste des codes promotionnels avec gestion des erreurs ().
+    -   Sécurisation du formatage des prompts pour éviter les crashs.
+    -   Ajout d'une limite de caractères pour le  avec logging.
+    -   Nettoyage des logs pour supprimer les données utilisateur sensibles.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Configuration du canal WhatsApp sur Twilio.**
-    *   **Debug checklist:** Rappeler à l'utilisateur que son numéro Twilio doit être activé comme sender WhatsApp dans sa console Twilio.
-    *   **Why to solve this issue and what will be achieved with this?** Débloquera toutes les fonctionnalités liées à l'envoi de messages via WhatsApp.
-    *   **Is recurring issue?** Y
+    -   **Debug checklist:** Rappeler à l'utilisateur que son numéro Twilio doit être activé comme sender WhatsApp dans sa console Twilio.
+    -   **Why to solve this issue and what will be achieved with this?** Débloquera toutes les fonctionnalités liées à l'envoi de messages via WhatsApp.
+    -   **Is recurring issue?** Y
 
 **Known issue recurrence from previous fork**
--   **Problème de suppression (UI)**: (Contexte historique) Le bug principal de la session précédente, où la suppression d'un élément ne mettait pas à jour l'UI, a été un problème récurrent majeur. Il a été résolu en s'assurant que la bonne variable d'état React était mise à jour.
--   **Rapport d'erreur de syntaxe/build**: (Nouveau dans cette session) L'utilisateur signale de manière récurrente des erreurs de build () que l'agent ne parvient pas à reproduire.
+-   **Rapport d'erreur de syntaxe/build**: L'utilisateur signale de manière récurrente des erreurs de build dans  que l'agent ne parvient pas à reproduire.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **CSS Stacking Context**: Utilisation du  pour corriger la superposition d'éléments en .
--   **React State Management**: Correction d'un bug où l'ID de l'expéditeur () n'était pas correctement ajouté à un message créé localement, causant un mauvais alignement dans le chat.
--   **Prompt Engineering (Backend)**: Modification en profondeur du prompt système de l'IA pour imposer des règles de comportement strictes et éliminer les hallucinations de contenu (codes promos).
+-   **Prompt Engineering**: Construction de prompts hiérarchiques avec des couches de base, de sécurité et de campagne pour un contrôle précis du comportement de l'IA.
+-   **Data Masking**: Remplacement des données sensibles (codes promo) par un placeholder avant leur envoi à une API externe.
+-   **Defensive Programming**: Utilisation de  pour la manipulation de données, échappement de chaînes pour prévenir les erreurs de formatage (f-string), et validation des entrées (limite de caractères).
+-   **API Development (FastAPI)**: Modification de multiples endpoints (, ) pour appliquer une logique métier et de sécurité cohérente.
 
 **key DB schema**
 -   Aucun changement de schéma dans cette session.
 
 **All files of reference**
--   : Fichier principal pour l'amélioration de l'interface du chat client.
--   : Fichier modifié pour corriger le bug de superposition du bouton Son.
--   : Fichier principal où les restrictions de l'IA ont été implémentées.
+-   : Fichier principal où toutes les restrictions et la nouvelle logique de l'IA ont été implémentées.
+-   : Fichier modifié pour ajouter le champ de saisie du .
 
-**Areas that need refactoring**
--   ****: Le refactoring de ce composant reste une priorité critique pour la maintenabilité du projet.
--   ****: Le fichier backend gère de plus en plus de logique (prompts, API, etc.) et pourrait bénéficier d'une division en plusieurs modules (ex: , ).
+**Areas that need refactoring**:
+-   : Le refactoring de ce composant de plus de 7800 lignes reste une priorité critique.
+-   : Le fichier continue de grossir et pourrait bénéficier d'une modularisation (par exemple, en séparant la logique de chat, la gestion du CRM, etc.).
 
 **key api endpoints**
--    : Endpoint de chat communautaire dont la logique de prompt a été modifiée.
--    : Second endpoint de chat dont la logique a également été mise à jour pour être cohérente.
+-   : Endpoint de chat principal, intensivement modifié.
+-   : Second endpoint de chat IA, modifié pour refléter la même logique de sécurité.
 
 **Critical Info for New Agent**
 -   **Langue :** Répondez **exclusivement en Français**.
--   **Validation Utilisateur :** La confiance de l'utilisateur est un point sensible. Ne déclarez pas une tâche terminée sans sa confirmation explicite. Validez toutes les implémentations de votre côté avant de lui présenter.
--   **Requêtes Répétées :** L'utilisateur peut répéter une demande déjà implémentée. Dans ce cas, re-vérifiez que la fonctionnalité est bien en place et fonctionnelle, puis confirmez-le à l'utilisateur avec des preuves (résultats de test, etc.).
--   **Le Bug de Syntaxe :** L'utilisateur est persuadé qu'il y a une erreur dans . Abordez ce sujet avec précaution. Confirmez que le build fonctionne et demandez-lui des informations supplémentaires pour reproduire le problème s'il persiste.
+-   **Priorité Absolue :** La première tâche doit être d'implémenter l'**Issue 1 (isolation de l'historique par )**, car c'était une exigence explicite de l'utilisateur qui a été manquée.
+-   **Interaction Utilisateur :** L'utilisateur est très technique, précis et fournit des instructions détaillées par étapes (audits). Il attend des preuves de l'implémentation (extraits de code) et une adhésion stricte à ses demandes.
+-   **Contexte Technique :** L'agent précédent a correctement identifié que l'architecture était FastAPI/MongoDB, malgré des instructions initiales de l'utilisateur mentionnant un autre stack. Gardez cela en tête.
 
 **documents and test reports created in this job**
--   Aucun nouveau document n'a été créé. Les rapports de test de la session précédente existent toujours ().
+-   Le fichier  a été mis à jour.
 
 **Last 10 User Messages and any pending HUMAN messages**
--   (Message 116) Répétition de la demande de restriction de l'IA. -> **Traité**
--   (Message 78) Demande initiale de restriction de l'IA et de correction de bugs. -> **Traité**
--   (Message 36) Demande de correction du bouton Son et du bug de syntaxe. -> **Traité**
--   (Message 5) Demande d'amélioration de l'interface du widget de chat. -> **Traité**
+-   (Message 165) Demande de nettoyage final et de verrouillage (logs, limite de caractères). -> **Traité**
+-   (Message 131) Demande d'audit final (sécurisation du formatage, purge de l'historique). -> **Partiellement traité (purge manquée)**
+-   (Message 95) Demande d'audit (structure de prompt, masquage technique, isolation de session). -> **Partiellement traité (isolation manquée)**
+-   (Message 71) Raffinement des règles de sécurité. -> **Traité**
+-   (Message 5) Spécifications initiales de la mission de sécurisation. -> **Traité**
 
 **Project Health Check:**
--   **Broken:** Non. L'application est fonctionnelle et les dernières demandes ont été implémentées.
--   **Mocked:** Non. Les fonctionnalités sont implémentées, mais en attente de validation finale par l'utilisateur.
+-   **Broken:** Non
+-   **Mocked:** Non
 
 **3rd Party Integrations**
 -   **Resend**: Pour l'envoi d'emails.
--   **Twilio**: Pour WhatsApp (non fonctionnel, nécessite configuration par l'utilisateur).
--   **OpenAI**: Pour le Chat IA.
--   **html5-qrcode**: Ajouté via CDN pour le scanner QR.
+-   **Twilio**: Pour WhatsApp (en attente de configuration par l'utilisateur).
+-   **OpenAI**: Pour le Chat IA (via ).
+-   **html5-qrcode**: Pour le scanner QR.
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** Aucune régression connue introduite dans cette session.
+-   **Known regressions:** Aucune.
 
 **Credentials to test flow:**
--   Pas de changement. L'accès au dashboard se fait comme précédemment.
+-   Aucun changement.
 
 **What agent forgot to execute**
--   L'agent a été très méthodique et n'a rien oublié. Il a notamment eu le bon réflexe de mettre à jour les restrictions de l'IA sur les **deux** endpoints concernés pour assurer la cohérence, ce qui était une étape cruciale non explicitement demandée par l'utilisateur.</analysis>
+-   **Isolation de l'historique de chat par ** : L'agent n'a pas implémenté la logique demandée dans les messages 95 et 131, qui consistait à vérifier si le  avait changé entre les sessions et, le cas échéant, à purger l'historique ou à envoyer un message système à l'IA pour qu'elle ignore le contexte précédent. C'est une exigence de sécurité critique qui doit être traitée en priorité.</analysis>
