@@ -3851,7 +3851,7 @@ async def list_custom_emojis():
     try:
         emoji_files = list(EMOJIS_DIR.glob("*.*"))
         for f in emoji_files:
-            if f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+            if f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']:
                 emojis.append({
                     "name": f.stem,
                     "url": f"/api/emojis/{f.name}",
