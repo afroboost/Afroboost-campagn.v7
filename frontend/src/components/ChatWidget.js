@@ -1032,9 +1032,9 @@ export const ChatWidget = () => {
   };
 
   // Handler pour l'input avec émission typing
-  const handleInputChange = (e) => {
+  const handleInputChangeWithTyping = (e) => {
     const value = e.target.value;
-    setInput(value);
+    setInputMessage(value);
     
     // Émettre l'événement typing
     if (value.length > 0) {
@@ -1042,7 +1042,7 @@ export const ChatWidget = () => {
     }
   };
 
-  // Arrêter l'indicateur typing quand on perd le focus
+  // Arrêter l'indicateur typing quand on perd le focus ou envoie
   const handleInputBlur = () => {
     emitTyping(false);
   };
