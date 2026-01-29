@@ -584,7 +584,12 @@ export const ChatWidget = () => {
       console.log('[SOCKET.IO] 📩 Message privé reçu:', data);
       
       // Vérifier que c'est pour notre conversation active
-      if (data.conversation_id !== activePrivateChat.id) return;
+      if (data.conversation_id !== activePrivateChat.id) {
+        // Message pour une autre conversation -> incrémenter compteur non lu
+        setUnreadPrivateCount(prev => prev + 1);
+        playNotificationSound('coach'); // Son distinct pour MP
+        return;
+      }
       
       // Ne pas dupliquer nos propres messages
       if (data.senderId === participantId) return;
@@ -612,32 +617,37 @@ export const ChatWidget = () => {
       axios.put(`${API}/private/messages/read/${activePrivateChat.id}?reader_id=${participantId}`).catch(() => {});
     };
     
-    socket.on('private_message_received', handlePrivateMessage);
+    // Écouter aussi quand AUCUNE conversation n'est active
+    const handleGlobalPrivateMessage = (data) => {
+      console.log('[SOCKET.IO] 📩 Message privé global reçu:', data);
+      
+      // Ne pas compter nos propres messages
+      if (data.senderId === participantId) return;
+      
+      // Si pas de conversation active ou conversation différente
+      if (!activePrivateChat || data.conversation_id !== activePrivateChat.id) {
+        setUnreadPrivateCount(prev => prev + 1);
+        playNotificationSound('coach');
+      }
+    };
+    
+    socket.on('private_message_received', activePrivateChat ? handlePrivateMessage : handleGlobalPrivateMessage);
     
     return () => {
       socket.off('private_message_received', handlePrivateMessage);
+      socket.off('private_message_received', handleGlobalPrivateMessage);
     };
   }, [activePrivateChat, participantId]);
 
   // === DÉMARRER UNE DISCUSSION PRIVÉE (COMPAT ANCIEN CODE) ===
   const startPrivateChat = async (targetId, targetName) => {
     // Utilise la nouvelle fonction openPrivateChat avec fenêtre flottante
+    // Réinitialiser le compteur quand on ouvre une conversation
+    setUnreadPrivateCount(0);
     openPrivateChat(targetId, targetName);
   };
 
-  // === CHARGER LES EMOJIS PERSONNALISÉS ===
-  const loadCustomEmojis = async () => {
-    try {
-      const res = await axios.get(`${API}/custom-emojis/list`);
-      setCustomEmojis(res.data.emojis || []);
-    } catch (err) {
-      console.warn('Erreur chargement emojis:', err);
-      // Fallback: essayer de charger les fichiers du dossier emojis
-      setCustomEmojis(['fire.svg', 'muscle.svg', 'heart.svg', 'thumbsup.svg', 'star.svg', 'celebration.svg']);
-    }
-  };
-
-  // Charger les emojis au montage
+  // Supprimer le chargement des emojis - maintenant géré par EmojiPicker
   useEffect(() => {
     loadCustomEmojis();
   }, []);
