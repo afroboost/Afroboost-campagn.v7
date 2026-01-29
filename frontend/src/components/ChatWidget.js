@@ -418,36 +418,6 @@ export const ChatWidget = () => {
     // Utilise la nouvelle fonction openPrivateChat avec fenêtre flottante
     openPrivateChat(targetId, targetName);
   };
-      localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(session));
-      setSessionData(session);
-      setIsCommunityMode(false);
-      setPrivateChatTarget({ id: targetId, name: targetName });
-      
-      // Charger les messages de la nouvelle session
-      const messagesRes = await axios.get(`${API}/chat/sessions/${session.id}/messages`);
-      const formattedMessages = messagesRes.data.map(m => ({
-        id: m.id,
-        type: m.sender_type === 'user' ? 'user' : m.sender_type === 'coach' ? 'coach' : 'ai',
-        text: m.content,
-        sender: m.sender_name,
-        senderId: m.sender_id
-      }));
-      
-      setMessages([
-        { type: 'ai', text: message },
-        ...formattedMessages
-      ]);
-      setLastMessageCount(formattedMessages.length + 1);
-      
-      playNotificationSound('message');
-      
-    } catch (err) {
-      console.error('Start private chat error:', err);
-      alert('Erreur lors de la création de la discussion privée');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Démarrer le polling quand en mode humain ou communautaire
   useEffect(() => {
