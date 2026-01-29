@@ -310,6 +310,12 @@ export const ChatWidget = () => {
   const [isFullscreen, setIsFullscreen] = useState(false); // Mode plein écran
   const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Sélecteur d'emojis
   const [customEmojis, setCustomEmojis] = useState([]); // Emojis personnalisés du coach
+  
+  // === INDICATEUR DE SAISIE (Typing Indicator) ===
+  const [typingUser, setTypingUser] = useState(null); // Qui est en train d'écrire
+  const typingTimeoutRef = useRef(null); // Timer pour cacher l'indicateur après 3s
+  const lastTypingEmitRef = useRef(0); // Éviter le spam d'événements typing
+  
   // === MESSAGERIE PRIVÉE (MP) ===
   const [privateChats, setPrivateChats] = useState([]); // Liste des conversations MP actives
   const [activePrivateChat, setActivePrivateChat] = useState(null); // MP actuellement ouverte
