@@ -4085,6 +4085,17 @@ async def get_ai_response_with_session(request: Request):
     )
     await db.chat_messages.insert_one(user_message.model_dump())
     
+    # === SOCKET.IO: Émettre le message utilisateur en temps réel ===
+    await emit_new_message(session_id, {
+        "id": user_message.id,
+        "type": "user",
+        "text": message_text,
+        "sender": participant_name,
+        "senderId": participant_id,
+        "sender_type": "user",
+        "created_at": user_message.created_at
+    })
+    
     # Vérifier si l'IA est active pour cette session
     if not session.get("is_ai_active", True) or session.get("mode") != "ai":
         # Mode humain - Notifier le coach par e-mail (non-bloquant)
