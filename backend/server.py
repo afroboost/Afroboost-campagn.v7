@@ -6089,6 +6089,30 @@ async def get_dynamic_manifest():
     from fastapi.responses import JSONResponse
     return JSONResponse(content=manifest, media_type="application/manifest+json")
 
+# ==================== SCHEDULER GROUP MESSAGE EMISSION ====================
+@api_router.post("/scheduler/emit-group-message")
+async def scheduler_emit_group_message(request: Request):
+    """
+    Endpoint interne pour permettre au scheduler d'émettre des messages via Socket.IO.
+    Appelé uniquement par le thread scheduler pour contourner les limitations asyncio.
+    """
+    try:
+        body = await request.json()
+        session_id = body.get("session_id")
+        message_data = body.get("message")
+        
+        if not session_id or not message_data:
+            return {"success": False, "error": "session_id et message requis"}
+        
+        # Émettre via Socket.IO
+        await emit_new_message(session_id, message_data)
+        logger.info(f"[SCHEDULER-EMIT] ✅ Message émis dans session {session_id}")
+        
+        return {"success": True, "session_id": session_id}
+    except Exception as e:
+        logger.error(f"[SCHEDULER-EMIT] ❌ Erreur: {e}")
+        return {"success": False, "error": str(e)}
+
 # ==================== SCHEDULER INTÉGRÉ (THREAD AUTOMATIQUE) ====================
 # Le scheduler tourne en arrière-plan dès le démarrage du serveur
 # Il vérifie les campagnes programmées toutes les 10 secondes
