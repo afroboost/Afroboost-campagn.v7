@@ -1100,7 +1100,7 @@ export const ChatWidget = () => {
                 </button>
               )}
               {/* Menu burger - VISIBLE UNIQUEMENT POUR LE COACH/ADMIN */}
-              {step === 'chat' && isCoachMode && (
+              {(step === 'chat' || step === 'coach') && isCoachMode && (
                 <div className="relative">
                   <button
                     onClick={() => setShowMenu(!showMenu)}
