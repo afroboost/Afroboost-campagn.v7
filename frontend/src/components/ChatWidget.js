@@ -331,38 +331,82 @@ export const ChatWidget = () => {
     return match ? match[1] : null;
   };
 
-  // === POLLING pour nouveaux messages (mode humain/communautaire) ===
-  const pollForNewMessages = useCallback(async () => {
-    if (!sessionData?.id) return;
-    
-    try {
-      const res = await axios.get(`${API}/chat/sessions/${sessionData.id}/messages`);
-      const newMessages = res.data;
+  // === SOCKET.IO CONNEXION ET GESTION TEMPS RÉEL ===
+  useEffect(() => {
+    // Connexion Socket.IO quand on a une session active
+    if (sessionData?.id && step === 'chat' && !socketRef.current) {
+      console.log('[SOCKET.IO] 🔌 Connexion à', SOCKET_URL);
       
-      // Vérifier s'il y a de nouveaux messages
-      if (newMessages.length > lastMessageCount) {
-        const latestMessage = newMessages[newMessages.length - 1];
+      const socket = io(SOCKET_URL, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
+      
+      socketRef.current = socket;
+      
+      socket.on('connect', () => {
+        console.log('[SOCKET.IO] ✅ Connecté, rejoindre session:', sessionData.id);
+        // Rejoindre la room de la session
+        socket.emit('join_session', {
+          session_id: sessionData.id,
+          participant_id: participantId
+        });
+      });
+      
+      socket.on('joined_session', (data) => {
+        console.log('[SOCKET.IO] 🎉 Session rejointe:', data);
+      });
+      
+      // Écouter les nouveaux messages en temps réel
+      socket.on('message_received', (messageData) => {
+        console.log('[SOCKET.IO] 📩 Message reçu:', messageData);
         
-        // Si le dernier message n'est pas de l'utilisateur actuel, notification
-        if (latestMessage.sender_id !== participantId && latestMessage.sender_type !== 'user') {
-          playNotificationSound('coach');
+        // Ne pas dupliquer nos propres messages (déjà ajoutés localement)
+        if (messageData.senderId === participantId && messageData.type === 'user') {
+          return;
         }
         
-        // Mettre à jour les messages avec senderId pour la fonctionnalité de chat privé
-        const formattedMessages = newMessages.map(m => ({
-          id: m.id,
-          type: m.sender_type === 'user' ? 'user' : m.sender_type === 'coach' ? 'coach' : 'ai',
-          text: m.content,
-          sender: m.sender_name,
-          senderId: m.sender_id
-        }));
-        setMessages(formattedMessages);
-        setLastMessageCount(newMessages.length);
-      }
-    } catch (err) {
-      console.warn('Polling error:', err);
+        // Ajouter le message à la liste
+        setMessages(prev => {
+          // Éviter les doublons
+          const exists = prev.some(m => m.id === messageData.id);
+          if (exists) return prev;
+          
+          return [...prev, {
+            id: messageData.id,
+            type: messageData.type,
+            text: messageData.text,
+            sender: messageData.sender,
+            senderId: messageData.senderId
+          }];
+        });
+        
+        // Notification sonore si message d'un autre
+        if (messageData.senderId !== participantId) {
+          playNotificationSound(messageData.type === 'coach' ? 'coach' : 'message');
+        }
+      });
+      
+      socket.on('disconnect', () => {
+        console.log('[SOCKET.IO] ❌ Déconnecté');
+      });
+      
+      socket.on('connect_error', (error) => {
+        console.warn('[SOCKET.IO] ⚠️ Erreur connexion:', error.message);
+      });
     }
-  }, [sessionData, participantId, lastMessageCount]);
+    
+    // Cleanup
+    return () => {
+      if (socketRef.current) {
+        console.log('[SOCKET.IO] 🔌 Déconnexion...');
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [sessionData?.id, step, participantId]);
 
   // === MESSAGERIE PRIVÉE (MP) - FENÊTRE FLOTTANTE ===
   const openPrivateChat = async (targetId, targetName) => {
