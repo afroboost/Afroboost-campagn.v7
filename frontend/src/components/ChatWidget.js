@@ -402,6 +402,9 @@ export const ChatWidget = () => {
       socket.on('message_received', (messageData) => {
         console.log('[SOCKET.IO] 📩 Message reçu:', messageData);
         
+        // Quand un message est reçu, cacher l'indicateur de saisie
+        setTypingUser(null);
+        
         // Ne pas dupliquer nos propres messages (déjà ajoutés localement)
         if (messageData.senderId === participantId && messageData.type === 'user') {
           return;
@@ -425,6 +428,30 @@ export const ChatWidget = () => {
         // Notification sonore si message d'un autre
         if (messageData.senderId !== participantId) {
           playNotificationSound(messageData.type === 'coach' ? 'coach' : 'message');
+        }
+      });
+      
+      // === ÉCOUTER L'INDICATEUR DE SAISIE ===
+      socket.on('user_typing', (data) => {
+        console.log('[SOCKET.IO] ⌨️ Typing event:', data);
+        
+        if (data.is_typing) {
+          // Afficher l'indicateur
+          setTypingUser({
+            name: data.user_name,
+            type: data.user_type
+          });
+          
+          // Cacher automatiquement après 3 secondes d'inactivité
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+          typingTimeoutRef.current = setTimeout(() => {
+            setTypingUser(null);
+          }, 3000);
+        } else {
+          // Cacher l'indicateur
+          setTypingUser(null);
         }
       });
       
