@@ -1,5 +1,34 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - Prompts par Lien (Mode Production)
+
+### Nouvelle fonctionnalité : `custom_prompt` par lien
+**Objectif**: Permettre au coach de définir des instructions IA spécifiques pour chaque lien de chat, tout en maintenant la rétrocompatibilité avec les liens existants.
+
+**Implémentation**:
+- **Modèle `ChatSession`** : Nouveau champ `custom_prompt: Optional[str] = None` (nullable)
+- **Endpoint `POST /api/chat/generate-link`** : Accepte un paramètre `custom_prompt` optionnel
+- **Routes `/api/chat` et `/api/chat/ai-response`** : 
+  - Récupèrent le `custom_prompt` du lien via `link_token`
+  - Hiérarchie de priorité: `custom_prompt (lien)` > `campaignPrompt (global)` > aucun
+
+**Frontend (Dashboard > Conversations)**:
+- Nouveau textarea "Prompt spécifique pour ce lien (Optionnel)" dans la section "🔗 Lien Chat IA"
+- data-testid: `new-link-custom-prompt`
+- Séparation des champs pour "Lien IA" et "Chat Communautaire"
+
+**Critères de réussite**:
+- ✅ Les anciens liens (sans `custom_prompt`) continuent de fonctionner avec le prompt global
+- ✅ Un nouveau lien avec `custom_prompt` utilise ses propres instructions (ignore le prompt global)
+- ✅ Aucune erreur 500 sur les liens existants
+- ✅ Logs explicites: `[CHAT-IA] ✅ Utilisation du custom_prompt du lien`
+
+**Fichiers modifiés**:
+- `/app/backend/server.py` : Modèles `ChatSession`, `ChatSessionUpdate`, routes `/api/chat/*`
+- `/app/frontend/src/components/CoachDashboard.js` : États `newLinkCustomPrompt`, `newCommunityName`, UI textarea
+
+---
+
 ## Mise à jour du 28 Janvier 2026 - Sécurisation IA et Campaign Prompt
 
 ### Nouvelles fonctionnalités :
