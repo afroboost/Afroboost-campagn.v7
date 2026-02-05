@@ -1810,83 +1810,156 @@ export const ChatWidget = () => {
                   <div ref={messagesEndRef} />
                 </div>
                 
-                {/* === PANNEAU DE RÉSERVATION RAPIDE (s'ouvre via icône) === */}
+                {/* === PANNEAU DE RÉSERVATION - SESSIONS DU COACH === */}
                 {showReservationPanel && (
                   <div style={{
-                    padding: '16px',
+                    padding: '12px',
                     borderTop: '1px solid rgba(147, 51, 234, 0.3)',
-                    background: 'rgba(0,0,0,0.5)',
+                    background: 'rgba(0,0,0,0.7)',
+                    maxHeight: '300px',
+                    overflowY: 'auto'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <h4 style={{ color: '#a855f7', fontSize: '14px', fontWeight: '600', margin: 0 }}>
-                        📅 Réservation {subscriberData?.name && `- ${subscriberData.name}`}
+                        📅 {selectedCourse ? 'Confirmer la réservation' : 'Choisir un cours'}
+                        {subscriberData?.name && <span style={{ opacity: 0.7, marginLeft: '8px' }}>({subscriberData.name})</span>}
                       </h4>
                       <button
                         type="button"
-                        onClick={() => setShowReservationPanel(false)}
+                        onClick={() => { setShowReservationPanel(false); setSelectedCourse(null); }}
                         style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '18px' }}
                       >×</button>
                     </div>
-                    <input
-                      type="date"
-                      id="reservation-date"
-                      min={new Date().toISOString().split('T')[0]}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        background: 'rgba(255,255,255,0.1)',
-                        border: '1px solid rgba(147, 51, 234, 0.3)',
-                        color: '#fff',
-                        marginBottom: '12px'
-                      }}
-                      data-testid="reservation-date-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const dateInput = document.getElementById('reservation-date');
-                        const selectedDate = dateInput?.value;
-                        if (!selectedDate) {
-                          alert('Veuillez sélectionner une date');
-                          return;
-                        }
+                    
+                    {/* Chargement */}
+                    {loadingCourses && (
+                      <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                        ⏳ Chargement des sessions...
+                      </div>
+                    )}
+                    
+                    {/* Liste des cours */}
+                    {!loadingCourses && !selectedCourse && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {availableCourses.length === 0 && (
+                          <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                            Aucune session disponible
+                          </div>
+                        )}
+                        {availableCourses.map(course => (
+                          <button
+                            key={course.id}
+                            type="button"
+                            onClick={() => setSelectedCourse(course)}
+                            style={{
+                              padding: '12px',
+                              borderRadius: '12px',
+                              background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(99, 102, 241, 0.3))',
+                              border: '1px solid rgba(147, 51, 234, 0.4)',
+                              color: '#fff',
+                              textAlign: 'left',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            data-testid={`course-${course.id}`}
+                          >
+                            <div style={{ fontWeight: '600', marginBottom: '4px' }}>{course.name || 'Session'}</div>
+                            <div style={{ fontSize: '12px', opacity: 0.8, display: 'flex', gap: '12px' }}>
+                              <span>🕐 {course.time || '18:30'}</span>
+                              <span>📍 {course.location || 'Genève'}</span>
+                              {course.price && <span>💰 CHF {course.price}</span>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Confirmation du cours sélectionné */}
+                    {selectedCourse && (
+                      <div>
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: 'rgba(147, 51, 234, 0.2)',
+                          border: '1px solid rgba(147, 51, 234, 0.4)',
+                          marginBottom: '12px'
+                        }}>
+                          <div style={{ fontWeight: '600', color: '#a855f7', marginBottom: '8px' }}>{selectedCourse.name}</div>
+                          <div style={{ fontSize: '12px', color: '#ccc' }}>
+                            🕐 {selectedCourse.time} | 📍 {selectedCourse.location || 'Genève'}
+                          </div>
+                          {subscriberData?.code && (
+                            <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '8px' }}>
+                              ✅ Code abonné: {subscriberData.code}
+                            </div>
+                          )}
+                        </div>
                         
-                        const reservationData = {
-                          name: subscriberData?.name || leadData?.firstName || 'Abonné',
-                          email: leadData?.email || subscriberData?.email || '',
-                          date: selectedDate,
-                          promoCode: subscriberData?.code || '',
-                          source: 'chat_widget',
-                          type: 'abonné'
-                        };
-                        
-                        try {
-                          const res = await axios.post(`${API}/reservations`, reservationData);
-                          if (res.data) {
-                            setShowReservationPanel(false);
-                            const confirmMsg = `📅 Réservation confirmée pour le ${new Date(selectedDate).toLocaleDateString('fr-FR')} !`;
-                            setMessages(prev => [...prev, { role: 'assistant', content: confirmMsg, timestamp: new Date().toISOString() }]);
-                          }
-                        } catch (err) {
-                          console.error('Erreur réservation:', err);
-                          alert('Erreur lors de la réservation. Réessayez.');
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                        border: 'none',
-                        color: '#fff',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                      data-testid="confirm-reservation-btn"
-                    >
-                      ✅ Confirmer
-                    </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCourse(null)}
+                            style={{
+                              flex: 1,
+                              padding: '10px',
+                              borderRadius: '8px',
+                              background: 'rgba(255,255,255,0.1)',
+                              border: 'none',
+                              color: '#fff',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ← Retour
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const reservationData = {
+                                userName: subscriberData?.name || leadData?.firstName || 'Abonné',
+                                userEmail: leadData?.email || subscriberData?.email || '',
+                                courseId: selectedCourse.id,
+                                courseName: selectedCourse.name,
+                                courseTime: selectedCourse.time,
+                                datetime: new Date().toISOString(),
+                                promoCode: subscriberData?.code || '',
+                                source: 'chat_widget',
+                                type: subscriberData?.code ? 'abonné' : 'achat_direct',
+                                offerId: selectedCourse.id,
+                                offerName: selectedCourse.name,
+                                price: selectedCourse.price || 0,
+                                totalPrice: selectedCourse.price || 0
+                              };
+                              
+                              try {
+                                const res = await axios.post(`${API}/reservations`, reservationData);
+                                if (res.data) {
+                                  setShowReservationPanel(false);
+                                  setSelectedCourse(null);
+                                  const confirmMsg = `✅ Réservation confirmée !\n📅 ${selectedCourse.name}\n🕐 ${selectedCourse.time}${subscriberData?.code ? `\n🎟️ Code: ${subscriberData.code}` : ''}`;
+                                  setMessages(prev => [...prev, { role: 'assistant', content: confirmMsg, timestamp: new Date().toISOString() }]);
+                                }
+                              } catch (err) {
+                                console.error('Erreur réservation:', err);
+                                alert('Erreur lors de la réservation. Réessayez.');
+                              }
+                            }}
+                            style={{
+                              flex: 2,
+                              padding: '10px',
+                              borderRadius: '8px',
+                              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                              border: 'none',
+                              color: '#fff',
+                              fontWeight: '600',
+                              cursor: 'pointer'
+                            }}
+                            data-testid="confirm-reservation-btn"
+                          >
+                            ✅ Confirmer
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 
