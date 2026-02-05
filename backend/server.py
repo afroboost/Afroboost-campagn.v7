@@ -7038,6 +7038,96 @@ def scheduler_job():
                 fail_count = 0
                 results = campaign.get("results", [])
                 
+                # ========== MESSAGERIE INTERNE (canal isolé - prioritaire) ==========
+                # CONDITION D'ISOLATION: Si internal est activé, on NE DÉCLENCHE PAS Twilio/WhatsApp
+                if channels.get("internal"):
+                    try:
+                        target_conv_id = campaign.get("targetConversationId")
+                        target_conv_name = campaign.get("targetConversationName", "")
+                        
+                        if not target_conv_id:
+                            print(f"[SCHEDULER-INTERNAL] ⚠️ Pas de conversation cible - SKIP")
+                            results.append({
+                                "contactId": "internal",
+                                "contactName": "Messagerie Interne",
+                                "channel": "internal",
+                                "status": "failed",
+                                "error": "Aucune conversation cible définie",
+                                "sentAt": now.isoformat()
+                            })
+                            fail_count += 1
+                        else:
+                            print(f"[SCHEDULER-INTERNAL] 🎯 Envoi vers: {target_conv_name} ({target_conv_id})")
+                            
+                            success, error, session_id = scheduler_send_internal_message_sync(
+                                scheduler_db=scheduler_db,
+                                conversation_id=target_conv_id,
+                                message_text=message,
+                                conversation_name=target_conv_name
+                            )
+                            
+                            result_entry = {
+                                "contactId": "internal",
+                                "contactName": target_conv_name or f"Conversation {target_conv_id[:8]}",
+                                "channel": "internal",
+                                "status": "sent" if success else "failed",
+                                "error": error if not success else None,
+                                "sessionId": session_id,
+                                "sentAt": now.isoformat()
+                            }
+                            results.append(result_entry)
+                            
+                            if success:
+                                success_count += 1
+                                logger.info(f"[SCHEDULER] ✅ Message interne envoyé: {target_conv_name}")
+                                print(f"[SCHEDULER] ✅ Scheduled Internal Message Sent: [Campaign: {campaign_name}] -> {target_conv_name}")
+                            else:
+                                fail_count += 1
+                                logger.error(f"[SCHEDULER] ❌ Message interne échoué: {error}")
+                                print(f"[SCHEDULER] ❌ Interne ÉCHEC: {error}")
+                                
+                    except Exception as e:
+                        logger.error(f"[SCHEDULER] ❌ Exception Interne: {e}")
+                        print(f"[SCHEDULER] ❌ Exception Interne: {e}")
+                        results.append({
+                            "contactId": "internal",
+                            "contactName": "Messagerie Interne",
+                            "channel": "internal",
+                            "status": "failed",
+                            "error": str(e),
+                            "sentAt": now.isoformat()
+                        })
+                        fail_count += 1
+                    
+                    # Si UNIQUEMENT le canal internal est activé, on skip les autres canaux
+                    only_internal = not any([
+                        channels.get("whatsapp"),
+                        channels.get("email"),
+                        channels.get("instagram"),
+                        channels.get("group")
+                    ])
+                    
+                    if only_internal:
+                        # Mettre à jour et passer à la campagne suivante
+                        new_status = "completed" if success_count > 0 else "failed"
+                        new_sent_dates = list(set(sent_dates + dates_to_process))
+                        
+                        scheduler_db.campaigns.update_one(
+                            {"id": campaign_id},
+                            {"$set": {
+                                "status": new_status,
+                                "results": results,
+                                "sentDates": new_sent_dates,
+                                "updatedAt": now.isoformat(),
+                                "lastProcessedAt": now.isoformat()
+                            }}
+                        )
+                        
+                        status_emoji = "🟢" if new_status == "completed" else "🔴"
+                        logger.info(f"[SCHEDULER] {status_emoji} {campaign_name}: {new_status} (✓{success_count}/✗{fail_count})")
+                        print(f"[SCHEDULER] {status_emoji} Campagne Interne '{campaign_name}' → {new_status}")
+                        continue  # PASSER À LA CAMPAGNE SUIVANTE
+                
                 for contact in contacts:
                     contact_id = contact.get("id", "")
                     contact_email = contact.get("email", "")
