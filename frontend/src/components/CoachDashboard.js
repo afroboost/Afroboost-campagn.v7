@@ -3739,6 +3739,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 <thead className="sticky top-0 bg-black z-10">
                   <tr>
                     <th className="bg-black">{t('code')}</th>
+                    <th className="bg-black">Origine</th>
                     <th className="bg-black">{t('name')}</th>
                     <th className="bg-black">{t('email')}</th>
                     <th className="bg-black">WhatsApp</th>
@@ -3746,6 +3747,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     <th className="bg-black">{t('date')}</th>
                     <th className="bg-black">{t('time')}</th>
                     <th className="bg-black">{t('offer')}</th>
+                    <th className="bg-black">Spécifications</th>
                     <th className="bg-black">{t('qty')}</th>
                     <th className="bg-black">{t('total')}</th>
                     <th className="bg-black">Statut</th>
@@ -3757,19 +3759,36 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   {filteredReservations.map(r => {
                     const dt = new Date(r.datetime);
                     const isProduct = r.selectedVariants || r.trackingNumber || r.shippingStatus !== 'pending';
+                    const isSubscriber = r.promoCode || r.source === 'chat_widget' || r.type === 'abonné';
                     return (
                       <tr key={r.id} className={r.validated ? 'bg-green-900/20' : ''}>
                         <td style={{ fontWeight: 'bold', color: '#d91cd2' }}>{r.reservationCode || '-'}</td>
-                        <td>{r.userName}</td><td>{r.userEmail}</td><td>{r.userWhatsapp || '-'}</td>
-                        <td>{r.courseName}</td><td>{dt.toLocaleDateString('fr-CH')}</td>
-                        <td>{dt.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}</td>
+                        {/* Colonne Origine */}
                         <td>
-                          {r.offerName}
-                          {r.selectedVariants && (
-                            <span className="block text-xs opacity-50">
-                              {r.selectedVariants.size && `Taille: ${r.selectedVariants.size}`}
-                              {r.selectedVariants.color && ` | ${r.selectedVariants.color}`}
+                          {isSubscriber ? (
+                            <span className="px-2 py-1 rounded text-xs bg-purple-600/40 text-purple-300 whitespace-nowrap" title={r.promoCode ? `Code: ${r.promoCode}` : ''}>
+                              💎 ABONNÉ {r.promoCode && <span className="opacity-70">({r.promoCode})</span>}
                             </span>
+                          ) : (
+                            <span className="px-2 py-1 rounded text-xs bg-amber-600/40 text-amber-300 whitespace-nowrap">
+                              💰 ACHAT
+                            </span>
+                          )}
+                        </td>
+                        <td>{r.userName || 'N/A'}</td><td>{r.userEmail || '-'}</td><td>{r.userWhatsapp || '-'}</td>
+                        <td>{r.courseName || '-'}</td><td>{dt.toLocaleDateString('fr-CH')}</td>
+                        <td>{dt.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>{r.offerName || '-'}</td>
+                        {/* Colonne Spécifications */}
+                        <td>
+                          {r.selectedVariants ? (
+                            <div className="text-xs">
+                              {r.selectedVariants.size && <span className="block text-blue-400">Taille: {r.selectedVariants.size}</span>}
+                              {r.selectedVariants.color && <span className="block text-pink-400">Couleur: {r.selectedVariants.color}</span>}
+                              {r.selectedVariants.model && <span className="block text-green-400">Modèle: {r.selectedVariants.model}</span>}
+                            </div>
+                          ) : (
+                            <span className="text-xs opacity-30">-</span>
                           )}
                         </td>
                         <td>{r.quantity || 1}</td>
