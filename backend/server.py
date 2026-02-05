@@ -189,6 +189,60 @@ async def leave_private_conversation(sid, data):
         await sio.leave_room(sid, room_name)
         logger.info(f"[SOCKET.IO] Client {sid} a quitté la conversation privée {conversation_id}")
 
+# ==================== DM TYPING INDICATOR (Messages Privés) ====================
+@sio.event
+async def dm_typing_start(sid, data):
+    """
+    Un utilisateur commence à taper dans un DM.
+    data = { "conversation_id": "xxx", "user_id": "xxx", "user_name": "xxx" }
+    """
+    conversation_id = data.get("conversation_id")
+    user_name = data.get("user_name", "Quelqu'un")
+    user_id = data.get("user_id")
+    
+    if conversation_id:
+        room_name = f"pm_{conversation_id}"
+        await sio.emit('dm_typing', {
+            'conversation_id': conversation_id,
+            'user_id': user_id,
+            'user_name': user_name,
+            'is_typing': True
+        }, room=room_name, skip_sid=sid)
+
+@sio.event
+async def dm_typing_stop(sid, data):
+    """Un utilisateur arrête de taper dans un DM."""
+    conversation_id = data.get("conversation_id")
+    user_id = data.get("user_id")
+    
+    if conversation_id:
+        room_name = f"pm_{conversation_id}"
+        await sio.emit('dm_typing', {
+            'conversation_id': conversation_id,
+            'user_id': user_id,
+            'is_typing': False
+        }, room=room_name, skip_sid=sid)
+
+# ==================== AVATAR UPDATE (Sync Temps Réel) ====================
+@sio.event
+async def avatar_updated(sid, data):
+    """
+    Un utilisateur a mis à jour son avatar - notifier tous les participants.
+    data = { "user_id": "xxx", "user_name": "xxx", "photo_url": "/api/uploads/profiles/xxx.jpg" }
+    """
+    user_id = data.get("user_id")
+    user_name = data.get("user_name", "Utilisateur")
+    photo_url = data.get("photo_url")
+    
+    if user_id and photo_url:
+        # Diffuser à tous les clients connectés
+        await sio.emit('user_avatar_changed', {
+            'user_id': user_id,
+            'user_name': user_name,
+            'photo_url': photo_url
+        }, skip_sid=sid)
+        logger.info(f"[SOCKET.IO] 📷 Avatar mis à jour: {user_name} -> {photo_url}")
+
 # ==================== TYPING INDICATOR ====================
 @sio.event
 async def typing_start(sid, data):
