@@ -3431,60 +3431,79 @@ async def delete_chat_participant(participant_id: str):
 @api_router.get("/conversations/active")
 async def get_active_conversations_for_messaging():
     """
-    Récupère toutes les conversations actives pour la programmation de messages internes.
-    Retourne une liste unifiée de groupes et utilisateurs avec leur conversation_id.
+    Récupère TOUTES les conversations pour la programmation de messages internes.
+    Inclut : sessions avec titre (groupes nommés), sessions utilisateurs, et groupes standards.
     """
     try:
         conversations = []
         
-        # 1. Récupérer les sessions de chat (utilisateurs individuels et groupes)
+        # 1. Récupérer TOUTES les sessions de chat (inclure le champ 'title')
         sessions = await db.chat_sessions.find(
             {"is_deleted": {"$ne": True}},
-            {"_id": 0, "id": 1, "mode": 1, "participant_ids": 1, "created_at": 1, "last_message_at": 1}
-        ).sort("last_message_at", -1).to_list(200)
+            {"_id": 0, "id": 1, "mode": 1, "title": 1, "participant_ids": 1, "created_at": 1, "last_message_at": 1, "updated_at": 1}
+        ).sort("updated_at", -1).to_list(500)
         
         for session in sessions:
-            session_id = session.get("id", "")
-            mode = session.get("mode", "user")
-            participant_ids = session.get("participant_ids", [])
-            
-            # Déterminer le nom de la conversation
-            if mode == "community":
-                conv_name = "🌍 Groupe Communauté"
-                conv_type = "group"
-            elif mode == "vip":
-                conv_name = "⭐ Groupe VIP"
-                conv_type = "group"
-            else:
-                # Session utilisateur - récupérer le nom du participant
-                if participant_ids:
-                    # Trouver le nom du premier participant (l'utilisateur)
-                    participant = await db.users.find_one(
-                        {"id": participant_ids[0]},
-                        {"_id": 0, "name": 1, "email": 1}
-                    )
-                    if participant:
-                        conv_name = f"👤 {participant.get('name', 'Utilisateur')} ({participant.get('email', '')})"
-                    else:
-                        # Chercher dans les participants de la session via les messages
-                        last_msg = await db.chat_messages.find_one(
-                            {"session_id": session_id, "sender_type": "user"},
-                            {"_id": 0, "sender_name": 1}
-                        )
-                        conv_name = f"👤 {last_msg.get('sender_name', 'Utilisateur')}" if last_msg else f"👤 Session {session_id[:8]}"
+            try:
+                session_id = session.get("id", "")
+                mode = session.get("mode", "user")
+                title = session.get("title", "")
+                participant_ids = session.get("participant_ids", [])
+                
+                # Déterminer le type et le nom de la conversation
+                if title and title.strip():
+                    # Session avec titre = Groupe nommé (comme "Les Lionnes")
+                    conv_name = f"👥 {title.strip()}"
+                    conv_type = "group"
+                elif mode in ["community", "vip", "promo", "group"]:
+                    # Mode groupe standard
+                    mode_names = {
+                        "community": "🌍 Communauté",
+                        "vip": "⭐ Groupe VIP",
+                        "promo": "🎁 Offres Spéciales",
+                        "group": "👥 Groupe"
+                    }
+                    conv_name = mode_names.get(mode, f"👥 Groupe {mode}")
+                    conv_type = "group"
                 else:
-                    conv_name = f"👤 Session {session_id[:8]}"
-                conv_type = "user"
-            
-            conversations.append({
-                "conversation_id": session_id,
-                "name": conv_name,
-                "type": conv_type,
-                "mode": mode,
-                "last_activity": session.get("last_message_at") or session.get("created_at", "")
-            })
+                    # Session utilisateur - récupérer le nom du participant
+                    conv_type = "user"
+                    if participant_ids:
+                        # Trouver le nom du premier participant
+                        participant = await db.users.find_one(
+                            {"id": participant_ids[0]},
+                            {"_id": 0, "name": 1, "email": 1}
+                        )
+                        if participant and participant.get("name"):
+                            conv_name = f"👤 {participant.get('name', 'Utilisateur')}"
+                            if participant.get("email"):
+                                conv_name += f" ({participant.get('email')})"
+                        else:
+                            # Chercher dans les messages
+                            last_msg = await db.chat_messages.find_one(
+                                {"session_id": session_id, "sender_type": "user"},
+                                {"_id": 0, "sender_name": 1}
+                            )
+                            if last_msg and last_msg.get("sender_name"):
+                                conv_name = f"👤 {last_msg.get('sender_name')}"
+                            else:
+                                conv_name = f"👤 Session {session_id[:8]}"
+                    else:
+                        conv_name = f"👤 Session {session_id[:8]}"
+                
+                conversations.append({
+                    "conversation_id": session_id,
+                    "name": conv_name,
+                    "type": conv_type,
+                    "mode": mode,
+                    "title": title or "",
+                    "last_activity": session.get("updated_at") or session.get("last_message_at") or session.get("created_at", "")
+                })
+            except Exception as session_err:
+                logger.warning(f"[CONVERSATIONS-ACTIVE] Erreur session {session.get('id', '?')}: {session_err}")
+                continue
         
-        # 2. Ajouter les groupes standards si pas de session
+        # 2. Ajouter les groupes standards s'ils n'existent pas
         standard_groups = [
             {"conversation_id": "community", "name": "🌍 Communauté Générale", "type": "group", "mode": "community"},
             {"conversation_id": "vip", "name": "⭐ Groupe VIP", "type": "group", "mode": "vip"},
@@ -3496,8 +3515,13 @@ async def get_active_conversations_for_messaging():
             if group["conversation_id"] not in existing_ids:
                 conversations.append(group)
         
-        # Trier: groupes d'abord, puis utilisateurs par activité récente
-        conversations.sort(key=lambda x: (0 if x["type"] == "group" else 1, x.get("last_activity", "") or ""), reverse=False)
+        # 3. Trier: groupes d'abord (par nom), puis utilisateurs (par activité)
+        conversations.sort(key=lambda x: (
+            0 if x["type"] == "group" else 1,
+            x.get("name", "").lower()
+        ))
+        
+        logger.info(f"[CONVERSATIONS-ACTIVE] {len(conversations)} conversations trouvées")
         
         return {
             "success": True,
