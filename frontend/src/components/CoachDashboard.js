@@ -2370,6 +2370,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
           channels: newCampaign.channels,
           targetGroupId: newCampaign.targetGroupId || 'community',
+          targetConversationId: newCampaign.targetConversationId || null,
+          targetConversationName: newCampaign.targetConversationName || null,
           scheduledAt: null
         };
         const res = await axios.post(`${API}/campaigns`, campaignData);
@@ -2389,6 +2391,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
             channels: newCampaign.channels,
             targetGroupId: newCampaign.targetGroupId || 'community',
+            targetConversationId: newCampaign.targetConversationId || null,
+            targetConversationName: newCampaign.targetConversationName || null,
             scheduledAt
           };
           const res = await axios.post(`${API}/campaigns`, campaignData);
@@ -2401,8 +2405,10 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       setNewCampaign({ 
         name: "", message: "", mediaUrl: "", mediaFormat: "16:9", 
         targetType: "all", selectedContacts: [], 
-        channels: { whatsapp: true, email: false, instagram: false, group: false }, 
+        channels: { whatsapp: true, email: false, instagram: false, group: false, internal: false }, 
         targetGroupId: 'community',
+        targetConversationId: '',
+        targetConversationName: '',
         scheduleSlots: [] 
       });
       setSelectedContactsForCampaign([]);
