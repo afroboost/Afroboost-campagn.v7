@@ -996,27 +996,14 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [newCampaign, setNewCampaign] = useState({
     name: "", message: "", mediaUrl: "", mediaFormat: "16:9",
     targetType: "all", selectedContacts: [],
-    channels: { whatsapp: true, email: false, instagram: false, group: false, internal: false },
+    channels: { whatsapp: true, email: false, instagram: false, group: false },
     targetGroupId: 'community',
-    targetConversationId: '',
-    targetConversationName: '',
     scheduleSlots: [] // Multi-date scheduling
   });
   const [selectedContactsForCampaign, setSelectedContactsForCampaign] = useState([]);
   const [contactSearchQuery, setContactSearchQuery] = useState("");
   const [campaignLogs, setCampaignLogs] = useState([]); // Error logs
   const [editingCampaignId, setEditingCampaignId] = useState(null); // ID de la campagne en édition
-  
-  // === CONVERSATIONS ACTIVES POUR MESSAGERIE INTERNE ===
-  const [activeConversations, setActiveConversations] = useState([]);
-  const [conversationSearch, setConversationSearch] = useState(''); // Recherche dans le sélecteur
-  const [showConversationDropdown, setShowConversationDropdown] = useState(false); // Dropdown ouvert/fermé
-  
-  // === FILTRES HISTORIQUE CAMPAGNES ===
-  const [campaignHistoryFilter, setCampaignHistoryFilter] = useState('all'); // 'all', 'groups', 'individuals'
-  
-  // === SECTION CANAUX EXTERNES REPLIABLE ===
-  const [externalChannelsExpanded, setExternalChannelsExpanded] = useState(false);
   
   // === SCHEDULER HEALTH STATE ===
   const [schedulerHealth, setSchedulerHealth] = useState({ status: "unknown", last_run: null });
@@ -1085,6 +1072,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [newCommunityName, setNewCommunityName] = useState('');  // Nom pour le chat communautaire
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [copiedLinkId, setCopiedLinkId] = useState(null);
+  const [conversationSearch, setConversationSearch] = useState(''); // Recherche globale conversations
   
   // === CRM AVANCÉ - Pagination et Infinite Scroll ===
   const [conversationsPage, setConversationsPage] = useState(1);
@@ -1138,17 +1126,10 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   useEffect(() => {
     const checkSchedulerHealth = async () => {
       try {
-        // Utiliser le nouvel endpoint avec infos APScheduler complètes
-        const res = await axios.get(`${API}/scheduler/status`);
-        setSchedulerHealth({
-          status: res.data.scheduler_running ? "active" : "stopped",
-          last_run: res.data.job?.next_run_time || null,
-          persistence: res.data.persistence || "unknown",
-          job_name: res.data.job?.name || null,
-          interval: res.data.interval_seconds || 60
-        });
+        const res = await axios.get(`${API}/scheduler/health`);
+        setSchedulerHealth(res.data);
       } catch (err) {
-        setSchedulerHealth({ status: "stopped", last_run: null, persistence: "error" });
+        setSchedulerHealth({ status: "stopped", last_run: null });
       }
     };
     
@@ -1160,7 +1141,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   }, [tab]);
 
-  // Load campaigns and active conversations
+  // Load campaigns
   useEffect(() => {
     const loadCampaigns = async () => {
       try {
@@ -1168,19 +1149,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         setCampaigns(res.data);
       } catch (err) { console.error("Error loading campaigns:", err); }
     };
-    
-    const loadActiveConversations = async () => {
-      try {
-        const res = await axios.get(`${API}/conversations/active`);
-        if (res.data.success) {
-          setActiveConversations(res.data.conversations || []);
-        }
-      } catch (err) { console.error("Error loading active conversations:", err); }
-    };
-    
     if (tab === "campaigns") {
       loadCampaigns();
-      loadActiveConversations();
       loadAIConfig();
       loadAILogs();
     }
@@ -2377,8 +2347,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
           channels: newCampaign.channels,
           targetGroupId: newCampaign.targetGroupId || 'community',
-          targetConversationId: newCampaign.targetConversationId || null,
-          targetConversationName: newCampaign.targetConversationName || null,
           scheduledAt: null
         };
         const res = await axios.post(`${API}/campaigns`, campaignData);
@@ -2398,8 +2366,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
             channels: newCampaign.channels,
             targetGroupId: newCampaign.targetGroupId || 'community',
-            targetConversationId: newCampaign.targetConversationId || null,
-            targetConversationName: newCampaign.targetConversationName || null,
             scheduledAt
           };
           const res = await axios.post(`${API}/campaigns`, campaignData);
@@ -2412,10 +2378,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       setNewCampaign({ 
         name: "", message: "", mediaUrl: "", mediaFormat: "16:9", 
         targetType: "all", selectedContacts: [], 
-        channels: { whatsapp: true, email: false, instagram: false, group: false, internal: false }, 
+        channels: { whatsapp: true, email: false, instagram: false, group: false }, 
         targetGroupId: 'community',
-        targetConversationId: '',
-        targetConversationName: '',
         scheduleSlots: [] 
       });
       setSelectedContactsForCampaign([]);
@@ -5337,316 +5301,57 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         {tab === "campaigns" && (
           <div className="card-gradient rounded-xl p-4 sm:p-6">
             {/* Header responsive */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
               <h2 className="font-semibold text-white text-lg sm:text-xl">📢 Gestionnaire de Campagnes</h2>
               
-              {/* === INDICATEUR STATUT SERVEUR DE PLANIFICATION (APScheduler) === */}
+              {/* === BADGE DE SANTÉ DU SCHEDULER === */}
               {(() => {
-                const isRunning = schedulerHealth.status === "active";
-                const hasPersistence = schedulerHealth.persistence && schedulerHealth.persistence.includes("MongoDB");
-                const isHealthy = isRunning && hasPersistence;
+                const isActive = schedulerHealth.status === "active" && schedulerHealth.last_run;
+                const lastRunDate = schedulerHealth.last_run ? new Date(schedulerHealth.last_run) : null;
+                const now = new Date();
+                const diffSeconds = lastRunDate ? Math.floor((now - lastRunDate) / 1000) : 999;
+                const isRecent = diffSeconds < 60;
+                const isHealthy = isActive && isRecent;
                 
                 return (
                   <div 
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium cursor-help ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
                       isHealthy 
                         ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
                         : 'bg-red-500/20 border border-red-500/50 text-red-400'
                     }`}
-                    title={`APScheduler: ${isRunning ? 'Actif' : 'Arrêté'}\nPersistance: ${schedulerHealth.persistence || 'Inconnue'}\nIntervalle: ${schedulerHealth.interval || 60}s`}
-                    data-testid="scheduler-status-indicator"
+                    title={lastRunDate ? `Dernier scan: ${lastRunDate.toLocaleTimeString()}` : 'Statut inconnu'}
                   >
                     <span className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                    <span>{isHealthy ? '🟢 Serveur Planification : Actif' : '🔴 Serveur Planification : Arrêté'}</span>
-                    {hasPersistence && <span className="text-[10px] opacity-70">(MongoDB)</span>}
+                    {isHealthy ? '● Automate : Actif' : '● Automate : Arrêté'}
                   </div>
                 );
               })()}
             </div>
             
-            {/* ========== FORMULAIRE NOUVELLE CAMPAGNE (EN PREMIER) ========== */}
-            <form onSubmit={handleCampaignSubmit} className="mb-6 p-4 rounded-xl glass border border-green-500/30 bg-green-900/10">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">✨</span>
-                {editingCampaignId ? '✏️ Modifier la campagne' : '📝 Nouvelle Campagne Interne'}
-              </h3>
-              
-              {/* Nom de la campagne */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">Nom de la campagne</label>
-                <input type="text" placeholder="Ex: Message de bienvenue, Promotion juin..."
-                  value={newCampaign.name}
-                  onChange={e => setNewCampaign({...newCampaign, name: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg neon-input"
-                  data-testid="campaign-name-input"
-                />
-              </div>
-              
-              {/* === SÉLECTEUR DE DESTINATAIRE AVEC RECHERCHE === */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">📍 Destinataire</label>
-                <div className="relative" data-testid="searchable-recipient-selector">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="🔍 Rechercher un groupe ou utilisateur..."
-                      value={conversationSearch}
-                      onChange={(e) => {
-                        setConversationSearch(e.target.value);
-                        setShowConversationDropdown(true);
-                      }}
-                      onFocus={() => setShowConversationDropdown(true)}
-                      className="w-full px-4 py-3 rounded-lg neon-input pr-10"
-                      data-testid="recipient-search-input"
-                    />
-                    {newCampaign.targetConversationId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNewCampaign({...newCampaign, targetConversationId: '', targetConversationName: ''});
-                          setConversationSearch('');
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                  
-                  {/* Destinataire sélectionné */}
-                  {newCampaign.targetConversationId && !showConversationDropdown && (
-                    <div className="mt-2 px-3 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm flex items-center gap-2">
-                      <span>{activeConversations.find(c => c.conversation_id === newCampaign.targetConversationId)?.type === 'group' ? '👥' : '👤'}</span>
-                      <span>{newCampaign.targetConversationName}</span>
-                      <span className="text-xs opacity-60">({newCampaign.targetConversationId.slice(0, 8)}...)</span>
-                    </div>
-                  )}
-                  
-                  {/* Dropdown avec recherche filtrée */}
-                  {showConversationDropdown && (
-                    <div 
-                      className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto rounded-lg bg-black/95 border border-purple-500/30 shadow-xl"
-                      onMouseLeave={() => setTimeout(() => setShowConversationDropdown(false), 200)}
-                    >
-                      {/* Groupes */}
-                      {activeConversations.filter(c => 
-                        c.type === 'group' && 
-                        (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
-                      ).length > 0 && (
-                        <div className="p-2 border-b border-purple-500/20">
-                          <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
-                          {activeConversations.filter(c => 
-                            c.type === 'group' && 
-                            (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
-                          ).map(conv => (
-                            <button
-                              key={conv.conversation_id}
-                              type="button"
-                              onClick={() => {
-                                setNewCampaign({
-                                  ...newCampaign,
-                                  targetConversationId: conv.conversation_id,
-                                  targetConversationName: conv.name,
-                                  channels: {...newCampaign.channels, internal: true}
-                                });
-                                setConversationSearch(conv.name);
-                                setShowConversationDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2 transition-colors"
-                            >
-                              <span className="text-lg">👥</span>
-                              <span>{conv.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Utilisateurs */}
-                      {activeConversations.filter(c => 
-                        c.type === 'user' && 
-                        (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
-                      ).length > 0 && (
-                        <div className="p-2">
-                          <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
-                          {activeConversations.filter(c => 
-                            c.type === 'user' && 
-                            (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
-                          ).slice(0, 10).map(conv => (
-                            <button
-                              key={conv.conversation_id}
-                              type="button"
-                              onClick={() => {
-                                setNewCampaign({
-                                  ...newCampaign,
-                                  targetConversationId: conv.conversation_id,
-                                  targetConversationName: conv.name,
-                                  channels: {...newCampaign.channels, internal: true}
-                                });
-                                setConversationSearch(conv.name);
-                                setShowConversationDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2 transition-colors"
-                            >
-                              <span className="text-lg">👤</span>
-                              <span className="truncate">{conv.name}</span>
-                            </button>
-                          ))}
-                          {activeConversations.filter(c => 
-                            c.type === 'user' && 
-                            (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
-                          ).length > 10 && (
-                            <p className="text-xs text-gray-500 px-3 py-1">... et {activeConversations.filter(c => c.type === 'user').length - 10} autres</p>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Aucun résultat */}
-                      {activeConversations.filter(c => 
-                        conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase())
-                      ).length === 0 && (
-                        <p className="text-center py-4 text-gray-500 text-sm">Aucun résultat pour "{conversationSearch}"</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mt-2">
-                  💡 Tapez les premières lettres pour filtrer. Le message sera envoyé dans le chat sélectionné.
-                </p>
-              </div>
-              
-              {/* Message */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">Message</label>
-                <textarea placeholder="Votre message... Utilisez {prénom} pour personnaliser"
-                  value={newCampaign.message}
-                  onChange={e => setNewCampaign({...newCampaign, message: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg neon-input min-h-[120px]"
-                  data-testid="campaign-message-input"
-                />
-              </div>
-              
-              {/* Programmation simplifiée */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">⏰ Programmation</label>
-                <div className="flex flex-wrap gap-4 items-center mb-3">
-                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length === 0}
-                      onChange={() => setNewCampaign({...newCampaign, scheduleSlots: []})} />
-                    Envoyer maintenant
-                  </label>
-                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length > 0}
-                      onChange={addScheduleSlot} />
-                    Programmer
-                  </label>
-                </div>
-                
-                {/* Slots de programmation */}
-                {newCampaign.scheduleSlots.length > 0 && (
-                  <div className="border border-purple-500/30 rounded-lg p-3 space-y-2">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-purple-400">{newCampaign.scheduleSlots.length} date(s)</span>
-                      <button type="button" onClick={addScheduleSlot} 
-                        className="px-3 py-1 rounded text-xs bg-purple-600 hover:bg-purple-700 text-white">
-                        + Ajouter
-                      </button>
-                    </div>
-                    {newCampaign.scheduleSlots.map((slot, idx) => (
-                      <div key={idx} className="flex gap-2 items-center">
-                        <input type="date" value={slot.date}
-                          onChange={e => updateScheduleSlot(idx, 'date', e.target.value)}
-                          className="flex-1 px-3 py-2 rounded-lg neon-input text-sm" />
-                        <input type="time" value={slot.time}
-                          onChange={e => updateScheduleSlot(idx, 'time', e.target.value)}
-                          className="w-32 px-3 py-2 rounded-lg neon-input text-sm" />
-                        <button type="button" onClick={() => removeScheduleSlot(idx)}
-                          className="px-3 py-2 rounded-lg bg-red-600/30 hover:bg-red-600/50 text-red-400 text-sm">✕</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Bouton de création/modification */}
-              <div className="flex gap-3">
-                <button type="button" onClick={handleCreateCampaign}
-                  disabled={!newCampaign.name || !newCampaign.message || !newCampaign.targetConversationId}
-                  className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid="create-campaign-btn"
-                >
-                  {editingCampaignId ? '💾 Modifier' : '🚀 Créer la campagne'}
-                </button>
-                {editingCampaignId && (
-                  <button type="button" onClick={cancelEditCampaign}
-                    className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-500 text-white font-semibold transition-all">
-                    Annuler
-                  </button>
-                )}
-              </div>
-            
-            {/* ========== SECTION CANAUX EXTERNES (REPLIABLE) ========== */}
-            <div className="mb-6 rounded-xl glass border border-gray-500/30">
-              <button
-                type="button"
-                onClick={() => setExternalChannelsExpanded(!externalChannelsExpanded)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors rounded-xl"
-                data-testid="toggle-external-channels"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400">⚙️</span>
-                  <span className="text-white font-medium">Configuration Canaux Externes</span>
-                  <span className="text-xs text-gray-500">(WhatsApp, Email, Instagram - à venir)</span>
-                </div>
-                <span className={`text-gray-400 transition-transform ${externalChannelsExpanded ? 'rotate-180' : ''}`}>▼</span>
-              </button>
-              
-              {externalChannelsExpanded && (
-                <div className="p-4 border-t border-gray-500/30">
-                  <p className="text-xs text-gray-400 mb-4">
-                    💡 Ces canaux nécessitent une configuration Twilio/SendGrid. La messagerie interne ci-dessus fonctionne sans configuration externe.
+            {/* === COMPTEUR DE CLIENTS CIBLÉS (Responsive) === */}
+            <div className="mb-6 p-4 rounded-xl glass border border-purple-500/30">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-white font-semibold text-base sm:text-lg">
+                    👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/60 mt-1">
+                    📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp
                   </p>
-                  
-                  {/* Compteur de clients */}
-                  <div className="mb-4 p-3 rounded-lg bg-purple-900/20 border border-purple-500/20">
-                    <h4 className="text-white text-sm font-medium mb-2">👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span></h4>
-                    <p className="text-xs text-white/60">📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp</p>
-                  </div>
-                  
-                  {/* Canaux externes */}
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
-                      <input type="checkbox" checked={newCampaign.channels.whatsapp}
-                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, whatsapp: e.target.checked}})} />
-                      📱 WhatsApp <span className="text-xs text-yellow-500">(config requise)</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
-                      <input type="checkbox" checked={newCampaign.channels.email}
-                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, email: e.target.checked}})} />
-                      📧 Email <span className="text-xs text-yellow-500">(config requise)</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
-                      <input type="checkbox" checked={newCampaign.channels.instagram}
-                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, instagram: e.target.checked}})} />
-                      📸 Instagram <span className="text-xs text-yellow-500">(bientôt)</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
-                      <input type="checkbox" checked={newCampaign.channels.group || false}
-                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, group: e.target.checked}})} />
-                      💬 Groupe Afroboost
-                    </label>
-                  </div>
-                  
-                  {/* Sélecteur de cible si non "tous" */}
-                  {newCampaign.channels.whatsapp || newCampaign.channels.email ? (
-                    <div className="p-3 rounded-lg bg-yellow-900/20 border border-yellow-500/30">
-                      <p className="text-yellow-400 text-sm mb-2">⚠️ Configuration Twilio/SendGrid requise</p>
-                      <p className="text-xs text-gray-400">
-                        Contactez le support pour activer l'envoi WhatsApp/Email vers vos contacts CRM.
-                      </p>
-                    </div>
-                  ) : null}
                 </div>
-              )}
+                {/* Bouton envoi direct - responsive */}
+                <div className="w-full sm:w-auto">
+                  <button 
+                    type="button"
+                    onClick={() => setDirectSendMode(!directSendMode)}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all ${directSendMode ? 'bg-pink-600 text-white' : 'glass text-white border border-purple-500/30'}`}
+                    data-testid="direct-send-mode-btn"
+                  >
+                    {directSendMode ? '✓ Mode Envoi Direct' : '🚀 Envoi Direct'}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* === MODE ENVOI DIRECT === */}
@@ -6351,87 +6056,254 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               )}
             </div>
 
-            {/* ========== HISTORIQUE DES CAMPAGNES AVEC FILTRES ========== */}
-            <div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                <h3 className="text-white font-semibold">📊 Historique des campagnes</h3>
+            {/* New Campaign Form */}
+            <form onSubmit={createCampaign} className="mb-8 p-5 rounded-xl glass">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold">
+                  {editingCampaignId ? '✏️ Modifier la Campagne' : 'Nouvelle Campagne'}
+                </h3>
+                {editingCampaignId && (
+                  <button 
+                    type="button" 
+                    onClick={cancelEditCampaign}
+                    className="px-3 py-1 rounded text-xs bg-gray-600 hover:bg-gray-700 text-white"
+                  >
+                    ❌ Annuler
+                  </button>
+                )}
+              </div>
+              
+              {/* Campaign Name */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Nom de la campagne</label>
+                <input type="text" required value={newCampaign.name} onChange={e => setNewCampaign({...newCampaign, name: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg neon-input" placeholder="Ex: Promo Noël 2024" />
+              </div>
+              
+              {/* Target Selection */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Contacts ciblés</label>
+                <div className="flex gap-4 mb-3">
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="radio" name="targetType" checked={newCampaign.targetType === "all"} 
+                      onChange={() => setNewCampaign({...newCampaign, targetType: "all"})} />
+                    Tous les contacts ({allContacts.length})
+                  </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="radio" name="targetType" checked={newCampaign.targetType === "selected"} 
+                      onChange={() => setNewCampaign({...newCampaign, targetType: "selected"})} />
+                    Sélection individuelle
+                  </label>
+                </div>
                 
-                {/* Boutons de filtrage rapide */}
-                <div className="flex gap-2" data-testid="campaign-history-filters">
-                  <button
-                    type="button"
-                    onClick={() => setCampaignHistoryFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      campaignHistoryFilter === 'all' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-700/50 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    Tout ({campaigns.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCampaignHistoryFilter('groups')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      campaignHistoryFilter === 'groups' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-700/50 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    👥 Groupes ({campaigns.filter(c => c.channels?.group || c.channels?.internal && activeConversations.find(ac => ac.conversation_id === c.targetConversationId)?.type === 'group').length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCampaignHistoryFilter('individuals')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      campaignHistoryFilter === 'individuals' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-700/50 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    👤 Individuels ({campaigns.filter(c => c.channels?.internal && activeConversations.find(ac => ac.conversation_id === c.targetConversationId)?.type === 'user').length})
-                  </button>
+                {/* Contact Selection List */}
+                {newCampaign.targetType === "selected" && (
+                  <div className="border border-purple-500/30 rounded-lg p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <input type="text" placeholder="🔍 Rechercher..." value={contactSearchQuery}
+                        onChange={e => setContactSearchQuery(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg neon-input text-sm" />
+                      <button type="button" onClick={toggleAllContacts} className="px-3 py-2 rounded-lg glass text-white text-xs">
+                        {selectedContactsForCampaign.length === allContacts.length ? 'Désélectionner tout' : 'Tout sélectionner'}
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      {filteredContacts.map(contact => (
+                        <div key={contact.id} className="flex items-center gap-2 text-white text-sm hover:bg-purple-500/10 p-1 rounded group">
+                          <input type="checkbox" checked={selectedContactsForCampaign.includes(contact.id)}
+                            onChange={() => toggleContactForCampaign(contact.id)} className="cursor-pointer" />
+                          <span className="truncate flex-1">{contact.name}</span>
+                          <span className="text-xs opacity-50 truncate">({contact.email})</span>
+                          {/* Bouton suppression (visible au hover) */}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); deleteContact(contact.id); }}
+                            className="opacity-0 group-hover:opacity-100 px-2 py-0.5 rounded text-red-400 hover:bg-red-500/20 text-xs transition-opacity"
+                            title="Supprimer définitivement"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-purple-400 mt-2">{selectedContactsForCampaign.length} contact(s) sélectionné(s)</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Message */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Message</label>
+                <textarea required value={newCampaign.message} onChange={e => setNewCampaign({...newCampaign, message: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg neon-input" rows={4}
+                  placeholder="Salut {prénom} ! 🎉&#10;&#10;Profite de notre offre spéciale..." />
+                <p className="text-xs text-purple-400 mt-1">Variables disponibles: {'{prénom}'} - sera remplacé par le nom du contact</p>
+              </div>
+              
+              {/* Media */}
+              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-2 text-white text-sm">URL du visuel (image/vidéo)</label>
+                  <input type="url" value={newCampaign.mediaUrl} onChange={e => setNewCampaign({...newCampaign, mediaUrl: e.target.value})}
+                    className="w-full px-4 py-3 rounded-lg neon-input" placeholder="https://..." />
+                </div>
+                <div>
+                  <label className="block mb-2 text-white text-sm">Format</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                      <input type="radio" name="mediaFormat" checked={newCampaign.mediaFormat === "9:16"}
+                        onChange={() => setNewCampaign({...newCampaign, mediaFormat: "9:16"})} />
+                      9:16 (Stories)
+                    </label>
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                      <input type="radio" name="mediaFormat" checked={newCampaign.mediaFormat === "16:9"}
+                        onChange={() => setNewCampaign({...newCampaign, mediaFormat: "16:9"})} />
+                      16:9 (Post)
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
+              
+              {/* Media Preview */}
+              {newCampaign.mediaUrl && (
+                <div className="mb-4">
+                  <p className="text-white text-sm mb-2">
+                    Aperçu ({newCampaign.mediaFormat}):
+                    {(newCampaign.mediaUrl.includes('/v/') || newCampaign.mediaUrl.includes('/api/share/')) && (
+                      <span className="ml-2 text-green-400 text-xs">✅ Lien média interne détecté</span>
+                    )}
+                  </p>
+                  <div className="flex justify-center">
+                    <div style={{ 
+                      width: newCampaign.mediaFormat === "9:16" ? '150px' : '280px',
+                      height: newCampaign.mediaFormat === "9:16" ? '267px' : '158px',
+                      background: '#000', borderRadius: '8px', overflow: 'hidden',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {resolvedThumbnail ? (
+                        <img 
+                          src={resolvedThumbnail} 
+                          alt="Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          onError={(e) => { 
+                            e.target.style.display = 'none';
+                            e.target.parentNode.innerHTML = '<span style="color:#888;font-size:12px;">Aperçu non disponible</span>';
+                          }} 
+                        />
+                      ) : (
+                        <span style={{ color: '#888', fontSize: '12px' }}>Chargement...</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Channels */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Canaux d'envoi</label>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="checkbox" checked={newCampaign.channels.whatsapp}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, whatsapp: e.target.checked}})} />
+                    📱 WhatsApp
+                  </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="checkbox" checked={newCampaign.channels.email}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, email: e.target.checked}})} />
+                    📧 Email
+                  </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="checkbox" checked={newCampaign.channels.instagram}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, instagram: e.target.checked}})} />
+                    📸 Instagram
+                  </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="checkbox" checked={newCampaign.channels.group || false}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, group: e.target.checked}})} />
+                    💬 Groupe Afroboost
+                  </label>
+                </div>
+                
+                {/* Sélecteur de groupe si canal groupe activé */}
+                {newCampaign.channels.group && (
+                  <div className="mt-3 p-3 rounded-lg border border-purple-500/30 bg-purple-900/20">
+                    <label className="block mb-2 text-purple-400 text-xs">Groupe cible</label>
+                    <select 
+                      value={newCampaign.targetGroupId || 'community'}
+                      onChange={e => setNewCampaign({...newCampaign, targetGroupId: e.target.value})}
+                      className="w-full px-3 py-2 rounded-lg neon-input text-sm"
+                    >
+                      <option value="community">🌍 Communauté Générale</option>
+                      <option value="vip">⭐ Groupe VIP</option>
+                      <option value="promo">🎁 Offres Spéciales</option>
+                    </select>
+                    <p className="text-xs text-gray-400 mt-2">
+                      💡 Le message sera envoyé par "💪 Coach Bassi" dans le chat de groupe.
+                      La variable {'{prénom}'} sera remplacée par "Communauté" pour les envois groupés.
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Scheduling - Multi-date support */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Programmation</label>
+                <div className="flex flex-wrap gap-4 items-center mb-3">
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length === 0}
+                      onChange={() => setNewCampaign({...newCampaign, scheduleSlots: []})} />
+                    Envoyer maintenant
+                  </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length > 0}
+                      onChange={addScheduleSlot} />
+                    Programmer (multi-dates)
+                  </label>
+                </div>
+                
+                {/* Multi-date slots */}
+                {newCampaign.scheduleSlots.length > 0 && (
+                  <div className="border border-purple-500/30 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs text-purple-400">{newCampaign.scheduleSlots.length} date(s) programmée(s)</span>
+                      <button type="button" onClick={addScheduleSlot} 
+                        className="px-3 py-1 rounded text-xs bg-purple-600 hover:bg-purple-700 text-white">
+                        + Ajouter une date
+                      </button>
+                    </div>
+                    {newCampaign.scheduleSlots.map((slot, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-black/30">
+                        <span className="text-white text-xs w-6">#{idx + 1}</span>
+                        <input type="date" value={slot.date} 
+                          onChange={e => updateScheduleSlot(idx, 'date', e.target.value)}
+                          className="px-3 py-2 rounded-lg neon-input text-sm flex-1" 
+                          min={new Date().toISOString().split('T')[0]} />
+                        <input type="time" value={slot.time}
+                          onChange={e => updateScheduleSlot(idx, 'time', e.target.value)}
+                          className="px-3 py-2 rounded-lg neon-input text-sm" />
+                        <button type="button" onClick={() => removeScheduleSlot(idx)}
+                          className="px-2 py-2 rounded text-xs bg-red-600/30 hover:bg-red-600/50 text-red-400"
+                          title="Supprimer cette date">
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <p className="text-xs text-purple-400 mt-2">
+                      📅 Chaque date créera une ligne distincte avec le statut "Programmé"
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <button type="submit" className={`px-6 py-3 rounded-lg w-full md:w-auto ${editingCampaignId ? 'bg-green-600 hover:bg-green-700' : 'btn-primary'}`}>
+                {editingCampaignId ? '💾 Enregistrer les modifications' : '🚀 Créer la campagne'}
+              </button>
+            </form>
             
             {/* Campaign History */}
             <div>
               <h3 className="text-white font-semibold mb-4">Historique des campagnes</h3>
-              
-              {/* Filtres pour l'historique */}
-              <div className="mb-4 flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setCampaignHistoryFilter('all')}
-                  className={`px-3 py-1 rounded text-sm ${
-                    campaignHistoryFilter === 'all' 
-                      ? 'bg-purple-600 text-white' 
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  📋 Toutes
-                </button>
-                <button
-                  onClick={() => setCampaignHistoryFilter('groups')}
-                  className={`px-3 py-1 rounded text-sm ${
-                    campaignHistoryFilter === 'groups' 
-                      ? 'bg-purple-600 text-white' 
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  👥 Groupes
-                </button>
-                <button
-                  onClick={() => setCampaignHistoryFilter('individuals')}
-                  className={`px-3 py-1 rounded text-sm ${
-                    campaignHistoryFilter === 'individuals' 
-                      ? 'bg-purple-600 text-white' 
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  👤 Individuels
-                </button>
-              </div>
               
               {/* Error Logs Panel - Shows if there are errors */}
               {campaignLogs.filter(l => l.type === 'error').length > 0 && (
@@ -6455,23 +6327,15 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   <thead className="sticky top-0 bg-black z-10">
                     <tr className="text-left text-white text-sm opacity-70 border-b border-purple-500/30">
                       <th className="pb-3 pt-2 pr-4 bg-black">Campagne</th>
-                      <th className="pb-3 pt-2 pr-4 bg-black">Destinataire</th>
-                      <th className="pb-3 pt-2 pr-4 bg-black">Type</th>
+                      <th className="pb-3 pt-2 pr-4 bg-black">Contacts</th>
+                      <th className="pb-3 pt-2 pr-4 bg-black">Canaux</th>
                       <th className="pb-3 pt-2 pr-4 bg-black">Statut</th>
-                      <th className="pb-3 pt-2 pr-4 bg-black">Date</th>
+                      <th className="pb-3 pt-2 pr-4 bg-black">Date programmée</th>
                       <th className="pb-3 pt-2 bg-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {campaigns
-                      .filter(campaign => {
-                        if (campaignHistoryFilter === 'all') return true;
-                        const convType = activeConversations.find(ac => ac.conversation_id === campaign.targetConversationId)?.type;
-                        if (campaignHistoryFilter === 'groups') return campaign.channels?.group || convType === 'group';
-                        if (campaignHistoryFilter === 'individuals') return convType === 'user';
-                        return true;
-                      })
-                      .map(campaign => {
+                    {campaigns.map(campaign => {
                       // Count failed results for this campaign
                       const failedCount = campaign.results?.filter(r => r.status === 'failed').length || 0;
                       const hasErrors = failedCount > 0 || campaignLogs.some(l => l.campaignId === campaign.id && l.type === 'error');
