@@ -6245,6 +6245,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, group: e.target.checked}})} />
                     💬 Groupe Afroboost
                   </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer" data-testid="internal-channel-checkbox">
+                    <input type="checkbox" checked={newCampaign.channels.internal || false}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, internal: e.target.checked}})} />
+                    💌 Chat Interne
+                  </label>
                 </div>
                 
                 {/* Sélecteur de groupe si canal groupe activé */}
@@ -6263,6 +6268,50 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     <p className="text-xs text-gray-400 mt-2">
                       💡 Le message sera envoyé par "💪 Coach Bassi" dans le chat de groupe.
                       La variable {'{prénom}'} sera remplacée par "Communauté" pour les envois groupés.
+                    </p>
+                  </div>
+                )}
+                
+                {/* SÉLECTEUR DE CONVERSATION POUR MESSAGERIE INTERNE */}
+                {newCampaign.channels.internal && (
+                  <div className="mt-3 p-3 rounded-lg border border-green-500/30 bg-green-900/20" data-testid="internal-conversation-selector">
+                    <label className="block mb-2 text-green-400 text-xs">📍 Destinataire (Groupe ou Utilisateur)</label>
+                    <select 
+                      value={newCampaign.targetConversationId || ''}
+                      onChange={e => {
+                        const selectedConv = activeConversations.find(c => c.conversation_id === e.target.value);
+                        setNewCampaign({
+                          ...newCampaign, 
+                          targetConversationId: e.target.value,
+                          targetConversationName: selectedConv?.name || ''
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg neon-input text-sm"
+                      data-testid="conversation-select"
+                    >
+                      <option value="">-- Choisir une conversation --</option>
+                      {activeConversations.length > 0 && (
+                        <>
+                          <optgroup label="🏠 Groupes">
+                            {activeConversations.filter(c => c.type === 'group').map(conv => (
+                              <option key={conv.conversation_id} value={conv.conversation_id}>
+                                {conv.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="👤 Utilisateurs">
+                            {activeConversations.filter(c => c.type === 'user').map(conv => (
+                              <option key={conv.conversation_id} value={conv.conversation_id}>
+                                {conv.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        </>
+                      )}
+                    </select>
+                    <p className="text-xs text-gray-400 mt-2">
+                      💌 Le message apparaîtra directement dans la fenêtre de chat de cette conversation.
+                      Programmation possible : le message sera envoyé automatiquement à l'heure prévue.
                     </p>
                   </div>
                 )}
