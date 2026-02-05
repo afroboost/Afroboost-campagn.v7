@@ -6443,8 +6443,44 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 )}
               </div>
               
-              <button type="submit" className={`px-6 py-3 rounded-lg w-full md:w-auto ${editingCampaignId ? 'bg-green-600 hover:bg-green-700' : 'btn-primary'}`}>
+              {/* === RÉCAPITULATIF AVANT CRÉATION === */}
+              {(newCampaign.name || newCampaign.targetConversationId) && (
+                <div className="mb-4 p-3 rounded-lg bg-gray-800/50 border border-gray-600/30">
+                  <p className="text-xs text-gray-400 mb-2">📋 Récapitulatif</p>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    {newCampaign.name && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Campagne:</span>
+                        <span className="text-white font-medium">{newCampaign.name}</span>
+                      </div>
+                    )}
+                    {newCampaign.targetConversationId ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Destinataire:</span>
+                        <span className="text-green-400 font-medium flex items-center gap-1">
+                          {activeConversations.find(c => c.conversation_id === newCampaign.targetConversationId)?.type === 'group' ? '👥' : '👤'}
+                          {newCampaign.targetConversationName}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-yellow-500">⚠️ Aucun destinataire sélectionné</span>
+                      </div>
+                    )}
+                    {newCampaign.scheduleSlots.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Programmation:</span>
+                        <span className="text-purple-400">{newCampaign.scheduleSlots.length} date(s)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <button type="submit" className={`px-6 py-3 rounded-lg w-full md:w-auto ${editingCampaignId ? 'bg-green-600 hover:bg-green-700' : 'btn-primary'}`}
+                disabled={!newCampaign.targetConversationId && !newCampaign.channels.whatsapp && !newCampaign.channels.email && !newCampaign.channels.group}>
                 {editingCampaignId ? '💾 Enregistrer les modifications' : '🚀 Créer la campagne'}
+              </button>
               </button>
             </form>
             
