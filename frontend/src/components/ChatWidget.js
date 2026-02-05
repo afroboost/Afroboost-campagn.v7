@@ -357,6 +357,7 @@ export const ChatWidget = () => {
   
   // === MENU UTILISATEUR (Partage + Mode Visiteur) ===
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCoachMenu, setShowCoachMenu] = useState(false); // Menu coach minimaliste
   const [linkCopied, setLinkCopied] = useState(false);
   const [isVisitorMode, setIsVisitorMode] = useState(false); // Mode visiteur (chat réduit mais profil conservé)
   
