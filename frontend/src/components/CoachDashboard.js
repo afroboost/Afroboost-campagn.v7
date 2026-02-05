@@ -2446,10 +2446,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       const res = await axios.post(`${API}/campaigns/${campaignId}/launch`);
       setCampaigns(campaigns.map(c => c.id === campaignId ? res.data : c));
       addCampaignLog(campaignId, `Campagne lancée avec ${res.data.results?.length || 0} destinataire(s)`, 'success');
-      alert("🚀 Campagne lancée ! Cliquez sur les contacts pour ouvrir les liens.");
+      showCampaignToast(`Campagne lancée ! ${res.data.results?.length || 0} destinataire(s)`, 'success');
     } catch (err) { 
       console.error("Error launching campaign:", err);
       addCampaignLog(campaignId, `Erreur lancement: ${err.message}`, 'error');
+      showCampaignToast(`Erreur lancement: ${err.message}`, 'error');
     }
   };
 
