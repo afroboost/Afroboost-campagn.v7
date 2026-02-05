@@ -6245,6 +6245,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, group: e.target.checked}})} />
                     💬 Groupe Afroboost
                   </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer bg-green-900/30 px-2 py-1 rounded border border-green-500/30" data-testid="internal-channel-checkbox">
+                    <input type="checkbox" checked={newCampaign.channels.internal || false}
+                      onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, internal: e.target.checked}})} />
+                    💌 Chat Interne
+                  </label>
                 </div>
                 
                 {/* Sélecteur de groupe si canal groupe activé */}
@@ -6263,6 +6268,88 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     <p className="text-xs text-gray-400 mt-2">
                       💡 Le message sera envoyé par "💪 Coach Bassi" dans le chat de groupe.
                       La variable {'{prénom}'} sera remplacée par "Communauté" pour les envois groupés.
+                    </p>
+                  </div>
+                )}
+                
+                {/* === SÉLECTEUR DE CONVERSATION AVEC RECHERCHE (Chat Interne) === */}
+                {newCampaign.channels.internal && (
+                  <div className="mt-3 p-3 rounded-lg border border-green-500/30 bg-green-900/20" data-testid="internal-conversation-selector">
+                    <label className="block mb-2 text-green-400 text-xs">📍 Destinataire (Groupe ou Utilisateur)</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="🔍 Rechercher un groupe ou utilisateur..."
+                        value={conversationSearch}
+                        onChange={(e) => {
+                          setConversationSearch(e.target.value);
+                          setShowConversationDropdown(true);
+                        }}
+                        onFocus={() => setShowConversationDropdown(true)}
+                        className="w-full px-3 py-2 rounded-lg neon-input text-sm"
+                        data-testid="recipient-search-input"
+                      />
+                      
+                      {/* Destinataire sélectionné */}
+                      {newCampaign.targetConversationId && !showConversationDropdown && (
+                        <div className="mt-2 px-3 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span>{activeConversations.find(c => c.conversation_id === newCampaign.targetConversationId)?.type === 'group' ? '👥' : '👤'}</span>
+                            <span>{newCampaign.targetConversationName}</span>
+                          </div>
+                          <button type="button" onClick={() => {
+                            setNewCampaign({...newCampaign, targetConversationId: '', targetConversationName: ''});
+                            setConversationSearch('');
+                          }} className="text-red-400 hover:text-red-300">✕</button>
+                        </div>
+                      )}
+                      
+                      {/* Dropdown avec recherche filtrée */}
+                      {showConversationDropdown && (
+                        <div className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto rounded-lg bg-black/95 border border-purple-500/30 shadow-xl"
+                          onMouseLeave={() => setTimeout(() => setShowConversationDropdown(false), 200)}>
+                          {/* Groupes */}
+                          {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).length > 0 && (
+                            <div className="p-2 border-b border-purple-500/20">
+                              <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
+                              {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).map(conv => (
+                                <button key={conv.conversation_id} type="button"
+                                  onClick={() => {
+                                    setNewCampaign({...newCampaign, targetConversationId: conv.conversation_id, targetConversationName: conv.name});
+                                    setConversationSearch(conv.name);
+                                    setShowConversationDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2">
+                                  <span>👥</span><span>{conv.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {/* Utilisateurs */}
+                          {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).length > 0 && (
+                            <div className="p-2">
+                              <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
+                              {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).slice(0, 10).map(conv => (
+                                <button key={conv.conversation_id} type="button"
+                                  onClick={() => {
+                                    setNewCampaign({...newCampaign, targetConversationId: conv.conversation_id, targetConversationName: conv.name});
+                                    setConversationSearch(conv.name);
+                                    setShowConversationDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2">
+                                  <span>👤</span><span className="truncate">{conv.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {activeConversations.filter(c => conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase())).length === 0 && (
+                            <p className="text-center py-4 text-gray-500 text-sm">Aucun résultat</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      💡 Tapez les premières lettres pour filtrer. Le message apparaîtra dans le chat sélectionné.
                     </p>
                   </div>
                 )}
