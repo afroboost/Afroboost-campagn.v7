@@ -1,5 +1,35 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - ARTICLE MANAGER ET CRM COMPLET ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Article Manager intégré ✅
+- Import ajouté: `import ArticleManager from "./ArticleManager";`
+- Nouvel onglet "📰 Articles" dans la navigation
+- Composant isolé avec son propre état (pas de collision avec Campagnes)
+- CRUD fonctionnel: 3 articles existants en base
+
+#### 2. CRM complet - 47+ contacts ✅
+- Endpoint `/api/conversations/active` modifié
+- **Avant**: 11 utilisateurs (dédupliqués par email)
+- **Après**: 47 utilisateurs (dédupliqués par ID uniquement)
+- Total: 53 conversations (6 groupes + 47 utilisateurs)
+
+#### 3. Non-régression vérifiée ✅
+- Code Twilio/WhatsApp intact
+- Badge "⏳ Auto" pour campagnes programmées
+- Null guards conservés
+- Frontend compile (24 warnings, 0 erreur)
+
+### Structure des onglets
+```
+Réservations | Concept | Cours | Offres | Paiements | Codes | 
+📢 Campagnes | 📰 Articles | 🎬 Médias | 💬 Conversations
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - RÉPARATION AFFICHAGE ET ÉDITION ✅
 
 ### MISSION ACCOMPLIE : Logique d'affichage corrigée
