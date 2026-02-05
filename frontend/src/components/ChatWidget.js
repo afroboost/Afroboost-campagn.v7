@@ -3318,6 +3318,175 @@ export const ChatWidget = () => {
           </div>
         </div>
       )}
+      
+      {/* === MODALE RECADRAGE PHOTO DE PROFIL === */}
+      {showCropModal && cropImageSrc && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.9)',
+            zIndex: 10000,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          data-testid="crop-modal"
+        >
+          {/* Header minimaliste */}
+          <div style={{ 
+            color: '#fff', 
+            fontSize: '14px', 
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            Centrer votre visage
+          </div>
+          
+          {/* Zone de prévisualisation circulaire */}
+          <div style={{
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '2px solid rgba(255,255,255,0.3)',
+            position: 'relative',
+            background: '#1a1a1a'
+          }}>
+            <img
+              src={cropImageSrc}
+              alt="Aperçu"
+              style={{
+                position: 'absolute',
+                width: `${100 * cropPosition.scale}%`,
+                height: 'auto',
+                minHeight: `${100 * cropPosition.scale}%`,
+                objectFit: 'cover',
+                left: `${50 - (50 * cropPosition.scale) + cropPosition.x}%`,
+                top: `${50 - (50 * cropPosition.scale) + cropPosition.y}%`,
+                transform: 'translate(0, 0)',
+                cursor: 'move'
+              }}
+              draggable={false}
+            />
+          </div>
+          
+          {/* Contrôle de zoom */}
+          <div style={{ 
+            marginTop: '20px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            color: '#888',
+            fontSize: '12px'
+          }}>
+            <span>-</span>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.1"
+              value={cropPosition.scale}
+              onChange={(e) => setCropPosition(prev => ({ ...prev, scale: parseFloat(e.target.value) }))}
+              style={{
+                width: '150px',
+                accentColor: '#9333ea'
+              }}
+            />
+            <span>+</span>
+          </div>
+          
+          {/* Boutons de position */}
+          <div style={{ 
+            marginTop: '16px', 
+            display: 'flex', 
+            gap: '8px' 
+          }}>
+            <button
+              onClick={() => setCropPosition(prev => ({ ...prev, y: prev.y - 5 }))}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px', padding: '8px', color: '#fff', cursor: 'pointer' }}
+            >↑</button>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px' 
+          }}>
+            <button
+              onClick={() => setCropPosition(prev => ({ ...prev, x: prev.x - 5 }))}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px', padding: '8px', color: '#fff', cursor: 'pointer' }}
+            >←</button>
+            <button
+              onClick={() => setCropPosition({ x: 0, y: 0, scale: 1 })}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px', padding: '8px', color: '#888', cursor: 'pointer', fontSize: '10px' }}
+            >Reset</button>
+            <button
+              onClick={() => setCropPosition(prev => ({ ...prev, x: prev.x + 5 }))}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px', padding: '8px', color: '#fff', cursor: 'pointer' }}
+            >→</button>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px' 
+          }}>
+            <button
+              onClick={() => setCropPosition(prev => ({ ...prev, y: prev.y + 5 }))}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px', padding: '8px', color: '#fff', cursor: 'pointer' }}
+            >↓</button>
+          </div>
+          
+          {/* Boutons d'action */}
+          <div style={{ 
+            marginTop: '24px', 
+            display: 'flex', 
+            gap: '12px' 
+          }}>
+            <button
+              onClick={() => { setShowCropModal(false); setCropImageSrc(null); }}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '8px',
+                padding: '10px 24px',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleCropAndUpload}
+              disabled={uploadingPhoto}
+              style={{
+                background: 'linear-gradient(135deg, #9333ea, #6366f1)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 24px',
+                color: '#fff',
+                cursor: uploadingPhoto ? 'wait' : 'pointer',
+                fontSize: '12px',
+                fontWeight: '600',
+                opacity: uploadingPhoto ? 0.7 : 1
+              }}
+              data-testid="crop-confirm-btn"
+            >
+              {uploadingPhoto ? '⏳ Upload...' : '✓ Valider'}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
