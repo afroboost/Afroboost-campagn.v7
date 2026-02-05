@@ -5032,7 +5032,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                         data-testid={`beneficiary-${i}`}
                       >
                         {selectedBeneficiaries.includes(c.email) && <span>✓</span>}
-                        {c.name.split(' ')[0]}
+                        {c.name ? c.name.split(' ')[0] : 'Contact'}
                       </button>
                     )) : (
                       <span className="text-white text-xs opacity-50">Aucun contact disponible</span>
