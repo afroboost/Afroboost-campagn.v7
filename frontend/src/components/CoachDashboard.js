@@ -2356,6 +2356,16 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     e.preventDefault();
     if (!newCampaign.name || !newCampaign.message) return;
     
+    // Valider qu'il y a au moins un destinataire
+    const hasRecipients = selectedRecipients.length > 0 || newCampaign.channels.whatsapp || newCampaign.channels.email || newCampaign.channels.group;
+    if (!hasRecipients) {
+      showCampaignToast('⚠️ Ajoutez au moins un destinataire', 'error');
+      return;
+    }
+    
+    // Préparer les targetIds depuis le panier
+    const targetIds = selectedRecipients.map(r => r.id);
+    
     // === MODE ÉDITION : Mise à jour d'une campagne existante ===
     if (editingCampaignId) {
       try {
@@ -2367,7 +2377,10 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           targetType: newCampaign.targetType,
           selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
           channels: newCampaign.channels,
-          targetGroupId: newCampaign.targetGroupId || 'community'
+          targetGroupId: newCampaign.targetGroupId || 'community',
+          targetIds: targetIds, // Tableau des IDs du panier
+          targetConversationId: targetIds[0] || '', // Premier ID pour compatibilité
+          targetConversationName: selectedRecipients[0]?.name || ''
         };
         const res = await axios.put(`${API}/campaigns/${editingCampaignId}`, updateData);
         setCampaigns(campaigns.map(c => c.id === editingCampaignId ? res.data : c));
@@ -2375,6 +2388,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         
         // Reset form et mode édition
         cancelEditCampaign();
+        setSelectedRecipients([]); // Vider le panier
         alert(`✅ Campagne "${newCampaign.name}" modifiée avec succès !`);
         return;
       } catch (err) {
@@ -2399,13 +2413,16 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           mediaFormat: newCampaign.mediaFormat,
           targetType: newCampaign.targetType,
           selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
-          channels: newCampaign.channels,
+          channels: { ...newCampaign.channels, internal: selectedRecipients.length > 0 },
           targetGroupId: newCampaign.targetGroupId || 'community',
+          targetIds: targetIds, // Tableau des IDs du panier
+          targetConversationId: targetIds[0] || '',
+          targetConversationName: selectedRecipients[0]?.name || '',
           scheduledAt: null
         };
         const res = await axios.post(`${API}/campaigns`, campaignData);
         setCampaigns([res.data, ...campaigns]);
-        addCampaignLog(res.data.id, `Campagne "${newCampaign.name}" créée (envoi immédiat)`, 'success');
+        addCampaignLog(res.data.id, `Campagne "${newCampaign.name}" créée (${targetIds.length} destinataire(s))`, 'success');
       } else {
         // Create one campaign per schedule slot (multi-date)
         for (let i = 0; i < scheduleSlots.length; i++) {
@@ -2418,8 +2435,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             mediaFormat: newCampaign.mediaFormat,
             targetType: newCampaign.targetType,
             selectedContacts: newCampaign.targetType === "selected" ? selectedContactsForCampaign : [],
-            channels: newCampaign.channels,
+            channels: { ...newCampaign.channels, internal: selectedRecipients.length > 0 },
             targetGroupId: newCampaign.targetGroupId || 'community',
+            targetIds: targetIds, // Tableau des IDs du panier
+            targetConversationId: targetIds[0] || '',
+            targetConversationName: selectedRecipients[0]?.name || '',
             scheduledAt
           };
           const res = await axios.post(`${API}/campaigns`, campaignData);
@@ -2432,11 +2452,14 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       setNewCampaign({ 
         name: "", message: "", mediaUrl: "", mediaFormat: "16:9", 
         targetType: "all", selectedContacts: [], 
-        channels: { whatsapp: true, email: false, instagram: false, group: false }, 
+        channels: { whatsapp: false, email: false, instagram: false, group: false, internal: true }, 
         targetGroupId: 'community',
+        targetConversationId: '',
+        targetConversationName: '',
         scheduleSlots: [] 
       });
       setSelectedContactsForCampaign([]);
+      setSelectedRecipients([]); // Vider le panier
       showCampaignToast(`${isImmediate ? 'Campagne créée' : `${scheduleSlots.length} campagne(s) programmée(s)`} avec succès !`, 'success');
     } catch (err) { 
       console.error("Error creating campaign:", err);
