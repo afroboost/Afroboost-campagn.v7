@@ -1113,6 +1113,71 @@ export const ChatWidget = () => {
     };
   }, [activePrivateChat, participantId]);
 
+  // === SOCKET.IO pour le TYPING INDICATOR dans les DM ===
+  useEffect(() => {
+    if (!socketRef.current) return;
+    
+    const socket = socketRef.current;
+    
+    const handleDmTyping = (data) => {
+      // Ignorer nos propres événements de frappe
+      if (data.user_id === participantId) return;
+      
+      // Vérifier si c'est pour notre conversation active
+      if (activePrivateChat && data.conversation_id === activePrivateChat.id) {
+        if (data.is_typing) {
+          setDmTypingUser({ name: data.user_name });
+          
+          // Auto-hide après 3 secondes
+          if (dmTypingTimeoutRef.current) {
+            clearTimeout(dmTypingTimeoutRef.current);
+          }
+          dmTypingTimeoutRef.current = setTimeout(() => {
+            setDmTypingUser(null);
+          }, 3000);
+        } else {
+          setDmTypingUser(null);
+        }
+      }
+    };
+    
+    socket.on('dm_typing', handleDmTyping);
+    
+    return () => {
+      socket.off('dm_typing', handleDmTyping);
+      if (dmTypingTimeoutRef.current) {
+        clearTimeout(dmTypingTimeoutRef.current);
+      }
+    };
+  }, [activePrivateChat, participantId]);
+
+  // === SOCKET.IO pour la mise à jour d'AVATAR en temps réel ===
+  useEffect(() => {
+    if (!socketRef.current) return;
+    
+    const socket = socketRef.current;
+    
+    const handleAvatarChanged = (data) => {
+      console.log('[SOCKET.IO] 📷 Avatar mis à jour:', data);
+      
+      // Mettre à jour les messages privés si l'avatar de l'interlocuteur change
+      if (activePrivateChat && data.user_id !== participantId) {
+        setPrivateMessages(prev => prev.map(msg => {
+          if (msg.senderId === data.user_id) {
+            return { ...msg, senderPhotoUrl: data.photo_url };
+          }
+          return msg;
+        }));
+      }
+    };
+    
+    socket.on('user_avatar_changed', handleAvatarChanged);
+    
+    return () => {
+      socket.off('user_avatar_changed', handleAvatarChanged);
+    };
+  }, [activePrivateChat, participantId]);
+
   // === DÉMARRER UNE DISCUSSION PRIVÉE (COMPAT ANCIEN CODE) ===
   const startPrivateChat = async (targetId, targetName) => {
     // Utilise la nouvelle fonction openPrivateChat avec fenêtre flottante
