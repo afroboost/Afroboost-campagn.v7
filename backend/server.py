@@ -3522,11 +3522,12 @@ async def get_active_conversations_for_messaging():
                 # Ignorer les utilisateurs sans ID
                 if not user_id:
                     continue
-                # Éviter les doublons par email
-                if user_email and user_email in seen_emails:
+                
+                # NOTE: Plus de déduplication par email - on inclut TOUS les users
+                # Éviter seulement les doublons par ID
+                if user_id in seen_user_ids:
                     continue
-                if user_email:
-                    seen_emails.add(user_email)
+                seen_user_ids.add(user_id)
                 
                 # Construire le nom d'affichage (fallback sur email si pas de nom)
                 if user_name:
