@@ -5972,11 +5972,29 @@ async def serve_media_opengraph_page(slug: str, request: Request):
 # === SCHEDULER HEALTH ENDPOINTS (définis avant include_router) ===
 @api_router.get("/scheduler/status")
 async def get_scheduler_status():
-    """Endpoint pour vérifier que le scheduler est en vie."""
+    """Endpoint pour vérifier que le scheduler est en vie avec APScheduler."""
     from datetime import datetime, timezone
+    
+    # Obtenir le statut d'APScheduler
+    scheduler_state = "running" if apscheduler.running else "stopped"
+    
+    # Obtenir les infos du job
+    job = apscheduler.get_job('campaign_scheduler_job')
+    job_info = None
+    if job:
+        job_info = {
+            "id": job.id,
+            "name": job.name,
+            "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+            "trigger": str(job.trigger)
+        }
+    
     return {
-        "scheduler_running": True,  # Le scheduler est toujours actif si le serveur tourne
-        "interval_seconds": 10
+        "scheduler_running": apscheduler.running,
+        "scheduler_state": scheduler_state,
+        "interval_seconds": SCHEDULER_INTERVAL,
+        "persistence": "MongoDB (survit aux redémarrages)",
+        "job": job_info
     }
 
 @api_router.get("/scheduler/health")
