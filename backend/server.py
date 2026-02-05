@@ -6622,8 +6622,8 @@ scheduler_thread = None
 
 @fastapi_app.on_event("startup")
 async def startup_scheduler():
-    """Lance le scheduler dans un thread séparé au démarrage du serveur."""
-    global scheduler_thread
+    """Lance APScheduler avec persistance MongoDB au démarrage du serveur."""
+    global SCHEDULER_RUNNING
     
     logger.info("[SYSTEM] 🚀 Démarrage du serveur Afroboost...")
     print("[SYSTEM] ============================================")
@@ -6631,15 +6631,51 @@ async def startup_scheduler():
     print(f"[SYSTEM] 📱 Twilio FROM: {TWILIO_FROM_NUMBER}")
     print("[SYSTEM] ============================================")
     
-    # Démarrer le scheduler dans un thread daemon
-    scheduler_thread = threading.Thread(target=scheduler_loop, daemon=True, name="CampaignScheduler")
-    scheduler_thread.start()
+    # Ajouter le job s'il n'existe pas déjà (persiste dans MongoDB)
+    try:
+        existing_job = apscheduler.get_job('campaign_scheduler_job')
+        if existing_job:
+            logger.info("[SCHEDULER] Job existant trouvé dans MongoDB - réutilisation")
+        else:
+            apscheduler.add_job(
+                scheduler_job,
+                trigger=IntervalTrigger(seconds=SCHEDULER_INTERVAL),
+                id='campaign_scheduler_job',
+                name='Campaign Scheduler',
+                replace_existing=True
+            )
+            logger.info("[SCHEDULER] ✅ Nouveau job créé et persisté dans MongoDB")
+    except Exception as e:
+        # Si le job existe déjà, on le remplace
+        apscheduler.add_job(
+            scheduler_job,
+            trigger=IntervalTrigger(seconds=SCHEDULER_INTERVAL),
+            id='campaign_scheduler_job',
+            name='Campaign Scheduler',
+            replace_existing=True
+        )
+        logger.info(f"[SCHEDULER] Job ajouté/remplacé: {e}")
     
-    logger.info("[SYSTEM] ✅ Scheduler thread lancé avec succès")
+    # Démarrer APScheduler s'il n'est pas déjà en cours
+    if not apscheduler.running:
+        apscheduler.start()
+        SCHEDULER_RUNNING = True
+        print("[SYSTEM] ✅ APScheduler avec persistance MongoDB : ONLINE")
+        logger.info("[SYSTEM] ✅ APScheduler démarré avec succès - Jobs persistés dans MongoDB")
+    else:
+        logger.info("[SYSTEM] APScheduler déjà en cours d'exécution")
 
 @fastapi_app.on_event("shutdown")
 async def shutdown_db_client():
     global SCHEDULER_RUNNING
     SCHEDULER_RUNNING = False
+    
+    # Arrêter APScheduler proprement (les jobs restent dans MongoDB)
+    if apscheduler.running:
+        apscheduler.shutdown(wait=False)
+        logger.info("[SCHEDULER] APScheduler arrêté (jobs persistés dans MongoDB)")
+    
+    # Fermer les connexions MongoDB
     client.close()
+    mongo_client_sync.close()
     logger.info("[SYSTEM] Serveur arrêté")
