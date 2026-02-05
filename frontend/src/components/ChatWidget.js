@@ -2463,6 +2463,45 @@ export const ChatWidget = () => {
                   </div>
                 )}
                 
+                {/* === BOUTON RÉACTIVATION MODE ABONNÉ (Visible en mode visiteur avec profil) === */}
+                {!isFullscreen && isVisitorMode && afroboostProfile?.code && step === 'chat' && (
+                  <div 
+                    style={{
+                      padding: '8px 12px',
+                      borderTop: '1px solid rgba(147, 51, 234, 0.3)',
+                      background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(99, 102, 241, 0.15))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <button
+                      onClick={handleReactivateSubscriber}
+                      style={{
+                        background: 'linear-gradient(135deg, #9333ea, #6366f1)',
+                        border: 'none',
+                        borderRadius: '20px',
+                        padding: '8px 16px',
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 10px rgba(147, 51, 234, 0.3)'
+                      }}
+                      data-testid="reactivate-subscriber-btn"
+                    >
+                      💎 Repasser en mode Réservation
+                    </button>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>
+                      ({afroboostProfile.name})
+                    </span>
+                  </div>
+                )}
+                
                 {/* Input message */}
                 <div 
                   style={{
