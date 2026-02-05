@@ -1,5 +1,48 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - PARTAGE ET GESTION SESSION ABONNÉ ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Header du Chat - Partage et Options ✅
+- **Icône Partage** (🔗) : Copie l'URL du site dans le presse-papier
+  - Feedback visuel : bouton passe au vert avec ✓ pendant 2s
+  - Fallback pour navigateurs sans Clipboard API
+- **Menu utilisateur** (⋮) : Visible uniquement pour les abonnés identifiés
+  - "🏃 Mode Visiteur" : Réduit le chat en bulle 380px sans effacer le profil
+  - "🔗 Partager le site" : Alternative au bouton direct
+
+#### 2. Réactivation Rapide ✅
+- **Bouton violet** : "💎 Repasser en mode Réservation" visible en mode visiteur
+  - Affiche le nom de l'abonné entre parenthèses
+  - Au clic : Restaure le mode plein écran + calendrier INSTANTANÉMENT
+  - Aucune saisie requise (profil conservé dans localStorage)
+
+#### 3. États ajoutés (ChatWidget.js) ✅
+```javascript
+const [showUserMenu, setShowUserMenu] = useState(false);
+const [linkCopied, setLinkCopied] = useState(false);
+const [isVisitorMode, setIsVisitorMode] = useState(false);
+```
+
+#### 4. Fonctions ajoutées ✅
+- `handleShareLink()` : Copie le lien avec feedback
+- `handleVisitorMode()` : Réduit le chat sans effacer le profil
+- `handleReactivateSubscriber()` : Restaure le mode plein écran
+
+#### 5. Garde-fous respectés ✅
+- Badge "⏳ Auto" préservé
+- Logique campagnes intacte
+- Code Twilio/WhatsApp intact
+- JSX équilibré (compilation OK)
+
+### Critères de réussite validés ✅
+1. ✅ Copier le lien via l'icône de partage → "Lien copié !"
+2. ✅ Mode Visiteur → chat réduit, shop visible, profil conservé
+3. ✅ Réactivation en un clic → plein écran + calendrier sans saisie
+
+---
+
 ## Mise à jour du 5 Février 2026 - NOTIFICATIONS EMAIL COACH ✅
 
 ### MISSION ACCOMPLIE
