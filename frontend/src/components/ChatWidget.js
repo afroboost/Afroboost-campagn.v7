@@ -859,6 +859,17 @@ export const ChatWidget = () => {
       setIsOpen(true);
     }
   }, []);
+  
+  // === FERMER LE MENU UTILISATEUR AU CLIC EXTÉRIEUR ===
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showUserMenu && !e.target.closest('.afro-share-menu')) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showUserMenu]);
 
   // === MODE COACH: Charger les sessions actives ===
   const loadCoachSessions = async () => {
