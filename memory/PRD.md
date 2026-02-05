@@ -1,5 +1,50 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - DM, PHOTOS ET DESIGN ULTRA-MINIMALISTE ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Interface Ultra-Minimaliste (Zéro Texte) ✅
+- **Header épuré** : Uniquement des icônes SVG filaires fines
+- **Icône Partage** (3 cercles reliés) : Copie l'URL avec feedback ✓ vert
+- **Icône Menu** (3 points ⋮) : Ouvre menu déroulant
+- **Badge rouge** : Indique les conversations actives
+
+#### 2. Module Social DM ✅
+- **Backend API complète** :
+  - `POST /api/private/conversations` - Créer une conversation
+  - `POST /api/private/messages` - Envoyer un message
+  - `GET /api/private/messages/{id}` - Lire les messages
+  - `PUT /api/private/messages/read/{id}` - Marquer comme lu
+- **Fonctions Frontend** :
+  - `openDirectMessage(memberId, memberName)` - Ouvrir un DM
+  - `closeDirectMessage()` - Fermer le DM
+  - `sendPrivateMessage()` - Envoyer un message
+- **Persistance F5** : DM actif restauré via localStorage
+
+#### 3. Module Identité (Photo Profil) ✅
+- **Upload endpoint** : `POST /api/upload/profile-photo`
+- **Stockage** : `/app/backend/uploads/profiles/` (max 200x200px)
+- **Frontend** : Option "Photo de profil" dans le menu utilisateur
+- **Affichage avatar** : Avatar rond dans les bulles de message
+
+#### 4. Menu Utilisateur amélioré ✅
+- 📸 Photo de profil (upload)
+- 🔀 Mode Visiteur (abonnés)
+- 🔄 Rafraîchir
+
+#### 5. Menu Coach minimaliste ✅
+- 🔄 Rafraîchir
+- 🚪 Déconnexion (rouge)
+
+### Critères de réussite validés ✅
+1. ✅ Header avec icônes filaires uniquement
+2. ✅ API DM fonctionnelle (backend complet)
+3. ✅ Upload photo de profil disponible
+4. ✅ Persistance F5 intégrée
+
+---
+
 ## Mise à jour du 5 Février 2026 - INTERFACE MINIMALISTE (ICÔNES) ✅
 
 ### MISSION ACCOMPLIE
