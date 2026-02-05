@@ -1138,7 +1138,7 @@ async def delete_discount_code(code_id: str):
 async def validate_discount_code(data: dict):
     code_str = data.get("code", "").strip().upper()  # Normalize: trim + uppercase
     user_email = data.get("email", "").strip()
-    course_id = data.get("courseId", "").strip()
+    course_id = data.get("courseId", "").strip() if data.get("courseId") else ""
     
     # Case-insensitive search using regex
     code = await db.discount_codes.find_one({
@@ -1170,15 +1170,17 @@ async def validate_discount_code(data: dict):
     if code.get("maxUses") and code.get("used", 0) >= code["maxUses"]:
         return {"valid": False, "message": "Code promo épuisé (nombre max d'utilisations atteint)"}
     
-    # Check if course is allowed - IMPORTANT: empty list = all courses allowed
+    # Check if course is allowed - SKIP if no courseId provided (identification flow)
+    # IMPORTANT: empty list = all courses allowed
     allowed_courses = code.get("courses", [])
-    if allowed_courses and len(allowed_courses) > 0:
+    if course_id and allowed_courses and len(allowed_courses) > 0:
         if course_id not in allowed_courses:
             return {"valid": False, "message": "Code non applicable à ce cours"}
     
-    # Check assigned email
-    if code.get("assignedEmail") and code["assignedEmail"].strip():
-        if code["assignedEmail"].strip().lower() != user_email.lower():
+    # Check assigned email (only if assignedEmail is set AND email is provided)
+    assigned = code.get("assignedEmail", "").strip()
+    if assigned and user_email:
+        if assigned.lower() != user_email.lower():
             return {"valid": False, "message": "Code réservé à un autre compte"}
     
     return {"valid": True, "code": code}
