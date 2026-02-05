@@ -1536,6 +1536,105 @@ export const ChatWidget = () => {
                   {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
                 </button>
               )}
+              
+              {/* === BOUTON PARTAGE + MENU UTILISATEUR (Visible pour tous) === */}
+              {step === 'chat' && (
+                <div className="relative afro-share-menu">
+                  {/* Icône Partager */}
+                  <button
+                    onClick={handleShareLink}
+                    title={linkCopied ? "Lien copié !" : "Partager le lien"}
+                    style={{
+                      background: linkCopied ? 'rgba(34, 197, 94, 0.4)' : 'rgba(255,255,255,0.2)',
+                      border: linkCopied ? '1px solid rgba(34, 197, 94, 0.5)' : 'none',
+                      borderRadius: '8px',
+                      width: '32px',
+                      height: '32px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: linkCopied ? '#22c55e' : '#fff',
+                      transition: 'all 0.2s ease'
+                    }}
+                    data-testid="share-link-btn"
+                  >
+                    {linkCopied ? '✓' : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                      </svg>
+                    )}
+                  </button>
+                  
+                  {/* Menu utilisateur (⋮) - Visible si abonné identifié */}
+                  {afroboostProfile?.code && (
+                    <>
+                      <button
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        style={{
+                          background: 'rgba(255,255,255,0.2)',
+                          border: 'none',
+                          borderRadius: '8px',
+                          width: '32px',
+                          height: '32px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: '16px',
+                          marginLeft: '4px'
+                        }}
+                        data-testid="user-menu-btn"
+                      >
+                        ⋮
+                      </button>
+                      
+                      {/* Menu déroulant utilisateur */}
+                      {showUserMenu && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '40px',
+                            right: '0',
+                            background: '#1a1a1a',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            overflow: 'hidden',
+                            minWidth: '200px',
+                            zIndex: 100,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+                          }}
+                        >
+                          <button
+                            onClick={handleVisitorMode}
+                            className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                            style={{ color: '#fff', border: 'none', background: 'none' }}
+                            data-testid="visitor-mode-btn"
+                          >
+                            🏃 Mode Visiteur
+                            <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: 'auto' }}>Réduire le chat</span>
+                          </button>
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                          <button
+                            onClick={() => { handleShareLink(); }}
+                            className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                            style={{ color: '#a855f7', border: 'none', background: 'none' }}
+                            data-testid="share-menu-btn"
+                          >
+                            🔗 Partager le site
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+              
               {/* Menu burger - VISIBLE UNIQUEMENT POUR LE COACH/ADMIN */}
               {(step === 'chat' || step === 'coach') && isCoachMode && (
                 <div className="relative">
