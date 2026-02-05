@@ -5338,7 +5338,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         {tab === "campaigns" && (
           <div className="card-gradient rounded-xl p-4 sm:p-6">
             {/* Header responsive */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <h2 className="font-semibold text-white text-lg sm:text-xl">📢 Gestionnaire de Campagnes</h2>
               
               {/* === INDICATEUR STATUT SERVEUR DE PLANIFICATION (APScheduler) === */}
@@ -5365,27 +5365,291 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               })()}
             </div>
             
-            {/* === COMPTEUR DE CLIENTS CIBLÉS (Responsive) === */}
-            <div className="mb-6 p-4 rounded-xl glass border border-purple-500/30">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-white font-semibold text-base sm:text-lg">
-                    👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-white/60 mt-1">
-                    📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp
-                  </p>
+            {/* ========== FORMULAIRE NOUVELLE CAMPAGNE (EN PREMIER) ========== */}
+            <div className="mb-6 p-4 rounded-xl glass border border-green-500/30 bg-green-900/10">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">✨</span>
+                {editingCampaignId ? '✏️ Modifier la campagne' : '📝 Nouvelle Campagne Interne'}
+              </h3>
+              
+              {/* Nom de la campagne */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Nom de la campagne</label>
+                <input type="text" placeholder="Ex: Message de bienvenue, Promotion juin..."
+                  value={newCampaign.name}
+                  onChange={e => setNewCampaign({...newCampaign, name: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg neon-input"
+                  data-testid="campaign-name-input"
+                />
+              </div>
+              
+              {/* === SÉLECTEUR DE DESTINATAIRE AVEC RECHERCHE === */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">📍 Destinataire</label>
+                <div className="relative" data-testid="searchable-recipient-selector">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="🔍 Rechercher un groupe ou utilisateur..."
+                      value={conversationSearch}
+                      onChange={(e) => {
+                        setConversationSearch(e.target.value);
+                        setShowConversationDropdown(true);
+                      }}
+                      onFocus={() => setShowConversationDropdown(true)}
+                      className="w-full px-4 py-3 rounded-lg neon-input pr-10"
+                      data-testid="recipient-search-input"
+                    />
+                    {newCampaign.targetConversationId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewCampaign({...newCampaign, targetConversationId: '', targetConversationName: ''});
+                          setConversationSearch('');
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Destinataire sélectionné */}
+                  {newCampaign.targetConversationId && !showConversationDropdown && (
+                    <div className="mt-2 px-3 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm flex items-center gap-2">
+                      <span>{activeConversations.find(c => c.conversation_id === newCampaign.targetConversationId)?.type === 'group' ? '👥' : '👤'}</span>
+                      <span>{newCampaign.targetConversationName}</span>
+                      <span className="text-xs opacity-60">({newCampaign.targetConversationId.slice(0, 8)}...)</span>
+                    </div>
+                  )}
+                  
+                  {/* Dropdown avec recherche filtrée */}
+                  {showConversationDropdown && (
+                    <div 
+                      className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto rounded-lg bg-black/95 border border-purple-500/30 shadow-xl"
+                      onMouseLeave={() => setTimeout(() => setShowConversationDropdown(false), 200)}
+                    >
+                      {/* Groupes */}
+                      {activeConversations.filter(c => 
+                        c.type === 'group' && 
+                        (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
+                      ).length > 0 && (
+                        <div className="p-2 border-b border-purple-500/20">
+                          <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
+                          {activeConversations.filter(c => 
+                            c.type === 'group' && 
+                            (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
+                          ).map(conv => (
+                            <button
+                              key={conv.conversation_id}
+                              type="button"
+                              onClick={() => {
+                                setNewCampaign({
+                                  ...newCampaign,
+                                  targetConversationId: conv.conversation_id,
+                                  targetConversationName: conv.name,
+                                  channels: {...newCampaign.channels, internal: true}
+                                });
+                                setConversationSearch(conv.name);
+                                setShowConversationDropdown(false);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2 transition-colors"
+                            >
+                              <span className="text-lg">👥</span>
+                              <span>{conv.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Utilisateurs */}
+                      {activeConversations.filter(c => 
+                        c.type === 'user' && 
+                        (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
+                      ).length > 0 && (
+                        <div className="p-2">
+                          <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
+                          {activeConversations.filter(c => 
+                            c.type === 'user' && 
+                            (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
+                          ).slice(0, 10).map(conv => (
+                            <button
+                              key={conv.conversation_id}
+                              type="button"
+                              onClick={() => {
+                                setNewCampaign({
+                                  ...newCampaign,
+                                  targetConversationId: conv.conversation_id,
+                                  targetConversationName: conv.name,
+                                  channels: {...newCampaign.channels, internal: true}
+                                });
+                                setConversationSearch(conv.name);
+                                setShowConversationDropdown(false);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2 transition-colors"
+                            >
+                              <span className="text-lg">👤</span>
+                              <span className="truncate">{conv.name}</span>
+                            </button>
+                          ))}
+                          {activeConversations.filter(c => 
+                            c.type === 'user' && 
+                            (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))
+                          ).length > 10 && (
+                            <p className="text-xs text-gray-500 px-3 py-1">... et {activeConversations.filter(c => c.type === 'user').length - 10} autres</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Aucun résultat */}
+                      {activeConversations.filter(c => 
+                        conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase())
+                      ).length === 0 && (
+                        <p className="text-center py-4 text-gray-500 text-sm">Aucun résultat pour "{conversationSearch}"</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {/* Bouton envoi direct - responsive */}
-                <div className="w-full sm:w-auto">
-                  <button 
-                    type="button"
-                    onClick={() => setDirectSendMode(!directSendMode)}
-                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all ${directSendMode ? 'bg-pink-600 text-white' : 'glass text-white border border-purple-500/30'}`}
-                    data-testid="direct-send-mode-btn"
-                  >
-                    {directSendMode ? '✓ Mode Envoi Direct' : '🚀 Envoi Direct'}
+                <p className="text-xs text-gray-400 mt-2">
+                  💡 Tapez les premières lettres pour filtrer. Le message sera envoyé dans le chat sélectionné.
+                </p>
+              </div>
+              
+              {/* Message */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">Message</label>
+                <textarea placeholder="Votre message... Utilisez {prénom} pour personnaliser"
+                  value={newCampaign.message}
+                  onChange={e => setNewCampaign({...newCampaign, message: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg neon-input min-h-[120px]"
+                  data-testid="campaign-message-input"
+                />
+              </div>
+              
+              {/* Programmation simplifiée */}
+              <div className="mb-4">
+                <label className="block mb-2 text-white text-sm">⏰ Programmation</label>
+                <div className="flex flex-wrap gap-4 items-center mb-3">
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length === 0}
+                      onChange={() => setNewCampaign({...newCampaign, scheduleSlots: []})} />
+                    Envoyer maintenant
+                  </label>
+                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length > 0}
+                      onChange={addScheduleSlot} />
+                    Programmer
+                  </label>
+                </div>
+                
+                {/* Slots de programmation */}
+                {newCampaign.scheduleSlots.length > 0 && (
+                  <div className="border border-purple-500/30 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs text-purple-400">{newCampaign.scheduleSlots.length} date(s)</span>
+                      <button type="button" onClick={addScheduleSlot} 
+                        className="px-3 py-1 rounded text-xs bg-purple-600 hover:bg-purple-700 text-white">
+                        + Ajouter
+                      </button>
+                    </div>
+                    {newCampaign.scheduleSlots.map((slot, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <input type="date" value={slot.date}
+                          onChange={e => updateScheduleSlot(idx, 'date', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg neon-input text-sm" />
+                        <input type="time" value={slot.time}
+                          onChange={e => updateScheduleSlot(idx, 'time', e.target.value)}
+                          className="w-32 px-3 py-2 rounded-lg neon-input text-sm" />
+                        <button type="button" onClick={() => removeScheduleSlot(idx)}
+                          className="px-3 py-2 rounded-lg bg-red-600/30 hover:bg-red-600/50 text-red-400 text-sm">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Bouton de création/modification */}
+              <div className="flex gap-3">
+                <button type="button" onClick={handleCreateCampaign}
+                  disabled={!newCampaign.name || !newCampaign.message || !newCampaign.targetConversationId}
+                  className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="create-campaign-btn"
+                >
+                  {editingCampaignId ? '💾 Modifier' : '🚀 Créer la campagne'}
+                </button>
+                {editingCampaignId && (
+                  <button type="button" onClick={cancelEditCampaign}
+                    className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-500 text-white font-semibold transition-all">
+                    Annuler
                   </button>
+                )}
+              </div>
+            </div>
+            
+            {/* ========== SECTION CANAUX EXTERNES (REPLIABLE) ========== */}
+            <div className="mb-6 rounded-xl glass border border-gray-500/30">
+              <button
+                type="button"
+                onClick={() => setExternalChannelsExpanded(!externalChannelsExpanded)}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors rounded-xl"
+                data-testid="toggle-external-channels"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-400">⚙️</span>
+                  <span className="text-white font-medium">Configuration Canaux Externes</span>
+                  <span className="text-xs text-gray-500">(WhatsApp, Email, Instagram - à venir)</span>
+                </div>
+                <span className={`text-gray-400 transition-transform ${externalChannelsExpanded ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              
+              {externalChannelsExpanded && (
+                <div className="p-4 border-t border-gray-500/30">
+                  <p className="text-xs text-gray-400 mb-4">
+                    💡 Ces canaux nécessitent une configuration Twilio/SendGrid. La messagerie interne ci-dessus fonctionne sans configuration externe.
+                  </p>
+                  
+                  {/* Compteur de clients */}
+                  <div className="mb-4 p-3 rounded-lg bg-purple-900/20 border border-purple-500/20">
+                    <h4 className="text-white text-sm font-medium mb-2">👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span></h4>
+                    <p className="text-xs text-white/60">📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp</p>
+                  </div>
+                  
+                  {/* Canaux externes */}
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
+                      <input type="checkbox" checked={newCampaign.channels.whatsapp}
+                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, whatsapp: e.target.checked}})} />
+                      📱 WhatsApp <span className="text-xs text-yellow-500">(config requise)</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
+                      <input type="checkbox" checked={newCampaign.channels.email}
+                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, email: e.target.checked}})} />
+                      📧 Email <span className="text-xs text-yellow-500">(config requise)</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
+                      <input type="checkbox" checked={newCampaign.channels.instagram}
+                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, instagram: e.target.checked}})} />
+                      📸 Instagram <span className="text-xs text-yellow-500">(bientôt)</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer opacity-60">
+                      <input type="checkbox" checked={newCampaign.channels.group || false}
+                        onChange={e => setNewCampaign({...newCampaign, channels: {...newCampaign.channels, group: e.target.checked}})} />
+                      💬 Groupe Afroboost
+                    </label>
+                  </div>
+                  
+                  {/* Sélecteur de cible si non "tous" */}
+                  {newCampaign.channels.whatsapp || newCampaign.channels.email ? (
+                    <div className="p-3 rounded-lg bg-yellow-900/20 border border-yellow-500/30">
+                      <p className="text-yellow-400 text-sm mb-2">⚠️ Configuration Twilio/SendGrid requise</p>
+                      <p className="text-xs text-gray-400">
+                        Contactez le support pour activer l'envoi WhatsApp/Email vers vos contacts CRM.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
                 </div>
               </div>
             </div>
