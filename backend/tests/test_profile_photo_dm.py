@@ -302,7 +302,7 @@ class TestSmartEntry:
         unique_name = f"TestUser_{uuid.uuid4().hex[:6]}"
         
         response = requests.post(f"{BASE_URL}/api/chat/smart-entry", json={
-            "firstName": unique_name,
+            "name": unique_name,  # API expects "name" not "firstName"
             "whatsapp": "+41791234567",
             "email": f"{unique_name.lower()}@test.com"
         })
