@@ -1,5 +1,36 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - MISSION V5 : FINALISATION SÉCURISÉE ✅
+
+### ÉTAPE 1 : VÉRIFICATION PERSISTANCE ✅
+- **Endpoint créé**: `GET /api/test-scheduler-persistence`
+- **Fonctionnement**: 
+  - Crée un job bidon pour 24h
+  - Pause/Resume du scheduler (simulation redémarrage)
+  - Vérifie si le job persiste dans MongoDB
+- **Résultat**: `{"persistence": "verified", "jobs_count": 2}`
+
+### ÉTAPE 2 : SÉCURISATION DASHBOARD ✅
+- **Backup créé**: `CoachDashboard.backup.js` (384KB)
+- **Indicateur visuel ajouté**: "🟢 Serveur Planification : Actif (MongoDB)"
+- **data-testid**: `scheduler-status-indicator`
+- **Garde-fou respecté**: Aucune modification Auth/Dashboard principal
+
+### ÉTAPE 3 : LOGS D'ERREURS ✅
+- **Endpoint créé**: `GET /api/campaigns/logs`
+- **Fonctionnement**: Retourne les 50 dernières erreurs d'envoi avec:
+  - `campaign_id`, `campaign_name`
+  - `contact_id`, `contact_name`
+  - `channel`, `error`, `sent_at`, `status`
+
+### Jobs MongoDB persistés
+```
+campaign_scheduler_job -> Toutes les 60s
+test_persistence_job_24h -> Test de persistance
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - SCHEDULER AVEC PERSISTANCE MONGODB ✅
 
 ### MIGRATION APScheduler COMPLÈTE ✅
