@@ -1007,7 +1007,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   
   // === CONVERSATIONS ACTIVES POUR MESSAGERIE INTERNE ===
   const [activeConversations, setActiveConversations] = useState([]);
-  const [conversationSearch, setConversationSearch] = useState(''); // Recherche dans le sélecteur
   const [showConversationDropdown, setShowConversationDropdown] = useState(false); // Dropdown ouvert/fermé
   
   // === FILTRES HISTORIQUE CAMPAGNES ===
