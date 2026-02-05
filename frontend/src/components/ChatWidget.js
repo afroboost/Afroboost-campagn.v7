@@ -2182,11 +2182,6 @@ export const ChatWidget = () => {
                           <div style={{ fontSize: '12px', color: '#ccc' }}>
                             🕐 {selectedCourse.time} | 📍 {selectedCourse.location || 'Genève'}
                           </div>
-                          {subscriberData?.code && (
-                            <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '8px' }}>
-                              ✅ Code abonné: {subscriberData.code}
-                            </div>
-                          )}
                         </div>
                         
                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -2208,16 +2203,18 @@ export const ChatWidget = () => {
                           <button
                             type="button"
                             onClick={async () => {
+                              // Utiliser les données du profil abonné (afroboostProfile)
                               const reservationData = {
-                                userName: subscriberData?.name || leadData?.firstName || 'Abonné',
-                                userEmail: leadData?.email || subscriberData?.email || '',
+                                userName: afroboostProfile?.name || leadData?.firstName || 'Abonné',
+                                userEmail: afroboostProfile?.email || leadData?.email || '',
+                                userWhatsapp: afroboostProfile?.whatsapp || leadData?.whatsapp || '',
                                 courseId: selectedCourse.id,
                                 courseName: selectedCourse.name,
                                 courseTime: selectedCourse.time,
                                 datetime: new Date().toISOString(),
-                                promoCode: subscriberData?.code || '',
-                                source: 'chat_widget',
-                                type: subscriberData?.code ? 'abonné' : 'achat_direct',
+                                promoCode: afroboostProfile?.code || '',
+                                source: 'chat_widget_abonne',
+                                type: 'abonné',
                                 offerId: selectedCourse.id,
                                 offerName: selectedCourse.name,
                                 price: selectedCourse.price || 0,
@@ -2229,8 +2226,13 @@ export const ChatWidget = () => {
                                 if (res.data) {
                                   setShowReservationPanel(false);
                                   setSelectedCourse(null);
-                                  const confirmMsg = `✅ Réservation confirmée !\n📅 ${selectedCourse.name}\n🕐 ${selectedCourse.time}${subscriberData?.code ? `\n🎟️ Code: ${subscriberData.code}` : ''}`;
-                                  setMessages(prev => [...prev, { role: 'assistant', content: confirmMsg, timestamp: new Date().toISOString() }]);
+                                  // Message de confirmation dans le chat
+                                  const confirmMsg = {
+                                    type: 'ai',
+                                    text: `✅ Réservation confirmée !\n📅 ${selectedCourse.name}\n🕐 ${selectedCourse.time}\n💎 Code: ${afroboostProfile?.code}`,
+                                    sender: 'Coach Bassi'
+                                  };
+                                  setMessages(prev => [...prev, confirmMsg]);
                                 }
                               } catch (err) {
                                 console.error('Erreur réservation:', err);
