@@ -6147,54 +6147,118 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   className="w-full px-4 py-3 rounded-lg neon-input" placeholder="Ex: Promo Noël 2024" />
               </div>
               
-              {/* Target Selection */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">Contacts ciblés</label>
-                <div className="flex gap-4 mb-3">
-                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="targetType" checked={newCampaign.targetType === "all"} 
-                      onChange={() => setNewCampaign({...newCampaign, targetType: "all"})} />
-                    Tous les contacts ({allContacts.length})
-                  </label>
-                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="targetType" checked={newCampaign.targetType === "selected"} 
-                      onChange={() => setNewCampaign({...newCampaign, targetType: "selected"})} />
-                    Sélection individuelle
-                  </label>
+              {/* === SÉLECTEUR DE DESTINATAIRE UNIFIÉ (PRINCIPAL) === */}
+              <div className="mb-4 p-4 rounded-lg border border-green-500/40 bg-green-900/20" data-testid="unified-recipient-selector">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-green-400 text-sm font-medium">📍 Destinataire</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">
+                      {activeConversations.filter(c => c.type === 'group').length} groupes • {activeConversations.filter(c => c.type === 'user').length} utilisateurs
+                    </span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const res = await axios.get(`${API}/conversations/active`);
+                          if (res.data.success) {
+                            setActiveConversations(res.data.conversations || []);
+                            showCampaignToast(`Liste actualisée : ${res.data.total} conversation(s)`, 'info');
+                          }
+                        } catch (err) {
+                          showCampaignToast('Erreur de synchronisation', 'error');
+                        }
+                      }}
+                      className="px-2 py-1 rounded text-xs bg-green-600/30 hover:bg-green-600/50 text-green-400 transition-all"
+                      data-testid="refresh-conversations-btn"
+                    >
+                      🔄
+                    </button>
+                  </div>
                 </div>
                 
-                {/* Contact Selection List */}
-                {newCampaign.targetType === "selected" && (
-                  <div className="border border-purple-500/30 rounded-lg p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <input type="text" placeholder="🔍 Rechercher..." value={contactSearchQuery}
-                        onChange={e => setContactSearchQuery(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg neon-input text-sm" />
-                      <button type="button" onClick={toggleAllContacts} className="px-3 py-2 rounded-lg glass text-white text-xs">
-                        {selectedContactsForCampaign.length === allContacts.length ? 'Désélectionner tout' : 'Tout sélectionner'}
-                      </button>
-                    </div>
-                    <div className="space-y-1">
-                      {filteredContacts.map(contact => (
-                        <div key={contact.id} className="flex items-center gap-2 text-white text-sm hover:bg-purple-500/10 p-1 rounded group">
-                          <input type="checkbox" checked={selectedContactsForCampaign.includes(contact.id)}
-                            onChange={() => toggleContactForCampaign(contact.id)} className="cursor-pointer" />
-                          <span className="truncate flex-1">{contact.name}</span>
-                          <span className="text-xs opacity-50 truncate">({contact.email})</span>
-                          {/* Bouton suppression (visible au hover) */}
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); deleteContact(contact.id); }}
-                            className="opacity-0 group-hover:opacity-100 px-2 py-0.5 rounded text-red-400 hover:bg-red-500/20 text-xs transition-opacity"
-                            title="Supprimer définitivement"
-                          >
-                            🗑️
-                          </button>
+                {/* Champ de recherche principal */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="🔍 Rechercher un groupe ou utilisateur (ex: Lion, Marie...)"
+                    value={conversationSearch}
+                    onChange={(e) => {
+                      setConversationSearch(e.target.value);
+                      setShowConversationDropdown(true);
+                    }}
+                    onFocus={() => setShowConversationDropdown(true)}
+                    className="w-full px-4 py-3 rounded-lg neon-input text-sm"
+                    data-testid="recipient-search-input"
+                  />
+                  
+                  {/* Dropdown avec résultats filtrés */}
+                  {showConversationDropdown && (
+                    <div className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto rounded-lg bg-black/95 border border-green-500/30 shadow-xl"
+                      onMouseLeave={() => setTimeout(() => setShowConversationDropdown(false), 300)}>
+                      {/* Groupes */}
+                      {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).length > 0 && (
+                        <div className="p-2 border-b border-green-500/20">
+                          <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
+                          {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).map(conv => (
+                            <button key={conv.conversation_id} type="button"
+                              onClick={() => {
+                                setNewCampaign({...newCampaign, targetConversationId: conv.conversation_id, targetConversationName: conv.name, channels: {...newCampaign.channels, internal: true}});
+                                setConversationSearch('');
+                                setShowConversationDropdown(false);
+                                showCampaignToast(`✅ Destinataire "${conv.name}" sélectionné`, 'success');
+                              }}
+                              className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2">
+                              <span>👥</span><span>{conv.name}</span>
+                            </button>
+                          ))}
                         </div>
-                      ))}
+                      )}
+                      {/* Utilisateurs */}
+                      {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).length > 0 && (
+                        <div className="p-2">
+                          <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
+                          {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).slice(0, 10).map(conv => (
+                            <button key={conv.conversation_id} type="button"
+                              onClick={() => {
+                                setNewCampaign({...newCampaign, targetConversationId: conv.conversation_id, targetConversationName: conv.name, channels: {...newCampaign.channels, internal: true}});
+                                setConversationSearch('');
+                                setShowConversationDropdown(false);
+                                showCampaignToast(`✅ Destinataire "${conv.name}" sélectionné`, 'success');
+                              }}
+                              className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2">
+                              <span>👤</span><span className="truncate">{conv.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {activeConversations.filter(c => conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase())).length === 0 && (
+                        <p className="text-center py-4 text-gray-500 text-sm">Aucun résultat pour "{conversationSearch}"</p>
+                      )}
                     </div>
-                    <p className="text-xs text-purple-400 mt-2">{selectedContactsForCampaign.length} contact(s) sélectionné(s)</p>
+                  )}
+                </div>
+                
+                {/* Destinataire sélectionné - Affichage clair */}
+                {newCampaign.targetConversationId && (
+                  <div className="mt-3 px-4 py-3 rounded-lg bg-green-600/20 border border-green-500/40 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{activeConversations.find(c => c.conversation_id === newCampaign.targetConversationId)?.type === 'group' ? '👥' : '👤'}</span>
+                      <div>
+                        <p className="text-green-400 text-sm font-medium">{newCampaign.targetConversationName}</p>
+                        <p className="text-xs text-gray-400">Destinataire sélectionné</p>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => {
+                      setNewCampaign({...newCampaign, targetConversationId: '', targetConversationName: ''});
+                      setConversationSearch('');
+                    }} className="px-3 py-1.5 rounded text-red-400 hover:bg-red-500/20 text-sm transition-all">
+                      ✕ Changer
+                    </button>
                   </div>
+                )}
+                
+                {!newCampaign.targetConversationId && (
+                  <p className="text-xs text-gray-400 mt-2">💡 Tapez les premières lettres pour filtrer. Le message apparaîtra dans le chat sélectionné.</p>
                 )}
               </div>
               
