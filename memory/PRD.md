@@ -1,5 +1,36 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - FIABILITÉ ENVOI ET PROGRAMMATION ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Boucle d'envoi sécurisée (Backend) ✅
+- `launch_campaign`: Support complet des `targetIds` (panier multiple)
+- Try/except à l'intérieur de la boucle - l'échec d'un envoi ne bloque pas les suivants
+- Messages internes envoyés dans les conversations chat
+
+#### 2. Scheduler mis à jour ✅
+- Support des `targetIds` (pas seulement `targetConversationId`)
+- Fallback automatique si ancien format (single ID)
+- Logs détaillés: `[SCHEDULER] ✅ Interne [1/2]: Nom`
+
+#### 3. Tests validés ✅
+```
+✅ POST /api/campaigns avec 2 targetIds → campagne créée
+✅ POST /api/campaigns/{id}/launch → status: completed, 2 envois réussis
+✅ Backend démarre sans erreur
+✅ Code Twilio/WhatsApp intact
+```
+
+### Flux d'envoi
+```
+1. Création: targetIds = ["id1", "id2", ...] → status: draft/scheduled
+2. Lancement: Boucle sur targetIds avec try/except isolé
+3. Résultat: results = [{status: "sent"}, ...] → status: completed
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - ARTICLE MANAGER ET CRM COMPLET ✅
 
 ### MISSION ACCOMPLIE
