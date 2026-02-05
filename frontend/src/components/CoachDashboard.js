@@ -5311,26 +5311,25 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
               <h2 className="font-semibold text-white text-lg sm:text-xl">📢 Gestionnaire de Campagnes</h2>
               
-              {/* === BADGE DE SANTÉ DU SCHEDULER === */}
+              {/* === INDICATEUR STATUT SERVEUR DE PLANIFICATION (APScheduler) === */}
               {(() => {
-                const isActive = schedulerHealth.status === "active" && schedulerHealth.last_run;
-                const lastRunDate = schedulerHealth.last_run ? new Date(schedulerHealth.last_run) : null;
-                const now = new Date();
-                const diffSeconds = lastRunDate ? Math.floor((now - lastRunDate) / 1000) : 999;
-                const isRecent = diffSeconds < 60;
-                const isHealthy = isActive && isRecent;
+                const isRunning = schedulerHealth.status === "active";
+                const hasPersistence = schedulerHealth.persistence && schedulerHealth.persistence.includes("MongoDB");
+                const isHealthy = isRunning && hasPersistence;
                 
                 return (
                   <div 
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium cursor-help ${
                       isHealthy 
                         ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
                         : 'bg-red-500/20 border border-red-500/50 text-red-400'
                     }`}
-                    title={lastRunDate ? `Dernier scan: ${lastRunDate.toLocaleTimeString()}` : 'Statut inconnu'}
+                    title={`APScheduler: ${isRunning ? 'Actif' : 'Arrêté'}\nPersistance: ${schedulerHealth.persistence || 'Inconnue'}\nIntervalle: ${schedulerHealth.interval || 60}s`}
+                    data-testid="scheduler-status-indicator"
                   >
                     <span className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                    {isHealthy ? '● Automate : Actif' : '● Automate : Arrêté'}
+                    <span>{isHealthy ? '🟢 Serveur Planification : Actif' : '🔴 Serveur Planification : Arrêté'}</span>
+                    {hasPersistence && <span className="text-[10px] opacity-70">(MongoDB)</span>}
                   </div>
                 );
               })()}
