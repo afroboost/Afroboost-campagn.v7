@@ -6481,7 +6481,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 disabled={!newCampaign.targetConversationId && !newCampaign.channels.whatsapp && !newCampaign.channels.email && !newCampaign.channels.group}>
                 {editingCampaignId ? '💾 Enregistrer les modifications' : '🚀 Créer la campagne'}
               </button>
-              </button>
             </form>
             
             {/* Campaign History */}
