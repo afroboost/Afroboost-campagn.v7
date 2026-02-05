@@ -1,5 +1,44 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - STABILISATION COACH (REFRESH & DÉCONNEXION) ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Persistance Session Coach (App.js) ✅
+- **localStorage** : `afroboost_coach_mode` et `afroboost_coach_user`
+- **Restauration automatique** : Au chargement, vérifie si une session existe
+- **Onglet actif persisté** : `afroboost_coach_tab` sauvegardé à chaque changement
+
+#### 2. Boutons Header Coach (CoachDashboard.js) ✅
+- **🔗 Partager** : Copie l'URL avec feedback vert "✓ Copié"
+- **← Retour** : Quitte le mode coach sans déconnecter (session conservée)
+- **🚪 Déconnexion** : Bouton rouge, vide localStorage + sessionStorage
+
+#### 3. États et fonctions ajoutés ✅
+```javascript
+// CoachDashboard.js
+const COACH_TAB_KEY = 'afroboost_coach_tab';
+const handleCoachShareLink = async () => {...}
+const handleSecureLogout = () => {...}
+
+// App.js
+const [coachMode, setCoachMode] = useState(() => localStorage check);
+const [coachUser, setCoachUser] = useState(() => localStorage check);
+const handleBackFromCoach = () => {...} // Retour sans déconnexion
+```
+
+#### 4. Garde-fous respectés ✅
+- Badge "⏳ Auto" préservé
+- Système de campagnes intact
+- JSX équilibré (compilation OK)
+
+### Critères de réussite validés ✅
+1. ✅ F5 sur "Codes promo" → Reste sur "Codes promo" sans déconnexion
+2. ✅ Bouton Partager → "✓ Copié" (feedback vert)
+3. ✅ Bouton Déconnexion → Nettoie localStorage et redirige
+
+---
+
 ## Mise à jour du 5 Février 2026 - PARTAGE ET GESTION SESSION ABONNÉ ✅
 
 ### MISSION ACCOMPLIE
