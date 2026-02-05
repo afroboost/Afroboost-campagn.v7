@@ -330,25 +330,30 @@ export const ChatWidget = () => {
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null); // Référence Socket.IO
   const chatContainerRef = useRef(null); // Ref pour le mode plein écran
+  
+  // === SUBSCRIBER DATA (Mémorisation code promo) ===
+  const [subscriberData, setSubscriberData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('subscriber_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [showReservationPanel, setShowReservationPanel] = useState(false);
 
   // Email du coach autorisé
   const COACH_EMAIL = 'contact.artboost@gmail.com';
+  
+  // Sauvegarder subscriber_data quand un code promo est validé
+  const saveSubscriberData = useCallback((code, name, type = 'abonné') => {
+    const data = { code, name, type, savedAt: new Date().toISOString() };
+    localStorage.setItem('subscriber_data', JSON.stringify(data));
+    setSubscriberData(data);
+    console.log('[SUBSCRIBER] ✅ Données abonné sauvegardées:', data);
+  }, []);
 
-  // === FONCTIONS MODE PLEIN ÉCRAN ===
-  const toggleFullscreen = async () => {
-    if (!chatContainerRef.current) return;
-    
-    try {
-      if (!document.fullscreenElement) {
-        await chatContainerRef.current.requestFullscreen();
-        setIsFullscreen(true);
-      } else {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    } catch (err) {
-      console.error('Erreur fullscreen:', err);
-    }
+  // === FONCTIONS MODE PLEIN ÉCRAN (CSS - plus fiable) ===
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => !prev);
   };
 
   // Écouter les changements de fullscreen (touche Escape, etc.)
