@@ -692,6 +692,9 @@ export const ChatWidget = () => {
         localStorage.setItem(AFROBOOST_PROFILE_KEY, JSON.stringify(profile));
         setAfroboostProfile(profile);
         
+        // === ÉMETTRE LA MISE À JOUR D'AVATAR EN TEMPS RÉEL ===
+        emitAvatarUpdate(photoUrl);
+        
         console.log('[PHOTO] ✅ Photo uploadée:', photoUrl);
       }
     } catch (err) {
