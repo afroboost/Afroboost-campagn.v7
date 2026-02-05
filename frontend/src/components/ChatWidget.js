@@ -933,6 +933,17 @@ export const ChatWidget = () => {
       setStep('coach');
     }
   }, [isCoachMode, isOpen]);
+  
+  // === FERMER LES MENUS AU CLIC EXTÉRIEUR ===
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showCoachMenu && !e.target.closest('.coach-icons-menu')) {
+        setShowCoachMenu(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showCoachMenu]);
 
   // Scroll vers le bas des messages
   useEffect(() => {
