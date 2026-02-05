@@ -2283,8 +2283,8 @@ export const ChatWidget = () => {
                     😊
                   </button>
                   
-                  {/* Icône Calendrier (Réservation) - Visible si abonné identifié */}
-                  {(subscriberData || (leadData && leadData.firstName)) && (
+                  {/* Icône Calendrier (Réservation) - UNIQUEMENT visible pour abonnés avec code promo */}
+                  {afroboostProfile?.code && (
                     <button
                       type="button"
                       onClick={() => {
@@ -2298,15 +2298,15 @@ export const ChatWidget = () => {
                         width: '40px',
                         height: '40px',
                         borderRadius: '50%',
-                        background: showReservationPanel ? '#9333ea' : 'rgba(255,255,255,0.1)',
-                        border: 'none',
+                        background: showReservationPanel ? '#9333ea' : 'rgba(147, 51, 234, 0.3)',
+                        border: '1px solid rgba(147, 51, 234, 0.5)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0
                       }}
-                      title="Réserver un cours"
+                      title="Réserver un cours (Abonné)"
                       data-testid="calendar-btn"
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={showReservationPanel ? '#fff' : '#a855f7'} strokeWidth="2">
