@@ -737,6 +737,9 @@ export const ChatWidget = () => {
   const [privateMessages, setPrivateMessages] = useState([]); // Messages de la MP active
   const [privateInput, setPrivateInput] = useState(''); // Input de la MP
   const [unreadPrivateCount, setUnreadPrivateCount] = useState(0); // Compteur MP non lus (pastille rouge)
+  const [dmTypingUser, setDmTypingUser] = useState(null); // Indicateur "en train d'écrire" pour DM
+  const dmTypingTimeoutRef = useRef(null); // Timer pour cacher l'indicateur DM après 3s
+  const lastDmTypingEmitRef = useRef(0); // Éviter le spam d'événements DM typing
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null); // Référence Socket.IO
   const chatContainerRef = useRef(null); // Ref pour le mode plein écran
