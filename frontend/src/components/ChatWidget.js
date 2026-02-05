@@ -200,11 +200,34 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
  * Utilise l'API /api/chat/smart-entry pour identifier les utilisateurs
  */
 export const ChatWidget = () => {
+  // === VÉRIFICATION DU PROFIL ABONNÉ (afroboost_profile) ===
+  const getStoredProfile = () => {
+    try {
+      const savedProfile = localStorage.getItem(AFROBOOST_PROFILE_KEY);
+      if (savedProfile) {
+        const profile = JSON.parse(savedProfile);
+        if (profile && profile.code && profile.name) {
+          return profile;
+        }
+      }
+    } catch (e) {
+      console.warn('[PROFILE] ⚠️ Erreur lecture profil:', e.message);
+    }
+    return null;
+  };
+
   // === VÉRIFICATION PERSISTANCE AU MONTAGE (AVANT tout render) ===
   // Déterminer le step initial IMMÉDIATEMENT basé sur localStorage
   // AVEC FALLBACK ROBUSTE pour données corrompues
   const getInitialStep = () => {
     try {
+      // PRIORITÉ 1: Vérifier si c'est un abonné identifié (afroboost_profile)
+      const profile = getStoredProfile();
+      if (profile) {
+        console.log('[PERSISTENCE] ✅ Abonné reconnu:', profile.name, '- Code:', profile.code);
+        return 'chat'; // Abonné → DIRECT au chat en mode plein écran
+      }
+      
       const savedIdentity = localStorage.getItem(AFROBOOST_IDENTITY_KEY);
       const savedClient = localStorage.getItem(CHAT_CLIENT_KEY);
       
@@ -233,11 +256,18 @@ export const ChatWidget = () => {
         localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
         localStorage.removeItem(CHAT_CLIENT_KEY);
         localStorage.removeItem(CHAT_SESSION_KEY);
+        localStorage.removeItem(AFROBOOST_PROFILE_KEY);
       } catch (cleanupError) {
         console.error('[PERSISTENCE] Erreur lors du nettoyage localStorage:', cleanupError);
       }
     }
     return 'form'; // Nouvel utilisateur ou données corrompues → formulaire
+  };
+  
+  // === DÉTERMINER SI MODE PLEIN ÉCRAN INITIAL (Abonné = plein écran) ===
+  const getInitialFullscreen = () => {
+    const profile = getStoredProfile();
+    return !!profile; // Abonné reconnu → plein écran activé
   };
 
   const [isOpen, setIsOpen] = useState(false);
