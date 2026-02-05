@@ -381,6 +381,8 @@ export const ChatWidget = () => {
   const [availableCourses, setAvailableCourses] = useState([]); // Cours pour réservation
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null); // Cours sélectionné
+  const [reservationLoading, setReservationLoading] = useState(false); // Chargement réservation
+  const [reservationError, setReservationError] = useState(''); // Erreur réservation
 
   // Email du coach autorisé
   const COACH_EMAIL = 'contact.artboost@gmail.com';
