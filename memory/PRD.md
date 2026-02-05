@@ -1,5 +1,41 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - FINALISATION PANIER ANTI-RÉGRESSION ✅
+
+### MISSION ACCOMPLIE : Panier sécurisé et synchronisé
+
+#### 1. Synchronisation CRM complète ✅
+- Backend inclut TOUS les utilisateurs (même sans nom → fallback email)
+- 17 conversations disponibles (6 groupes + 11 utilisateurs uniques par email)
+- Note: 47 users en DB mais seulement 11 emails uniques (doublons filtrés)
+
+#### 2. Protection anti-doublons ✅
+- Bouton "+ Tous" vérifie les IDs existants avant d'ajouter
+- Toast informatif si tout est déjà dans le panier
+- Chaque tag a un `data-testid` unique pour tests
+
+#### 3. Validation renforcée du bouton Créer ✅
+- Désactivé si panier vide OU message vide
+- Messages dynamiques: "⚠️ Écrivez un message" / "⚠️ Ajoutez des destinataires"
+- Affiche le compteur: "🚀 Créer (X dest.)"
+
+#### 4. UI améliorée ✅
+- Tags avec icônes intégrées (👥/👤)
+- Bordures colorées par type (purple/blue)
+- Bouton "🗑️ Vider" rouge visible
+- Compteur final: "✅ Prêt à envoyer à X destinataire(s) (Y 👥, Z 👤)"
+- Max-height avec scroll pour les gros paniers
+
+### Tests validés
+```
+✅ POST /api/campaigns avec targetIds: 3 destinataires → status: scheduled
+✅ Frontend compile (24 warnings, 0 erreur)
+✅ Anti-doublons fonctionne
+✅ Code Twilio/WhatsApp intact
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - SYSTÈME PANIER DE DESTINATAIRES ✅
 
 ### MISSION ACCOMPLIE : Sélection multiple avec tags
