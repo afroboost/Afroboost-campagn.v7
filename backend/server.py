@@ -3432,12 +3432,16 @@ async def delete_chat_participant(participant_id: str):
 async def get_active_conversations_for_messaging():
     """
     Récupère TOUTES les conversations pour la programmation de messages internes.
-    Inclut : sessions avec titre (groupes nommés), sessions utilisateurs, et groupes standards.
+    Inclut : 
+    - Sessions avec titre (groupes nommés comme "Les Lionnes")
+    - Groupes standards (community, vip, promo)
+    - TOUS les utilisateurs de la collection users
     """
     try:
         conversations = []
+        seen_user_ids = set()  # Pour éviter les doublons d'utilisateurs
         
-        # 1. Récupérer TOUTES les sessions de chat (inclure le champ 'title')
+        # 1. Récupérer TOUTES les sessions de chat avec titre (GROUPES NOMMÉS)
         sessions = await db.chat_sessions.find(
             {"is_deleted": {"$ne": True}},
             {"_id": 0, "id": 1, "mode": 1, "title": 1, "participant_ids": 1, "created_at": 1, "last_message_at": 1, "updated_at": 1}
@@ -3450,55 +3454,38 @@ async def get_active_conversations_for_messaging():
                 title = session.get("title", "")
                 participant_ids = session.get("participant_ids", [])
                 
-                # Déterminer le type et le nom de la conversation
+                # GROUPES : Sessions avec titre OU mode groupe
                 if title and title.strip():
                     # Session avec titre = Groupe nommé (comme "Les Lionnes")
-                    conv_name = f"👥 {title.strip()}"
-                    conv_type = "group"
+                    conversations.append({
+                        "conversation_id": session_id,
+                        "name": f"👥 {title.strip()}",
+                        "type": "group",
+                        "mode": mode,
+                        "title": title.strip(),
+                        "last_activity": session.get("updated_at") or session.get("last_message_at") or session.get("created_at", "")
+                    })
                 elif mode in ["community", "vip", "promo", "group"]:
-                    # Mode groupe standard
+                    # Mode groupe standard - uniquement si pas encore ajouté
                     mode_names = {
                         "community": "🌍 Communauté",
                         "vip": "⭐ Groupe VIP",
                         "promo": "🎁 Offres Spéciales",
                         "group": "👥 Groupe"
                     }
-                    conv_name = mode_names.get(mode, f"👥 Groupe {mode}")
-                    conv_type = "group"
+                    conversations.append({
+                        "conversation_id": session_id,
+                        "name": mode_names.get(mode, f"👥 Groupe {mode}"),
+                        "type": "group",
+                        "mode": mode,
+                        "title": "",
+                        "last_activity": session.get("updated_at") or ""
+                    })
                 else:
-                    # Session utilisateur - récupérer le nom du participant
-                    conv_type = "user"
-                    if participant_ids:
-                        # Trouver le nom du premier participant
-                        participant = await db.users.find_one(
-                            {"id": participant_ids[0]},
-                            {"_id": 0, "name": 1, "email": 1}
-                        )
-                        if participant and participant.get("name"):
-                            conv_name = f"👤 {participant.get('name', 'Utilisateur')}"
-                            if participant.get("email"):
-                                conv_name += f" ({participant.get('email')})"
-                        else:
-                            # Chercher dans les messages
-                            last_msg = await db.chat_messages.find_one(
-                                {"session_id": session_id, "sender_type": "user"},
-                                {"_id": 0, "sender_name": 1}
-                            )
-                            if last_msg and last_msg.get("sender_name"):
-                                conv_name = f"👤 {last_msg.get('sender_name')}"
-                            else:
-                                conv_name = f"👤 Session {session_id[:8]}"
-                    else:
-                        conv_name = f"👤 Session {session_id[:8]}"
-                
-                conversations.append({
-                    "conversation_id": session_id,
-                    "name": conv_name,
-                    "type": conv_type,
-                    "mode": mode,
-                    "title": title or "",
-                    "last_activity": session.get("updated_at") or session.get("last_message_at") or session.get("created_at", "")
-                })
+                    # Session utilisateur - noter les IDs pour éviter les doublons
+                    for pid in participant_ids:
+                        seen_user_ids.add(pid)
+                        
             except Exception as session_err:
                 logger.warning(f"[CONVERSATIONS-ACTIVE] Erreur session {session.get('id', '?')}: {session_err}")
                 continue
@@ -3515,18 +3502,63 @@ async def get_active_conversations_for_messaging():
             if group["conversation_id"] not in existing_ids:
                 conversations.append(group)
         
-        # 3. Trier: groupes d'abord (par nom), puis utilisateurs (par activité)
+        # 3. Récupérer TOUS les utilisateurs de la collection users
+        all_users = await db.users.find(
+            {},
+            {"_id": 0, "id": 1, "name": 1, "email": 1, "created_at": 1}
+        ).sort("name", 1).to_list(500)
+        
+        # Éviter les doublons (même email)
+        seen_emails = set()
+        for user in all_users:
+            try:
+                user_id = user.get("id", "")
+                user_name = user.get("name", "").strip()
+                user_email = user.get("email", "").strip().lower()
+                
+                # Ignorer les utilisateurs sans nom ou déjà vus (par email)
+                if not user_name or not user_id:
+                    continue
+                if user_email and user_email in seen_emails:
+                    continue
+                if user_email:
+                    seen_emails.add(user_email)
+                
+                # Construire le nom d'affichage
+                display_name = f"👤 {user_name}"
+                if user_email:
+                    display_name += f" ({user_email})"
+                
+                conversations.append({
+                    "conversation_id": user_id,  # Utilise l'ID utilisateur pour cibler directement
+                    "name": display_name,
+                    "type": "user",
+                    "mode": "user",
+                    "title": "",
+                    "email": user_email,
+                    "last_activity": user.get("created_at", "")
+                })
+            except Exception as user_err:
+                logger.warning(f"[CONVERSATIONS-ACTIVE] Erreur user: {user_err}")
+                continue
+        
+        # 4. Trier: groupes d'abord (par nom), puis utilisateurs (par nom)
         conversations.sort(key=lambda x: (
             0 if x["type"] == "group" else 1,
             x.get("name", "").lower()
         ))
         
-        logger.info(f"[CONVERSATIONS-ACTIVE] {len(conversations)} conversations trouvées")
+        # Compter les résultats
+        groups_count = len([c for c in conversations if c["type"] == "group"])
+        users_count = len([c for c in conversations if c["type"] == "user"])
+        logger.info(f"[CONVERSATIONS-ACTIVE] {len(conversations)} conversations trouvées ({groups_count} groupes, {users_count} utilisateurs)")
         
         return {
             "success": True,
             "conversations": conversations,
-            "total": len(conversations)
+            "total": len(conversations),
+            "groups_count": groups_count,
+            "users_count": users_count
         }
         
     except Exception as e:
