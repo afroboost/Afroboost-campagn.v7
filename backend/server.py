@@ -4416,6 +4416,78 @@ async def get_unread_private_count(participant_id: str):
     })
     return {"unread_count": count}
 
+# ==================== UPLOAD PHOTO DE PROFIL ====================
+
+@api_router.post("/upload/profile-photo")
+async def upload_profile_photo(file: UploadFile = File(...), participant_id: str = Form("guest")):
+    """
+    Upload une photo de profil pour un participant.
+    L'image est redimensionnée à max 200x200px et stockée sur le serveur.
+    """
+    import os
+    from PIL import Image
+    import io
+    
+    # Vérifier le type MIME
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Type de fichier non supporté")
+    
+    # Lire le fichier
+    contents = await file.read()
+    
+    # Vérifier la taille (max 2MB)
+    if len(contents) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 2MB)")
+    
+    try:
+        # Ouvrir et redimensionner l'image
+        img = Image.open(io.BytesIO(contents))
+        
+        # Convertir en RGB si nécessaire
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        
+        # Redimensionner à max 200x200 en conservant les proportions
+        img.thumbnail((200, 200), Image.LANCZOS)
+        
+        # Créer le dossier s'il n'existe pas
+        upload_dir = "/app/backend/uploads/profiles"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Générer un nom de fichier unique
+        import uuid
+        filename = f"{participant_id}_{uuid.uuid4().hex[:8]}.jpg"
+        filepath = os.path.join(upload_dir, filename)
+        
+        # Sauvegarder l'image
+        img.save(filepath, "JPEG", quality=85)
+        
+        # Retourner l'URL relative
+        photo_url = f"/api/uploads/profiles/{filename}"
+        
+        # Mettre à jour le profil dans la base de données si l'utilisateur existe
+        await db.users.update_one(
+            {"participant_id": participant_id},
+            {"$set": {"photoUrl": photo_url}},
+            upsert=False
+        )
+        
+        logger.info(f"[UPLOAD] ✅ Photo de profil uploadée: {filename}")
+        return {"url": photo_url, "filename": filename}
+        
+    except Exception as e:
+        logger.error(f"[UPLOAD] ❌ Erreur traitement image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur traitement image: {str(e)}")
+
+# Route pour servir les photos de profil
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Créer le dossier uploads s'il n'existe pas
+os.makedirs("/app/backend/uploads/profiles", exist_ok=True)
+
+# Note: La route statique est montée séparément via app.mount()
+
 # ==================== NOTIFICATIONS (SONORES ET VISUELLES) ====================
 
 @api_router.get("/notifications/unread")
