@@ -1,5 +1,35 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - NOTIFICATIONS EMAIL COACH ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Notification Automatique Email (Backend) ✅
+- **Déclencheur** : À chaque réservation "💎 ABONNÉ" (type='abonné' + promoCode)
+- **Destinataire** : contact.artboost@gmail.com
+- **Template HTML** : 
+  - Nom, WhatsApp (lien cliquable), Email
+  - Cours choisi, Horaire
+  - Code promo utilisé
+  - Bouton "💬 Contacter sur WhatsApp"
+- **Domaine validé** : notifications@afroboosteur.com (via Resend)
+
+#### 2. Tableau Coach enrichi (ReservationList) ✅
+- **Colonne "Origine"** : Badge "💎 ABONNÉ" (violet) avec code promo visible
+- **Colonne "WhatsApp"** : Lien cliquable `wa.me/numéro 📲` (couleur verte)
+- **Détection abonné** : `r.promoCode || r.source === 'chat_widget' || r.type === 'abonné'`
+
+#### 3. Garde-fous respectés ✅
+- Badge "⏳ Auto" préservé
+- Logique campagnes intacte
+- Try/catch/finally sur l'envoi email (ne bloque pas la réservation)
+
+### Test effectué ✅
+- Email envoyé avec succès (ID: `ba881e49-5745-46eb-80c6-27a6a44dd2af`)
+- Réservation confirmée instantanément
+
+---
+
 ## Mise à jour du 5 Février 2026 - DÉBLOCAGE CRITIQUE FLUX RÉSERVATION ✅
 
 ### MISSION ACCOMPLIE
