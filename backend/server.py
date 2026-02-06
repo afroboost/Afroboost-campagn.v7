@@ -852,7 +852,8 @@ async def root():
 # --- Courses ---
 @api_router.get("/courses", response_model=List[Course])
 async def get_courses():
-    courses_raw = await db.courses.find({}, {"_id": 0}).to_list(100)
+    # EXCLURE les cours archivés de la liste
+    courses_raw = await db.courses.find({"archived": {"$ne": True}}, {"_id": 0}).to_list(100)
     if not courses_raw:
         # Insert default courses
         default_courses = [
