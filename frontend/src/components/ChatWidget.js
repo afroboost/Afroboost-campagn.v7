@@ -1350,6 +1350,17 @@ export const ChatWidget = () => {
         }
       });
       
+      // === SYNCHRONISATION TEMPS RÉEL : Suppression de cours ===
+      socket.on('course_deleted', (data) => {
+        console.log('[SOCKET.IO] 🗑️ Cours supprimé:', data.courseId);
+        // Retirer le cours de la liste locale
+        setAvailableCourses(prev => prev.filter(course => course.id !== data.courseId));
+        // Notification optionnelle
+        if (data.deletedReservations > 0) {
+          console.log(`[SOCKET.IO] 📅 ${data.deletedReservations} réservation(s) annulée(s)`);
+        }
+      });
+      
       socket.on('disconnect', () => {
         console.log('[SOCKET.IO] ❌ Déconnecté');
       });
