@@ -5422,7 +5422,6 @@ async def get_ai_response_with_session(request: Request):
     
     # =====================================================================
     # DÉTECTION MODE STRICT (AVANT construction du contexte)
-    # =====================================================================
     use_strict_mode = False
     CUSTOM_PROMPT = ""
     
@@ -5431,13 +5430,9 @@ async def get_ai_response_with_session(request: Request):
     if session_custom_prompt and isinstance(session_custom_prompt, str) and session_custom_prompt.strip():
         CUSTOM_PROMPT = session_custom_prompt.strip()
         use_strict_mode = True
-        logger.info(f"[CHAT-AI-RESPONSE] 🔒 Mode STRICT détecté (custom_prompt présent)")
+        logger.info(f"[CHAT-AI-RESPONSE] 🔒 Mode STRICT détecté")
     
-    # =====================================================================
-    # CONSTRUCTION DU CONTEXTE - LOGIQUE DE REMPLACEMENT TOTAL
-    # MODE STRICT: Aucune donnée de vente (prix, Twint, etc.)
-    # MODE STANDARD: Contexte complet avec tous les prix
-    # =====================================================================
+    # CONSTRUCTION DU CONTEXTE
     logger.info("[CHAT-AI-RESPONSE] 🔄 Construction du contexte...")
     
     if use_strict_mode:
