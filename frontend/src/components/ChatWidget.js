@@ -100,7 +100,7 @@ const GroupIcon = () => (
  * Affiche le nom de l'expéditeur au-dessus de chaque bulle
  * Couleurs: Violet (#8B5CF6) pour le Coach, Gris foncé pour les membres/IA
  */
-const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUserId, profilePhotoUrl }) => {
+const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUserId, profilePhotoUrl, onReservationClick }) => {
   // Convertir le texte en HTML avec liens cliquables ET emojis parsés
   const htmlContent = parseMessageContent(msg.text);
   const isOtherUser = isCommunity && msg.type === 'user' && msg.senderId && msg.senderId !== currentUserId;
@@ -176,6 +176,56 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
     }
     return null;
   };
+  
+  // === DÉTECTION MÉDIA AVEC CTA ===
+  // Si le message contient un média (media_url) et/ou un CTA
+  const hasMedia = msg.media_url && msg.media_url.trim() !== '';
+  const hasCta = msg.cta_type && msg.cta_text;
+  
+  // Si c'est un message média avec CTA, utiliser MediaMessage
+  if (hasMedia || hasCta) {
+    const ctaConfig = hasCta ? {
+      type: msg.cta_type === 'reserver' ? 'RESERVER' : 
+            msg.cta_type === 'offre' ? 'OFFRE' : 'PERSONNALISE',
+      text: msg.cta_text,
+      url: msg.cta_link || '#'
+    } : null;
+    
+    return (
+      <div
+        style={{
+          alignSelf: isUser ? 'flex-end' : 'flex-start',
+          maxWidth: '320px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px'
+        }}
+      >
+        {/* Nom au-dessus si pas utilisateur */}
+        {!isUser && (
+          <div style={{
+            fontSize: '10px',
+            fontWeight: '600',
+            marginLeft: '4px',
+            color: getNameColor()
+          }}>
+            {displayName}
+          </div>
+        )}
+        
+        {/* Composant MediaMessage avec CTA */}
+        <MediaMessage
+          mediaUrl={hasMedia ? msg.media_url : null}
+          description={msg.text}
+          cta={ctaConfig}
+          onReservationClick={onReservationClick}
+          isCompact={true}
+        />
+      </div>
+    );
+  }
+  
+  // === MESSAGE STANDARD (sans média) ===
   
   return (
     <div
