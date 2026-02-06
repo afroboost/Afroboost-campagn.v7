@@ -1126,8 +1126,9 @@ export const ChatWidget = () => {
         axios.put(`${API}/private/messages/read/${activePrivateChat.id}?reader_id=${participantId}`).catch(() => {});
       } else {
         // Message pour une autre conversation ou pas de conversation ouverte
-        // -> NOTIFICATION COMPLÈTE (son + titre clignotant + badge)
+        // -> NOTIFICATION COMPLÈTE (badge + son si activé + titre clignotant)
         setUnreadPrivateCount(prev => prev + 1);
+        playSoundIfEnabled('private'); // Son "ding" cristallin si activé
         notifyPrivateMessage(data.sender || 'Quelqu\'un');
       }
     };
@@ -1137,7 +1138,7 @@ export const ChatWidget = () => {
     return () => {
       socket.off('private_message_received', handlePrivateMessage);
     };
-  }, [activePrivateChat, participantId]);
+  }, [activePrivateChat, participantId, soundEnabled]);
 
   // === SOCKET.IO pour le TYPING INDICATOR dans les DM ===
   useEffect(() => {
