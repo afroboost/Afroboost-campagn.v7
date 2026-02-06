@@ -1,0 +1,221 @@
+/**
+ * BookingPanel.js - Panneau de réservation pour les abonnés
+ * 
+ * Extrait de ChatWidget.js pour alléger le fichier principal.
+ * Affiche la liste des cours disponibles et permet de réserver un créneau.
+ */
+
+import React, { memo } from 'react';
+
+/**
+ * Panneau de réservation de cours
+ * @param {object} afroboostProfile - Profil abonné {code, name, email, whatsapp}
+ * @param {array} availableCourses - Liste des cours disponibles
+ * @param {object} selectedCourse - Cours sélectionné
+ * @param {function} setSelectedCourse - Setter pour sélectionner un cours
+ * @param {boolean} loadingCourses - État de chargement des cours
+ * @param {boolean} reservationLoading - État de chargement de la réservation
+ * @param {string} reservationError - Message d'erreur
+ * @param {function} onConfirmReservation - Handler de confirmation
+ * @param {function} onClose - Handler de fermeture
+ */
+const BookingPanel = ({
+  afroboostProfile,
+  availableCourses,
+  selectedCourse,
+  setSelectedCourse,
+  loadingCourses,
+  reservationLoading,
+  reservationError,
+  onConfirmReservation,
+  onClose
+}) => {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      padding: '4px'
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '8px'
+      }}>
+        <h3 style={{ color: '#fff', fontSize: '16px', margin: 0 }}>
+          📅 Réserver un cours
+        </h3>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.6)',
+            cursor: 'pointer',
+            fontSize: '18px'
+          }}
+          data-testid="close-booking"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Badge abonné */}
+      {afroboostProfile?.code && (
+        <div style={{
+          background: 'rgba(34, 197, 94, 0.2)',
+          border: '1px solid rgba(34, 197, 94, 0.3)',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          marginBottom: '12px',
+          fontSize: '12px',
+          color: '#22c55e'
+        }}>
+          💎 Abonné • Code: <strong>{afroboostProfile.code}</strong>
+        </div>
+      )}
+
+      {/* Chargement */}
+      {loadingCourses && (
+        <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+          ⏳ Chargement des sessions...
+        </div>
+      )}
+
+      {/* Liste des cours */}
+      {!loadingCourses && !selectedCourse && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {availableCourses.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+              Aucune session disponible
+            </div>
+          )}
+          {availableCourses.map(course => (
+            <button
+              key={course.id}
+              type="button"
+              onClick={() => setSelectedCourse(course)}
+              style={{
+                padding: '12px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(99, 102, 241, 0.3))',
+                border: '1px solid rgba(147, 51, 234, 0.4)',
+                color: '#fff',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              data-testid={`course-${course.id}`}
+            >
+              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                {course.name}
+              </div>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                🕐 {course.time} • 📍 {course.location || 'À définir'}
+              </div>
+              {course.spotsLeft !== undefined && (
+                <div style={{ 
+                  fontSize: '11px', 
+                  marginTop: '4px',
+                  color: course.spotsLeft <= 3 ? '#f97316' : '#22c55e'
+                }}>
+                  {course.spotsLeft <= 0 ? '❌ Complet' : `✅ ${course.spotsLeft} place(s) restante(s)`}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Détail du cours sélectionné */}
+      {selectedCourse && (
+        <div style={{
+          background: 'rgba(147, 51, 234, 0.2)',
+          border: '1px solid rgba(147, 51, 234, 0.4)',
+          borderRadius: '12px',
+          padding: '16px'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            marginBottom: '12px'
+          }}>
+            <div>
+              <h4 style={{ color: '#fff', margin: '0 0 4px 0', fontSize: '14px' }}>
+                {selectedCourse.name}
+              </h4>
+              <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '12px' }}>
+                🕐 {selectedCourse.time}
+              </p>
+              {selectedCourse.location && (
+                <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '12px' }}>
+                  📍 {selectedCourse.location}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedCourse(null)}
+              disabled={reservationLoading}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                color: '#fff',
+                fontSize: '11px',
+                cursor: reservationLoading ? 'not-allowed' : 'pointer',
+                opacity: reservationLoading ? 0.5 : 1
+              }}
+            >
+              ← Retour
+            </button>
+          </div>
+
+          {/* Bouton de confirmation */}
+          <button
+            type="button"
+            onClick={onConfirmReservation}
+            disabled={reservationLoading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '10px',
+              background: reservationLoading 
+                ? 'linear-gradient(135deg, #666, #555)'
+                : 'linear-gradient(135deg, #22c55e, #16a34a)',
+              border: 'none',
+              color: '#fff',
+              fontWeight: 'bold',
+              cursor: reservationLoading ? 'wait' : 'pointer',
+              opacity: reservationLoading ? 0.7 : 1
+            }}
+            data-testid="confirm-reservation-btn"
+          >
+            {reservationLoading ? '⏳ Envoi en cours...' : '✅ Confirmer la réservation'}
+          </button>
+
+          {/* Erreur */}
+          {reservationError && (
+            <div style={{
+              marginTop: '12px',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.2)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#ef4444',
+              fontSize: '12px'
+            }}>
+              ❌ {reservationError}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default memo(BookingPanel);
