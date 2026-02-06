@@ -450,6 +450,28 @@ export const ChatWidget = () => {
     } catch { return true; }
   });
   
+  // === MODE SILENCE AUTO (Ne pas déranger 22h-08h) ===
+  const [silenceAutoEnabled, setSilenceAutoEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem('afroboost_silence_auto');
+      return saved === 'true';
+    } catch { return false; }
+  });
+  
+  // Vérifie si on est dans la plage de silence (22h-08h)
+  const isInSilenceHours = () => {
+    const hour = new Date().getHours();
+    return hour >= 22 || hour < 8;
+  };
+  
+  // Toggle le mode Silence Auto
+  const toggleSilenceAuto = () => {
+    const newValue = !silenceAutoEnabled;
+    setSilenceAutoEnabled(newValue);
+    localStorage.setItem('afroboost_silence_auto', String(newValue));
+    console.log('[SILENCE AUTO] 🌙', newValue ? 'Activé (22h-08h)' : 'Désactivé');
+  };
+  
   // Sauvegarder les préférences sonores
   const toggleSound = () => {
     const newValue = !soundEnabled;
@@ -458,8 +480,14 @@ export const ChatWidget = () => {
     console.log('[SOUND] 🔊', newValue ? 'Activé' : 'Désactivé');
   };
   
-  // === WRAPPER POUR JOUER LES SONS (vérifie si activé) ===
+  // === WRAPPER POUR JOUER LES SONS (vérifie si activé ET mode silence) ===
   const playSoundIfEnabled = (type = 'message') => {
+    // Vérifier le mode silence auto (22h-08h)
+    if (silenceAutoEnabled && isInSilenceHours()) {
+      console.log('[SOUND] 🌙 Mode silence actif (22h-08h)');
+      return;
+    }
+    // Vérifier la préférence manuelle
     if (soundEnabled) {
       playNotificationSound(type);
     }
