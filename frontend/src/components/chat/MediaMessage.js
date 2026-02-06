@@ -13,7 +13,7 @@
  */
 
 import React, { memo, useState, useCallback } from 'react';
-import { parseMediaUrl } from '../services/MediaParser';
+import { parseMediaUrl } from '../../services/MediaParser';
 
 // === ICÔNES FILAIRES FINES ===
 const PlayIcon = () => (
