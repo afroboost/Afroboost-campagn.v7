@@ -3168,15 +3168,13 @@ async def send_whatsapp_direct(to_phone: str, message: str, media_url: str = Non
             result = response.json()
             
             if response.status_code >= 400:
-                # === CAPTURE DÉTAILLÉE DES ERREURS TWILIO ===
                 error_msg = result.get("message", "Unknown error")
                 error_code = result.get("code", response.status_code)
                 more_info = result.get("more_info", "")
                 
-                logger.error(f"[WHATSAPP-PROD] ❌ Erreur Twilio [{error_code}]: {error_msg}")
-                print(f"[WHATSAPP-PROD] Message envoyé via {clean_from} vers {clean_to} - Status: ERROR [{error_code}] ({error_msg})")
+                logger.error(f"[WHATSAPP] ❌ Erreur [{error_code}]: {error_msg}")
                 
-                # === STOCKAGE DANS campaign_errors POUR DIAGNOSTIC ===
+                # Stockage dans campaign_errors
                 try:
                     error_doc = {
                         "campaign_id": campaign_id or "direct_send",
@@ -3191,11 +3189,9 @@ async def send_whatsapp_direct(to_phone: str, message: str, media_url: str = Non
                         "http_status": response.status_code,
                         "created_at": datetime.now(timezone.utc).isoformat()
                     }
-                    # Utiliser le client MongoDB synchrone pour éviter les problèmes d'event loop
                     mongo_client_sync[os.environ.get('DB_NAME', 'test_database')].campaign_errors.insert_one(error_doc)
-                    logger.info(f"[WHATSAPP-DIAG] Erreur enregistrée dans campaign_errors: {error_code}")
                 except Exception as log_err:
-                    logger.error(f"[WHATSAPP-DIAG] Impossible d'enregistrer l'erreur: {log_err}")
+                    logger.error(f"[WHATSAPP] Erreur log: {log_err}")
                 
                 return {
                     "status": "error", 
@@ -3205,8 +3201,7 @@ async def send_whatsapp_direct(to_phone: str, message: str, media_url: str = Non
                 }
             
             sid = result.get("sid", "")
-            logger.info(f"[WHATSAPP-PROD] ✅ Message envoyé - SID: {sid}")
-            print(f"[WHATSAPP-PROD] Message envoyé via {clean_from} vers {clean_to} - Status: SUCCESS (SID: {sid})")
+            logger.info(f"[WHATSAPP] ✅ Envoyé - SID: {sid}")
             
             return {
                 "status": "success",
@@ -3216,10 +3211,8 @@ async def send_whatsapp_direct(to_phone: str, message: str, media_url: str = Non
             }
             
     except Exception as e:
-        logger.error(f"[WHATSAPP-PROD] ❌ Exception: {str(e)}")
-        print(f"[WHATSAPP-PROD] Message envoyé via {clean_from} vers {clean_to} - Status: ERROR ({str(e)})")
+        logger.error(f"[WHATSAPP] ❌ Exception: {str(e)}")
         
-        # === STOCKAGE EXCEPTION DANS campaign_errors ===
         try:
             error_doc = {
                 "campaign_id": campaign_id or "direct_send",
