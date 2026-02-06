@@ -2989,8 +2989,16 @@ export const ChatWidget = () => {
                       </span>
                     </div>
 
-                    {/* Messages */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Messages - SMOOTH SCROLL: overflow-anchor none pour stabilité mobile */}
+                    <div style={{ 
+                      flex: 1, 
+                      overflowY: 'auto', 
+                      overflowAnchor: 'none', /* Fix sauts visuels mobile */
+                      padding: '12px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '8px' 
+                    }}>
                       {messages.map((msg, idx) => (
                         <MemoizedMessageBubble 
                           key={msg.id || idx} 
