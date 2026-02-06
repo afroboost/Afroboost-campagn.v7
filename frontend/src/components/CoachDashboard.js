@@ -1064,7 +1064,11 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     targetGroupId: 'community',
     targetConversationId: '', // ID de la conversation interne sélectionnée (legacy)
     targetConversationName: '', // Nom pour affichage (legacy)
-    scheduleSlots: [] // Multi-date scheduling
+    scheduleSlots: [], // Multi-date scheduling
+    // === CHAMPS CTA ===
+    ctaType: 'none', // 'none', 'reserver', 'offre', 'personnalise'
+    ctaText: '',     // Texte personnalisé du bouton
+    ctaLink: ''      // URL du bouton (pour offre et personnalise)
   });
   const [selectedContactsForCampaign, setSelectedContactsForCampaign] = useState([]);
   const [contactSearchQuery, setContactSearchQuery] = useState("");
