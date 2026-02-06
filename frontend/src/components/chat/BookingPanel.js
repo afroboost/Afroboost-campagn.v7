@@ -212,9 +212,21 @@ const BookingPanel = ({
               <p style={{ color: '#a78bfa', margin: '0 0 4px 0', fontSize: '13px', fontWeight: '500' }}>
                 📅 {selectedCourse.formattedDate || formatCourseDate(selectedCourse.time, selectedCourse.weekday)}
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '12px' }}>
-                📍 {selectedCourse.displayLocation || getLocationDisplay(selectedCourse)}
-              </p>
+              {/* Lieu avec style discret si "Lieu à confirmer" */}
+              {(() => {
+                const loc = selectedCourse.displayLocation || getLocationDisplay(selectedCourse);
+                const isPlaceholder = loc === 'Lieu à confirmer';
+                return (
+                  <p style={{ 
+                    color: isPlaceholder ? '#999' : 'rgba(255,255,255,0.7)', 
+                    margin: 0, 
+                    fontSize: '12px',
+                    fontStyle: isPlaceholder ? 'italic' : 'normal'
+                  }}>
+                    📍 {loc}
+                  </p>
+                );
+              })()}
             </div>
             <button
               type="button"
