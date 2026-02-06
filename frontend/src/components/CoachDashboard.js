@@ -2499,6 +2499,13 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     const scheduleSlots = newCampaign.scheduleSlots;
     const isImmediate = scheduleSlots.length === 0;
     
+    // Préparer les champs CTA (seulement si un type est sélectionné)
+    const ctaFields = newCampaign.ctaType !== 'none' ? {
+      ctaType: newCampaign.ctaType,
+      ctaText: newCampaign.ctaText || (newCampaign.ctaType === 'reserver' ? 'RÉSERVER' : newCampaign.ctaType === 'offre' ? 'VOIR L\'OFFRE' : 'EN SAVOIR PLUS'),
+      ctaLink: newCampaign.ctaLink || (newCampaign.ctaType === 'reserver' ? '#courses' : '')
+    } : {};
+    
     try {
       if (isImmediate) {
         // Create single immediate campaign
@@ -2514,7 +2521,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           targetIds: targetIds, // Tableau des IDs du panier
           targetConversationId: targetIds[0] || '',
           targetConversationName: selectedRecipients[0]?.name || '',
-          scheduledAt: null
+          scheduledAt: null,
+          ...ctaFields  // Ajouter les champs CTA
         };
         const res = await axios.post(`${API}/campaigns`, campaignData);
         setCampaigns([res.data, ...campaigns]);
@@ -2536,7 +2544,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             targetIds: targetIds, // Tableau des IDs du panier
             targetConversationId: targetIds[0] || '',
             targetConversationName: selectedRecipients[0]?.name || '',
-            scheduledAt
+            scheduledAt,
+            ...ctaFields  // Ajouter les champs CTA
           };
           const res = await axios.post(`${API}/campaigns`, campaignData);
           setCampaigns(prev => [res.data, ...prev]);
