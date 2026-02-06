@@ -2143,6 +2143,43 @@ export const ChatWidget = () => {
                         </>
                       )}
                       
+                      {/* Toggle Son (icône haut-parleur filaire) */}
+                      <button
+                        onClick={() => { toggleSound(); setShowUserMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          textAlign: 'left',
+                          fontSize: '12px',
+                          color: '#fff',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px'
+                        }}
+                        className="hover:bg-white/10"
+                        data-testid="toggle-sound-btn"
+                      >
+                        {soundEnabled ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                          </svg>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <line x1="23" y1="9" x2="17" y2="15"></line>
+                            <line x1="17" y1="9" x2="23" y2="15"></line>
+                          </svg>
+                        )}
+                        {soundEnabled ? 'Son activé' : 'Son désactivé'}
+                      </button>
+                      
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                      
                       {/* Rafraîchir */}
                       <button
                         onClick={() => { window.location.reload(); }}
