@@ -851,7 +851,13 @@ async def get_courses():
             {"id": str(uuid.uuid4()), "name": "Afroboost Silent – Sunday Vibes", "weekday": 0, "time": "18:30", "locationName": "Rue des Vallangines 97, Neuchâtel", "mapsUrl": ""}
         ]
         await db.courses.insert_many(default_courses)
-        return default_courses
+        courses = default_courses
+    
+    # === FIX: Ajouter "location" comme alias de "locationName" pour le frontend ===
+    for course in courses:
+        if "locationName" in course and "location" not in course:
+            course["location"] = course["locationName"]
+    
     return courses
 
 @api_router.post("/courses", response_model=Course)
