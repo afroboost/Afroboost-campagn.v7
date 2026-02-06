@@ -1014,11 +1014,21 @@ export const ChatWidget = () => {
       });
     }
     
-    // Cleanup
+    // Cleanup - Nettoyage complet pour éviter les fuites de mémoire
     return () => {
       if (socketRef.current) {
-        console.log('[SOCKET.IO] 🔌 Déconnexion...');
-        socketRef.current.disconnect();
+        const socket = socketRef.current;
+        console.log('[SOCKET.IO] 🔌 Nettoyage listeners et déconnexion...');
+        
+        // Supprimer explicitement tous les listeners avant déconnexion
+        socket.off('connect');
+        socket.off('joined_session');
+        socket.off('connect_error');
+        socket.off('disconnect');
+        socket.off('message_received');
+        socket.off('user_typing');
+        
+        socket.disconnect();
         socketRef.current = null;
       }
     };
