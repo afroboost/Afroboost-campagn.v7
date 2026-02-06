@@ -1497,50 +1497,51 @@ export const ChatWidget = () => {
   // === ÉTAT DE SYNCHRONISATION (indicateur visuel) ===
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // === RÉCUPÉRATION MESSAGES AU RETOUR (focus/visibilité) - ARCHITECTURE "RAMASSER" RÉSILIENTE ===
+  // === RÉCUPÉRATION MESSAGES AU RETOUR - ARCHITECTURE "RAMASSER" RÉSILIENTE ===
   // Garantit ZÉRO PERTE de message avec retry automatique et gestion hors-ligne
   useEffect(() => {
     if (!sessionData?.id || step !== 'chat') return;
     
-    // Stocker la dernière date de sync dans localStorage pour persistance
+    // Stocker la dernière date de sync dans localStorage (UTC ISO 8601)
     const LAST_SYNC_KEY = `afroboost_last_sync_${sessionData.id}`;
     let lastSyncTime = localStorage.getItem(LAST_SYNC_KEY) || null;
     
+    // Constantes de configuration
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 2000;
+    const ONLINE_DELAY = 800; // Délai après retour réseau pour stabiliser la connexion
+    const REQUEST_TIMEOUT = 10000;
+    
     // Fonction de récupération RÉSILIENTE avec retry
-    const fetchLatestMessages = async (retryCount = 0) => {
-      const MAX_RETRIES = 3;
-      const RETRY_DELAY = 2000; // 2 secondes
-      
+    const fetchLatestMessages = async (retryCount = 0, source = 'manual') => {
       // Vérifier si on est en ligne
       if (!navigator.onLine) {
         console.log('[RAMASSER] 📵 Hors ligne - Attente connexion...');
-        // Attendre que le réseau revienne
-        const waitForOnline = () => new Promise(resolve => {
-          if (navigator.onLine) {
-            resolve();
-          } else {
-            window.addEventListener('online', resolve, { once: true });
-          }
-        });
-        await waitForOnline();
-        console.log('[RAMASSER] 📶 Connexion rétablie!');
+        return; // On laisse le listener 'online' rappeler
       }
       
       setIsSyncing(true);
       
       try {
-        // Construire l'URL avec session_id ET participant_id pour robustesse
+        // Construire l'URL avec timestamp UTC
         let url = `${API}/messages/sync?session_id=${sessionData.id}&limit=100`;
         if (lastSyncTime) {
+          // S'assurer que le timestamp est en UTC
           url += `&since=${encodeURIComponent(lastSyncTime)}`;
         }
+        
+        console.log(`[RAMASSER] 🔄 Sync depuis ${source} (since=${lastSyncTime ? lastSyncTime.substring(0, 19) : 'null'})`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
         
         const response = await fetch(url, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          // Timeout de 10 secondes
-          signal: AbortSignal.timeout(10000)
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -1548,22 +1549,28 @@ export const ChatWidget = () => {
         
         const data = await response.json();
         
-        // Mettre à jour lastSyncTime et persister
+        // Mettre à jour lastSyncTime avec le timestamp UTC du serveur
         if (data.synced_at) {
           lastSyncTime = data.synced_at;
           localStorage.setItem(LAST_SYNC_KEY, lastSyncTime);
         }
         
         if (data.messages && data.messages.length > 0) {
-          console.log(`[RAMASSER] 📥 ${data.count} message(s) récupéré(s) depuis DB`);
+          console.log(`[RAMASSER] 📥 ${data.count} message(s) récupéré(s)`);
           setMessages(prev => {
+            // Fusionner sans doublons (basé sur ID unique)
             const existingIds = new Set(prev.map(m => m.id));
-            const newMsgs = data.messages.filter(m => !existingIds.has(m.id));
+            const newMsgs = data.messages.filter(m => m.id && !existingIds.has(m.id));
+            
             if (newMsgs.length > 0) {
               console.log(`[RAMASSER] ✅ ${newMsgs.length} NOUVEAUX messages ajoutés`);
-              return [...prev, ...newMsgs].sort((a, b) => 
-                new Date(a.created_at || 0) - new Date(b.created_at || 0)
-              );
+              // Trier par date UTC (comparaison de chaînes ISO 8601)
+              const merged = [...prev, ...newMsgs];
+              return merged.sort((a, b) => {
+                const dateA = a.created_at || '0';
+                const dateB = b.created_at || '0';
+                return dateA.localeCompare(dateB);
+              });
             }
             return prev;
           });
@@ -1576,14 +1583,14 @@ export const ChatWidget = () => {
       } catch (err) {
         console.warn(`[RAMASSER] ⚠️ Tentative ${retryCount + 1}/${MAX_RETRIES} échouée:`, err.message);
         
-        // Retry si pas épuisé
-        if (retryCount < MAX_RETRIES - 1) {
+        // Retry si pas épuisé et toujours en ligne
+        if (retryCount < MAX_RETRIES - 1 && navigator.onLine) {
           console.log(`[RAMASSER] 🔄 Retry dans ${RETRY_DELAY/1000}s...`);
           await new Promise(r => setTimeout(r, RETRY_DELAY));
-          return fetchLatestMessages(retryCount + 1);
+          return fetchLatestMessages(retryCount + 1, source);
         }
         
-        // Fallback vers l'ancien endpoint après échecs
+        // Fallback vers l'ancien endpoint
         console.log('[RAMASSER] 🔄 Tentative fallback...');
         try {
           const fallback = await fetch(`${API}/chat/sessions/${sessionData.id}/messages`);
@@ -1592,11 +1599,11 @@ export const ChatWidget = () => {
             if (Array.isArray(data) && data.length > 0) {
               setMessages(prev => {
                 const existingIds = new Set(prev.map(m => m.id));
-                const newMsgs = data.filter(m => !existingIds.has(m.id));
+                const newMsgs = data.filter(m => m.id && !existingIds.has(m.id));
                 if (newMsgs.length > 0) {
                   console.log(`[RAMASSER-FALLBACK] ✅ ${newMsgs.length} messages récupérés`);
                   return [...prev, ...newMsgs].sort((a, b) => 
-                    new Date(a.created_at || 0) - new Date(b.created_at || 0)
+                    (a.created_at || '0').localeCompare(b.created_at || '0')
                   );
                 }
                 return prev;
@@ -1604,7 +1611,7 @@ export const ChatWidget = () => {
             }
           }
         } catch (fallbackErr) {
-          console.warn('[RAMASSER] ❌ Fallback aussi échoué:', fallbackErr.message);
+          console.warn('[RAMASSER] ❌ Fallback échoué:', fallbackErr.message);
         }
         
         setIsSyncing(false);
@@ -1614,21 +1621,25 @@ export const ChatWidget = () => {
     // Listener visibilité (changement d'onglet ou retour de veille)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[VISIBILITY] 👀 App visible - RAMASSER messages...');
-        fetchLatestMessages();
+        console.log('[VISIBILITY] 👀 App visible');
+        fetchLatestMessages(0, 'visibility');
       }
     };
     
     // Listener focus (clic sur la fenêtre)
     const handleFocus = () => {
-      console.log('[FOCUS] 🎯 App focus - RAMASSER messages...');
-      fetchLatestMessages();
+      console.log('[FOCUS] 🎯 App focus');
+      fetchLatestMessages(0, 'focus');
     };
     
-    // Listener online (retour réseau)
+    // Listener online (retour réseau) - AVEC DÉLAI 800ms
     const handleOnline = () => {
-      console.log('[ONLINE] 📶 Réseau rétabli - RAMASSER messages...');
-      fetchLatestMessages();
+      console.log('[ONLINE] 📶 Réseau rétabli - Attente 800ms pour stabilisation...');
+      // Délai pour laisser la connexion se stabiliser
+      setTimeout(() => {
+        console.log('[ONLINE] 📶 Lancement sync après stabilisation');
+        fetchLatestMessages(0, 'online');
+      }, ONLINE_DELAY);
     };
     
     // Ajouter les listeners
@@ -1637,7 +1648,7 @@ export const ChatWidget = () => {
     window.addEventListener('online', handleOnline);
     
     // Récupération initiale au montage
-    fetchLatestMessages();
+    fetchLatestMessages(0, 'mount');
     
     // Cleanup
     return () => {
