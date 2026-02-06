@@ -5505,16 +5505,51 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
                   {/* URL Vidéo */}
                   <div className="md:col-span-2">
-                    <label className="text-white/70 text-sm mb-1 block">URL YouTube ou Vimeo *</label>
+                    <label className="text-white/70 text-sm mb-1 block">URL Média (YouTube, Google Drive, Image) *</label>
                     <input
                       type="text"
                       value={newMediaLink.video_url}
-                      onChange={(e) => setNewMediaLink(prev => ({ ...prev, video_url: e.target.value }))}
-                      placeholder="https://youtube.com/watch?v=... ou https://youtu.be/..."
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        setNewMediaLink(prev => ({ ...prev, video_url: url }));
+                        // Auto-détecter le type de média et générer la miniature
+                        if (url) {
+                          const parsed = parseMediaUrl(url);
+                          if (parsed.thumbnailUrl && !newMediaLink.custom_thumbnail) {
+                            // Suggérer la miniature auto-générée
+                            console.log('[MEDIA] Miniature détectée:', parsed.thumbnailUrl);
+                          }
+                        }
+                      }}
+                      placeholder="https://youtube.com/... ou https://drive.google.com/..."
                       className="w-full px-4 py-3 rounded-lg"
                       style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
                       data-testid="media-url-input"
                     />
+                    {/* Indicateur du type de média détecté */}
+                    {newMediaLink.video_url && (() => {
+                      const parsed = parseMediaUrl(newMediaLink.video_url);
+                      return (
+                        <div className="mt-2 flex items-center gap-2 text-xs">
+                          <span className={`px-2 py-0.5 rounded-full ${
+                            parsed.type === 'youtube' ? 'bg-red-500/30 text-red-400' :
+                            parsed.type === 'drive' ? 'bg-blue-500/30 text-blue-400' :
+                            parsed.type === 'image' ? 'bg-green-500/30 text-green-400' :
+                            parsed.type === 'video' ? 'bg-purple-500/30 text-purple-400' :
+                            'bg-gray-500/30 text-gray-400'
+                          }`}>
+                            {parsed.type === 'youtube' ? '🎬 YouTube' :
+                             parsed.type === 'drive' ? '📁 Google Drive' :
+                             parsed.type === 'image' ? '🖼️ Image' :
+                             parsed.type === 'video' ? '🎥 Vidéo' :
+                             '🔗 Lien'}
+                          </span>
+                          {parsed.thumbnailUrl && (
+                            <span className="text-green-400">✓ Miniature auto</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Slug (optionnel) */}
