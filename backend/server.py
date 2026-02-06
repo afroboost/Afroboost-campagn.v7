@@ -1697,15 +1697,10 @@ async def get_campaigns():
 
 @api_router.get("/campaigns/logs")
 async def get_campaigns_error_logs():
-    """
-    Renvoie les 50 dernières erreurs d'envoi de campagnes.
-    Combine les erreurs des résultats de campagnes ET la collection campaign_errors (Twilio).
-    Objectif: Permettre à l'utilisateur de savoir pourquoi un message n'est pas parti.
-    """
+    """Renvoie les 50 dernières erreurs d'envoi de campagnes."""
     try:
         error_logs = []
         
-        # === SOURCE 1: Erreurs dans les résultats des campagnes ===
         campaigns_with_results = await db.campaigns.find(
             {"results": {"$exists": True, "$ne": []}},
             {"_id": 0, "id": 1, "name": 1, "results": 1, "updatedAt": 1}
