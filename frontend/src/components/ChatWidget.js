@@ -2990,7 +2990,7 @@ export const ChatWidget = () => {
                   <div ref={messagesEndRef} />
                 </div>
                 
-                {/* === PANNEAU DE RÉSERVATION - SESSIONS DU COACH (ABONNÉS UNIQUEMENT) === */}
+                {/* === PANNEAU DE RÉSERVATION - Extrait vers BookingPanel.js === */}
                 {showReservationPanel && afroboostProfile && (
                   <div style={{
                     padding: '12px',
@@ -2999,204 +2999,17 @@ export const ChatWidget = () => {
                     maxHeight: '300px',
                     overflowY: 'auto'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <h4 style={{ color: '#a855f7', fontSize: '14px', fontWeight: '600', margin: 0 }}>
-                        📅 {selectedCourse ? 'Confirmer la réservation' : 'Choisir un cours'}
-                        <span style={{ opacity: 0.7, marginLeft: '8px' }}>({afroboostProfile?.name})</span>
-                      </h4>
-                      <button
-                        type="button"
-                        onClick={() => { setShowReservationPanel(false); setSelectedCourse(null); }}
-                        style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '18px' }}
-                      >×</button>
-                    </div>
-                    
-                    {/* Badge code promo actif */}
-                    {afroboostProfile?.code && (
-                      <div style={{
-                        background: 'rgba(34, 197, 94, 0.2)',
-                        border: '1px solid rgba(34, 197, 94, 0.4)',
-                        borderRadius: '8px',
-                        padding: '8px 12px',
-                        marginBottom: '12px',
-                        fontSize: '12px',
-                        color: '#22c55e'
-                      }}>
-                        💎 Abonné • Code: <strong>{afroboostProfile.code}</strong>
-                      </div>
-                    )}
-                    
-                    {/* Chargement */}
-                    {loadingCourses && (
-                      <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
-                        ⏳ Chargement des sessions...
-                      </div>
-                    )}
-                    
-                    {/* Liste des cours */}
-                    {!loadingCourses && !selectedCourse && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {availableCourses.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
-                            Aucune session disponible
-                          </div>
-                        )}
-                        {availableCourses.map(course => (
-                          <button
-                            key={course.id}
-                            type="button"
-                            onClick={() => setSelectedCourse(course)}
-                            style={{
-                              padding: '12px',
-                              borderRadius: '12px',
-                              background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(99, 102, 241, 0.3))',
-                              border: '1px solid rgba(147, 51, 234, 0.4)',
-                              color: '#fff',
-                              textAlign: 'left',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s'
-                            }}
-                            data-testid={`course-${course.id}`}
-                          >
-                            <div style={{ fontWeight: '600', marginBottom: '4px' }}>{course.name || 'Session'}</div>
-                            <div style={{ fontSize: '12px', opacity: 0.8, display: 'flex', gap: '12px' }}>
-                              <span>🕐 {course.time || '18:30'}</span>
-                              <span>📍 {course.location || 'Genève'}</span>
-                              {course.price && <span>💰 CHF {course.price}</span>}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Confirmation du cours sélectionné */}
-                    {selectedCourse && (
-                      <div>
-                        <div style={{
-                          padding: '12px',
-                          borderRadius: '12px',
-                          background: 'rgba(147, 51, 234, 0.2)',
-                          border: '1px solid rgba(147, 51, 234, 0.4)',
-                          marginBottom: '12px'
-                        }}>
-                          <div style={{ fontWeight: '600', color: '#a855f7', marginBottom: '8px' }}>{selectedCourse.name}</div>
-                          <div style={{ fontSize: '12px', color: '#ccc' }}>
-                            🕐 {selectedCourse.time} | 📍 {selectedCourse.location || 'Genève'}
-                          </div>
-                        </div>
-                        
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            type="button"
-                            onClick={() => { setSelectedCourse(null); setReservationError(''); }}
-                            disabled={reservationLoading}
-                            style={{
-                              flex: 1,
-                              padding: '10px',
-                              borderRadius: '8px',
-                              background: 'rgba(255,255,255,0.1)',
-                              border: 'none',
-                              color: '#fff',
-                              cursor: reservationLoading ? 'not-allowed' : 'pointer',
-                              opacity: reservationLoading ? 0.5 : 1
-                            }}
-                          >
-                            ← Retour
-                          </button>
-                          <button
-                            type="button"
-                            disabled={reservationLoading}
-                            onClick={async () => {
-                              // Reset error state
-                              setReservationError('');
-                              setReservationLoading(true);
-                              
-                              // Utiliser les données du profil abonné (afroboostProfile)
-                              const reservationData = {
-                                userName: afroboostProfile?.name?.trim() || leadData?.firstName?.trim() || 'Abonné',
-                                userEmail: (afroboostProfile?.email || leadData?.email || '').trim(),
-                                userWhatsapp: (afroboostProfile?.whatsapp || leadData?.whatsapp || '').trim(),
-                                userId: participantId || `guest-${Date.now()}`, // ID utilisateur requis
-                                courseId: selectedCourse.id,
-                                courseName: selectedCourse.name,
-                                courseTime: selectedCourse.time,
-                                datetime: new Date().toISOString(),
-                                promoCode: (afroboostProfile?.code || '').trim().toUpperCase(),
-                                source: 'chat_widget_abonne',
-                                type: 'abonné',
-                                offerId: selectedCourse.id,
-                                offerName: selectedCourse.name,
-                                price: selectedCourse.price || 0,
-                                totalPrice: selectedCourse.price || 0
-                              };
-                              
-                              // LOG pour debug
-                              console.log('[RESERVATION] 📤 Envoi des données:', JSON.stringify(reservationData, null, 2));
-                              
-                              try {
-                                const res = await axios.post(`${API}/reservations`, reservationData);
-                                console.log('[RESERVATION] ✅ Réponse serveur:', res.data);
-                                
-                                if (res.data) {
-                                  // Succès : fermer le panneau et afficher message
-                                  setShowReservationPanel(false);
-                                  setSelectedCourse(null);
-                                  setReservationError('');
-                                  
-                                  // Message de confirmation dans le chat
-                                  const confirmMsg = {
-                                    type: 'ai',
-                                    text: `✅ Réservation confirmée !\n📅 ${selectedCourse.name}\n🕐 ${selectedCourse.time}\n💎 Code: ${afroboostProfile?.code || 'N/A'}\n👤 ${reservationData.userName}`,
-                                    sender: 'Coach Bassi'
-                                  };
-                                  setMessages(prev => [...prev, confirmMsg]);
-                                }
-                              } catch (err) {
-                                console.error('[RESERVATION] ❌ Erreur:', err.response?.data || err.message);
-                                // Afficher l'erreur dans l'UI (pas alert)
-                                const errorMsg = err.response?.data?.detail || err.response?.data?.message || 'Erreur serveur, réessayez.';
-                                setReservationError(errorMsg);
-                              } finally {
-                                // TOUJOURS réactiver le bouton
-                                setReservationLoading(false);
-                              }
-                            }}
-                            style={{
-                              flex: 2,
-                              padding: '10px',
-                              borderRadius: '8px',
-                              background: reservationLoading 
-                                ? 'rgba(34, 197, 94, 0.5)' 
-                                : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                              border: 'none',
-                              color: '#fff',
-                              fontWeight: '600',
-                              cursor: reservationLoading ? 'wait' : 'pointer',
-                              opacity: reservationLoading ? 0.7 : 1
-                            }}
-                            data-testid="confirm-reservation-btn"
-                          >
-                            {reservationLoading ? '⏳ Envoi en cours...' : '✅ Confirmer'}
-                          </button>
-                        </div>
-                        
-                        {/* Message d'erreur */}
-                        {reservationError && (
-                          <div style={{
-                            marginTop: '12px',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            background: 'rgba(239, 68, 68, 0.2)',
-                            border: '1px solid rgba(239, 68, 68, 0.4)',
-                            color: '#ef4444',
-                            fontSize: '12px',
-                            textAlign: 'center'
-                          }}>
-                            ❌ {reservationError}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <BookingPanel
+                      afroboostProfile={afroboostProfile}
+                      availableCourses={availableCourses}
+                      selectedCourse={selectedCourse}
+                      setSelectedCourse={setSelectedCourse}
+                      loadingCourses={loadingCourses}
+                      reservationLoading={reservationLoading}
+                      reservationError={reservationError}
+                      onConfirmReservation={handleConfirmReservation}
+                      onClose={() => { setShowReservationPanel(false); setSelectedCourse(null); }}
+                    />
                   </div>
                 )}
                 
