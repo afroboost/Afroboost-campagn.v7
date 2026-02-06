@@ -3662,19 +3662,9 @@ async def chat_with_ai(data: ChatMessage):
     message_lower = message.lower()
     is_trial_intent = any(word in message_lower for word in ['essai', 'gratuit', 'tester', 'essayer', 'test', 'découvrir'])
     
-    # =====================================================================
-    # ARCHITECTURE DE PROMPT - LOGIQUE DE REMPLACEMENT TOTAL
-    # MODE STRICT: custom_prompt REMPLACE BASE_PROMPT (pas d'ajout)
-    # MODE STANDARD: BASE + SECURITY + CAMPAIGN (flux habituel)
-    # =====================================================================
-    
+    # ARCHITECTURE DE PROMPT - STRICT vs STANDARD
     if use_strict_mode:
-        # =====================================================================
-        # MODE STRICT : CONTEXTE MINIMALISTE SANS AUCUNE INFO DE VENTE
-        # =====================================================================
-        # Le custom_prompt REMPLACE ENTIÈREMENT le BASE_PROMPT
-        # AUCUNE donnée de prix, tarif, boutique, Twint n'est injectée
-        
+        # MODE STRICT : custom_prompt REMPLACE BASE_PROMPT, AUCUNE donnée de vente
         STRICT_SYSTEM_PROMPT = """
 ╔══════════════════════════════════════════════════════════════════════╗
 ║        🔒🔒🔒 MODE STRICT - PARTENARIAT / COLLABORATION 🔒🔒🔒        ║
@@ -3700,23 +3690,14 @@ Tu peux parler du CONCEPT Afroboost (cardio + danse afrobeat + casques audio imm
 Tu ne connais AUCUN prix, AUCUN tarif, AUCUN lien de paiement.
 
 """
-        # Ajouter le custom_prompt comme instructions exclusives
-        STRICT_SYSTEM_PROMPT += "\n═══════════════════════════════════════════════════════════════\n"
-        STRICT_SYSTEM_PROMPT += "📋 INSTRUCTIONS EXCLUSIVES DU LIEN:\n"
-        STRICT_SYSTEM_PROMPT += "═══════════════════════════════════════════════════════════════\n\n"
+        STRICT_SYSTEM_PROMPT += "\n📋 INSTRUCTIONS EXCLUSIVES DU LIEN:\n\n"
         STRICT_SYSTEM_PROMPT += CUSTOM_PROMPT
-        STRICT_SYSTEM_PROMPT += "\n\n═══════════════════════════════════════════════════════════════\n"
         
-        # Injecter le prompt STRICT (remplace tout)
         context += STRICT_SYSTEM_PROMPT
-        logger.info("[CHAT-IA] 🔒 Mode STRICT activé - Aucune donnée de vente/prix/Twint injectée")
+        logger.info("[CHAT-IA] 🔒 Mode STRICT activé")
         
     else:
-        # =====================================================================
-        # MODE STANDARD : FLUX HABITUEL AVEC TOUTES LES DONNÉES DE VENTE
-        # =====================================================================
-        
-        # --- 1. BASE_PROMPT : Limite l'IA aux produits/cours ---
+        # MODE STANDARD : FLUX HABITUEL AVEC DONNÉES DE VENTE
         BASE_PROMPT = """
 ╔══════════════════════════════════════════════════════════════════╗
 ║                BASE_PROMPT - IDENTITÉ COACH BASSI                ║
