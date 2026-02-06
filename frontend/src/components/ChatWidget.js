@@ -26,6 +26,7 @@ import EmojiPicker from './EmojiPicker';
 import SubscriberForm from './chat/SubscriberForm';
 import PrivateChatView from './chat/PrivateChatView';
 import BookingPanel from './chat/BookingPanel';
+import MessageSkeleton from './chat/MessageSkeleton';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 const SOCKET_URL = process.env.REACT_APP_BACKEND_URL; // URL Socket.IO (même que backend)
@@ -35,6 +36,7 @@ const CHAT_CLIENT_KEY = 'af_chat_client';
 const CHAT_SESSION_KEY = 'af_chat_session';
 const AFROBOOST_IDENTITY_KEY = 'afroboost_identity'; // Clé unifiée pour l'identité
 const AFROBOOST_PROFILE_KEY = 'afroboost_profile'; // Profil abonné avec code promo validé
+const MESSAGE_CACHE_KEY = 'afroboost_last_msgs'; // Cache hybride pour chargement instantané
 
 // Icône Plein Écran
 const FullscreenIcon = () => (
