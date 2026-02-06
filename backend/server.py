@@ -1122,6 +1122,140 @@ async def delete_user(user_id: str):
     
     return {"success": True, "message": "Contact supprimé et références nettoyées"}
 
+# --- Photo de profil (MOTEUR D'UPLOAD RÉEL) ---
+@api_router.post("/users/upload-photo")
+async def upload_user_photo(file: UploadFile = File(...), participant_id: str = Form(...)):
+    """
+    MOTEUR D'UPLOAD RÉEL - Sauvegarde physique + DB
+    1. Reçoit l'image via UploadFile
+    2. Redimensionne à 200x200 max
+    3. Sauvegarde dans /app/backend/uploads/profiles/
+    4. Met à jour photo_url dans la collection 'users' ET 'chat_participants'
+    5. Retourne l'URL pour synchronisation
+    """
+    from PIL import Image
+    import io
+    import uuid
+    import os
+    
+    # Validation du type MIME
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Type de fichier non supporté. Envoyez une image.")
+    
+    # Lire le contenu du fichier
+    contents = await file.read()
+    
+    # Vérifier la taille (max 2MB)
+    if len(contents) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 2MB)")
+    
+    try:
+        # Ouvrir et traiter l'image
+        img = Image.open(io.BytesIO(contents))
+        
+        # Convertir en RGB si nécessaire (RGBA, P modes)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        
+        # Redimensionner à max 200x200 en conservant les proportions
+        img.thumbnail((200, 200), Image.LANCZOS)
+        
+        # Créer le dossier s'il n'existe pas
+        upload_dir = "/app/backend/uploads/profiles"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Générer un nom de fichier unique
+        filename = f"{participant_id}_{uuid.uuid4().hex[:8]}.jpg"
+        filepath = os.path.join(upload_dir, filename)
+        
+        # Sauvegarder l'image PHYSIQUEMENT sur le serveur
+        img.save(filepath, "JPEG", quality=85)
+        
+        # URL relative pour accès via l'API
+        photo_url = f"/api/uploads/profiles/{filename}"
+        
+        # === MISE À JOUR BASE DE DONNÉES ===
+        # 1. Mettre à jour dans la collection 'users' (par participant_id OU email)
+        update_result_users = await db.users.update_one(
+            {"$or": [{"id": participant_id}, {"participant_id": participant_id}]},
+            {"$set": {"photo_url": photo_url, "photoUrl": photo_url}},
+            upsert=False
+        )
+        
+        # 2. Mettre à jour dans 'chat_participants' si existe
+        update_result_participants = await db.chat_participants.update_one(
+            {"id": participant_id},
+            {"$set": {"photo_url": photo_url, "photoUrl": photo_url}},
+            upsert=False
+        )
+        
+        logger.info(f"[UPLOAD] ✅ Photo uploadée: {filename} | users={update_result_users.modified_count}, participants={update_result_participants.modified_count}")
+        
+        return {
+            "success": True,
+            "url": photo_url,
+            "filename": filename,
+            "participant_id": participant_id,
+            "db_updated": {
+                "users": update_result_users.modified_count,
+                "participants": update_result_participants.modified_count
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"[UPLOAD] ❌ Erreur traitement image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur traitement image: {str(e)}")
+
+
+@api_router.get("/users/{participant_id}/profile")
+async def get_user_profile(participant_id: str):
+    """
+    Récupère le profil utilisateur depuis la DB (PAS localStorage).
+    Cherche dans 'users' puis 'chat_participants'.
+    """
+    # 1. Chercher dans la collection 'users'
+    user = await db.users.find_one(
+        {"$or": [{"id": participant_id}, {"participant_id": participant_id}]},
+        {"_id": 0}
+    )
+    
+    if user:
+        photo_url = user.get("photo_url") or user.get("photoUrl")
+        return {
+            "success": True,
+            "source": "users",
+            "participant_id": participant_id,
+            "name": user.get("name") or user.get("username"),
+            "email": user.get("email"),
+            "photo_url": photo_url
+        }
+    
+    # 2. Fallback: chercher dans 'chat_participants'
+    participant = await db.chat_participants.find_one(
+        {"id": participant_id},
+        {"_id": 0}
+    )
+    
+    if participant:
+        photo_url = participant.get("photo_url") or participant.get("photoUrl")
+        return {
+            "success": True,
+            "source": "chat_participants",
+            "participant_id": participant_id,
+            "name": participant.get("name") or participant.get("username"),
+            "email": participant.get("email"),
+            "photo_url": photo_url
+        }
+    
+    # 3. Aucun profil trouvé
+    return {
+        "success": False,
+        "participant_id": participant_id,
+        "photo_url": None,
+        "message": "Profil non trouvé"
+    }
+
+
 # --- Reservations ---
 @api_router.get("/reservations")
 async def get_reservations(
