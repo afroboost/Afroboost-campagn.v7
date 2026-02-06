@@ -135,15 +135,15 @@ const BookingPanel = ({
         </div>
       )}
 
-      {/* Liste des cours */}
+      {/* Liste des cours - Avec dates formatées en français */}
       {!loadingCourses && !selectedCourse && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {availableCourses.length === 0 && (
+          {formattedCourses.length === 0 && (
             <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
               Aucune session disponible
             </div>
           )}
-          {availableCourses.map(course => (
+          {formattedCourses.map(course => (
             <button
               key={course.id}
               type="button"
@@ -163,8 +163,12 @@ const BookingPanel = ({
               <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
                 {course.name}
               </div>
+              {/* Date formatée en français (Europe/Paris) */}
+              <div style={{ fontSize: '13px', marginBottom: '4px', color: '#a78bfa' }}>
+                📅 {course.formattedDate}
+              </div>
               <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                🕐 {course.time} • 📍 {course.location || 'À définir'}
+                📍 {course.displayLocation}
               </div>
               {course.spotsLeft !== undefined && (
                 <div style={{ 
