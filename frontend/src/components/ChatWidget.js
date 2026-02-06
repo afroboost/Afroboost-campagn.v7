@@ -251,6 +251,18 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
   );
 };
 
+// === OPTIMISATION: React.memo pour éviter les re-rendus inutiles ===
+const MemoizedMessageBubble = React.memo(MessageBubble, (prevProps, nextProps) => {
+  // Re-rendre seulement si ces props changent
+  return (
+    prevProps.msg.id === nextProps.msg.id &&
+    prevProps.msg.text === nextProps.msg.text &&
+    prevProps.msg.senderPhotoUrl === nextProps.msg.senderPhotoUrl &&
+    prevProps.isUser === nextProps.isUser &&
+    prevProps.profilePhotoUrl === nextProps.profilePhotoUrl
+  );
+});
+
 /**
  * Widget de chat IA flottant avec reconnaissance automatique et historique
  * Utilise l'API /api/chat/smart-entry pour identifier les utilisateurs
