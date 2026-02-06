@@ -3743,13 +3743,7 @@ export const ChatWidget = () => {
                     {afroboostProfile?.code && (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (!showReservationPanel) {
-                            loadAvailableCourses();
-                          }
-                          setShowReservationPanel(!showReservationPanel);
-                          setSelectedCourse(null);
-                        }}
+                        onClick={handleReservationClick}
                         style={{
                           width: '40px',
                           height: '40px',
