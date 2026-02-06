@@ -3006,8 +3006,8 @@ export const ChatWidget = () => {
                   }}
                 >
                   {messages.map((msg, idx) => (
-                    <MessageBubble 
-                      key={idx} 
+                    <MemoizedMessageBubble 
+                      key={msg.id || idx} 
                       msg={msg} 
                       isUser={msg.type === 'user' && msg.senderId === participantId}
                       onParticipantClick={startPrivateChat}
