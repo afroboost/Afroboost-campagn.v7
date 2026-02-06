@@ -1534,7 +1534,10 @@ async def create_campaign(campaign: CampaignCreate):
         targetConversationId=campaign.targetConversationId,
         targetConversationName=campaign.targetConversationName,
         scheduledAt=campaign.scheduledAt,
-        status="scheduled" if campaign.scheduledAt else "draft"
+        status="scheduled" if campaign.scheduledAt else "draft",
+        ctaType=campaign.ctaType,
+        ctaText=campaign.ctaText,
+        ctaLink=campaign.ctaLink
     ).model_dump()
     await db.campaigns.insert_one(campaign_data)
     return {k: v for k, v in campaign_data.items() if k != "_id"}
