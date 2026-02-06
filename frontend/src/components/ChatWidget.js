@@ -1206,6 +1206,14 @@ export const ChatWidget = () => {
           return msg;
         }));
       }
+      
+      // Mettre à jour les messages du chat principal (communautaire)
+      setMessages(prev => prev.map(msg => {
+        if (msg.senderId === data.user_id) {
+          return { ...msg, senderPhotoUrl: data.photo_url };
+        }
+        return msg;
+      }));
     };
     
     socket.on('user_avatar_changed', handleAvatarChanged);
