@@ -7153,38 +7153,14 @@ apscheduler = BackgroundScheduler(
 print("✅ APScheduler configuré avec persistance MongoDB : OK")
 
 # Import pytz pour la gestion des fuseaux horaires Europe/Paris
-import pytz
-PARIS_TZ = pytz.timezone('Europe/Paris')
-
-def parse_campaign_date(date_str):
-    """
-    Parse une date ISO et la convertit en datetime UTC.
-    IMPORTANT: Les dates sans fuseau sont interprétées comme Europe/Paris (fuseau utilisateur)
-    """
-    if not date_str:
-        return None
-    try:
-        if 'Z' in date_str:
-            # Déjà en UTC
-            date_str = date_str.replace('Z', '+00:00')
-            dt = datetime.fromisoformat(date_str)
-        elif '+' in date_str or (len(date_str) > 10 and '-' in date_str[-6:] and ':' in date_str[-3:]):
-            # A un fuseau horaire explicite
-            dt = datetime.fromisoformat(date_str)
-        else:
-            # PAS de fuseau = heure Europe/Paris (saisie utilisateur)
-            dt = datetime.fromisoformat(date_str)
-            dt = PARIS_TZ.localize(dt)  # Interpréter comme heure Paris
-        
-        # Convertir en UTC pour comparaison uniforme
-        if dt.tzinfo is None:
-            dt = PARIS_TZ.localize(dt)
-        
-        dt_utc = dt.astimezone(pytz.UTC)
-        return dt_utc
-    except Exception as e:
-        logger.warning(f"[SCHEDULER] Date parsing error '{date_str}': {e}")
-        return None
+# NOTE: Les fonctions utilitaires du scheduler sont dans scheduler_engine.py
+from scheduler_engine import (
+    PARIS_TZ,
+    parse_campaign_date,
+    get_current_times,
+    should_process_campaign_date,
+    format_campaign_result
+)
 
 def scheduler_send_email_sync(to_email, to_name, subject, message, media_url=None):
     """Envoi synchrone d'email pour le scheduler (utilise requests)."""
