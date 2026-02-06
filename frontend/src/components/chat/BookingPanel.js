@@ -202,14 +202,13 @@ const BookingPanel = ({
               <h4 style={{ color: '#fff', margin: '0 0 4px 0', fontSize: '14px' }}>
                 {selectedCourse.name}
               </h4>
-              <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '12px' }}>
-                🕐 {selectedCourse.time}
+              {/* Date formatée en français (Europe/Paris) */}
+              <p style={{ color: '#a78bfa', margin: '0 0 4px 0', fontSize: '13px', fontWeight: '500' }}>
+                📅 {selectedCourse.formattedDate || formatCourseDate(selectedCourse.time, selectedCourse.weekday)}
               </p>
-              {selectedCourse.location && (
-                <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '12px' }}>
-                  📍 {selectedCourse.location}
-                </p>
-              )}
+              <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '12px' }}>
+                📍 {selectedCourse.displayLocation || getLocationDisplay(selectedCourse)}
+              </p>
             </div>
             <button
               type="button"
