@@ -1,5 +1,43 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - REFACTORING MOTEUR SCHEDULER ✅
+
+### MISSION ACCOMPLIE - Critères de réussite validés
+
+| Critère | Résultat |
+|---------|----------|
+| server.py allégé > 200 lignes | ✅ **-286 lignes** (8040 → 7754) |
+| Validation URL CTA | ✅ Bordure rouge + bouton désactivé si invalide |
+| Scheduler déporté fonctionne | ✅ Test régression message simple |
+| Aucun ImportError | ✅ Backend démarre sans erreur |
+
+#### Fichiers refactorisés
+```
+/app/backend/
+├── server.py               # 7754 lignes (< 7900 ✅)
+└── scheduler_engine.py     # 350+ lignes - Fonctions extraites:
+    ├── parse_campaign_date()
+    ├── get_current_times()
+    ├── should_process_campaign_date()
+    ├── format_campaign_result()
+    ├── validate_cta_link()
+    ├── scheduler_send_email_sync()
+    ├── scheduler_send_internal_message_sync()
+    └── scheduler_send_group_message_sync()
+```
+
+#### Validation UI CTA (CampaignManager.js)
+- ✅ Bordure rouge si URL invalide (ne commence pas par https://)
+- ✅ Message d'erreur "L'URL doit commencer par https://"
+- ✅ Bouton "Programmer" désactivé si URL manquante ou invalide
+- ✅ Texte dynamique du bouton selon l'erreur
+
+#### MessageSkeleton.js amélioré
+- ✅ Support espace pour média + CTA (`hasMedia`, `hasCta`)
+- ✅ Évite le "saut" lors du chargement des messages enrichis
+
+---
+
 ## Mise à jour du 6 Février 2026 - FORMULAIRE CTA COACH & REFACTORING ✅
 
 ### MISSION ACCOMPLIE
