@@ -7278,7 +7278,7 @@ def scheduler_send_internal_message_sync(scheduler_db, conversation_id, message_
         
         mode = session.get("mode", "user")
         
-        # Créer le message du Coach
+        # Créer le message du Coach avec média et CTA
         coach_message = {
             "id": str(uuid_module.uuid4()),
             "session_id": conversation_id,
@@ -7292,6 +7292,16 @@ def scheduler_send_internal_message_sync(scheduler_db, conversation_id, message_
             "scheduled": True,  # Marqueur pour identifier les messages programmés
             "created_at": datetime.now(timezone.utc).isoformat()
         }
+        
+        # Ajouter les champs média et CTA si présents
+        if media_url:
+            coach_message["media_url"] = media_url
+        if cta_type:
+            coach_message["cta_type"] = cta_type
+        if cta_text:
+            coach_message["cta_text"] = cta_text
+        if cta_link:
+            coach_message["cta_link"] = cta_link
         
         # INSERTION DIRECTE dans la collection messages
         scheduler_db.chat_messages.insert_one(coach_message)
