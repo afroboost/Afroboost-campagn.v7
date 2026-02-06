@@ -2913,8 +2913,8 @@ export const ChatWidget = () => {
                     {/* Messages */}
                     <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {messages.map((msg, idx) => (
-                        <MessageBubble 
-                          key={idx} 
+                        <MemoizedMessageBubble 
+                          key={msg.id || idx} 
                           msg={msg} 
                           isUser={msg.type === 'coach'}
                         />
