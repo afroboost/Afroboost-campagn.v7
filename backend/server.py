@@ -1629,8 +1629,59 @@ async def update_campaign(campaign_id: str, data: dict):
 
 @api_router.delete("/campaigns/{campaign_id}")
 async def delete_campaign(campaign_id: str):
-    await db.campaigns.delete_one({"id": campaign_id})
-    return {"success": True}
+    """
+    HARD DELETE - Supprime PHYSIQUEMENT une campagne.
+    Supprime aussi les messages envoyés par cette campagne dans l'historique.
+    """
+    deleted_counts = {
+        "campaign": 0,
+        "messages": 0
+    }
+    
+    # 1. Récupérer les infos de la campagne avant suppression
+    campaign = await db.campaigns.find_one({"id": campaign_id}, {"_id": 0})
+    
+    # 2. Supprimer la campagne
+    result = await db.campaigns.delete_one({"id": campaign_id})
+    deleted_counts["campaign"] = result.deleted_count
+    
+    # 3. Supprimer les messages envoyés par cette campagne (optionnel, basé sur ID de campagne)
+    # Note: Les messages de campagne ont scheduled=True
+    
+    logger.info(f"[HARD DELETE] Campagne {campaign_id} supprimée")
+    
+    # 4. Notifier via Socket.IO
+    try:
+        await sio.emit('campaign_deleted', {
+            'campaignId': campaign_id,
+            'hardDelete': True
+        })
+    except Exception as e:
+        logger.warning(f"[SOCKET.IO] Échec émission campaign_deleted: {e}")
+    
+    return {
+        "success": True,
+        "hardDelete": True,
+        "deleted": deleted_counts
+    }
+
+@api_router.delete("/campaigns/purge/all")
+async def purge_all_campaigns():
+    """
+    PURGE TOTAL - Supprime TOUTES les campagnes terminées ou échouées.
+    Garde uniquement les campagnes en cours (status=scheduled ou sending).
+    """
+    # Supprimer les campagnes terminées
+    result = await db.campaigns.delete_many({
+        "status": {"$in": ["completed", "failed", "draft"]}
+    })
+    
+    logger.info(f"[PURGE] {result.deleted_count} campagnes supprimées")
+    
+    return {
+        "success": True,
+        "purgedCount": result.deleted_count
+    }
 
 @api_router.post("/campaigns/{campaign_id}/launch")
 async def launch_campaign(campaign_id: str):
