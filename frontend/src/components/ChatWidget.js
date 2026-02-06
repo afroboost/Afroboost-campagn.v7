@@ -2,7 +2,7 @@
 // Architecture modulaire Afroboost - Utilise l'API chat améliorée
 // Fonctionnalités: Socket.IO temps réel, notifications push, sons, liens cliquables, suppression historique
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { 
