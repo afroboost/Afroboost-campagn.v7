@@ -1,5 +1,50 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - BOUTONS CTA & MÉDIAS INTERACTIFS ✅
+
+### MISSION ACCOMPLIE - Messages programmés avec média + CTA
+
+#### Fonctionnalités implémentées
+
+| Composant | Description | Statut |
+|-----------|-------------|--------|
+| **MediaMessage.js** | Affiche vidéo YouTube/Drive + bouton CTA | ✅ |
+| **Backend CTA** | Modèle Campaign avec ctaType/ctaText/ctaLink | ✅ |
+| **Scheduler CTA** | Envoi des données CTA avec le message | ✅ |
+| **ChatWidget.js** | Intégration MediaMessage pour messages CTA | ✅ |
+| **Drive Fallback** | Icône élégante si image ne charge pas | ✅ |
+
+#### Types de CTA supportés
+```javascript
+CTA_CONFIG = {
+  RESERVER: { color: '#9333ea', text: 'RÉSERVER MA PLACE' },
+  OFFRE: { color: '#d91cd2', text: 'VOIR L\'OFFRE' },
+  PERSONNALISE: { color: '#6366f1', text: 'EN SAVOIR PLUS' }
+}
+```
+
+#### Flux de données CTA
+```
+Campaign (ctaType, ctaText, ctaLink)
+    ↓
+scheduler_send_group_message_sync() 
+    ↓
+chat_messages (media_url, cta_type, cta_text, cta_link)
+    ↓
+Socket.IO → ChatWidget → MediaMessage → Bouton CTA
+```
+
+#### Test validé
+```
+content: 💥 Nouvelle vidéo d'entraînement disponible !
+media_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+cta_type: reserver
+cta_text: RÉSERVER
+cta_link: https://afroboosteur.com/#courses
+```
+
+---
+
 ## Mise à jour du 6 Février 2026 - FIX CRASH & MEDIA PARSER ✅
 
 ### MISSION ACCOMPLIE
