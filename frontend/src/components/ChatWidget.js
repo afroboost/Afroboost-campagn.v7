@@ -1524,7 +1524,7 @@ export const ChatWidget = () => {
         
         if (response.data.response) {
           // Jouer un son pour la réponse
-          playNotificationSound('message');
+          playSoundIfEnabled('message');
           
           setMessages(prev => [...prev, { 
             type: 'ai', 
@@ -1551,7 +1551,7 @@ export const ChatWidget = () => {
           leadId: ''
         });
         
-        playNotificationSound('message');
+        playSoundIfEnabled('message');
         
         setMessages(prev => [...prev, { 
           type: 'ai', 
