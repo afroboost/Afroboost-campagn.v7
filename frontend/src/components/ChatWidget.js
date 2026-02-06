@@ -446,6 +446,13 @@ export const ChatWidget = () => {
     console.log('[SOUND] 🔊', newValue ? 'Activé' : 'Désactivé');
   };
   
+  // === WRAPPER POUR JOUER LES SONS (vérifie si activé) ===
+  const playSoundIfEnabled = (type = 'message') => {
+    if (soundEnabled) {
+      playNotificationSound(type);
+    }
+  };
+  
   // Fonction pour copier le lien du site
   const handleShareLink = async () => {
     try {
