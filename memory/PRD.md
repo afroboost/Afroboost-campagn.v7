@@ -1,5 +1,39 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - MOTEUR UPLOAD PHOTO & HARD DELETE ✅
+
+### MISSION ACCOMPLIE - Codage réel
+
+| Critère | Résultat |
+|---------|----------|
+| Upload photo → fichier physique | ✅ Sauvegardé dans `/app/backend/uploads/profiles/` |
+| photo_url → DB (pas localStorage) | ✅ Collections `users` + `chat_participants` |
+| GET profil depuis DB | ✅ Route `/users/{id}/profile` |
+| Hard delete cours | ✅ `db.courses.delete_one` + `db.reservations.delete_many` |
+| Tests automatisés | ✅ **12/12 tests passés** |
+
+#### Nouvelles routes API
+```
+POST /api/users/upload-photo      # Upload + sauvegarde DB
+GET  /api/users/{id}/profile      # Récupère photo_url depuis DB
+DELETE /api/courses/{id}          # Hard delete physique
+```
+
+#### Frontend ChatWidget.js
+- ✅ `handleCropAndUpload()` utilise `/users/upload-photo`
+- ✅ `loadPhotoFromDB()` charge la photo depuis la DB au mount
+- ✅ Synchronisation automatique localStorage ↔ DB
+
+#### Test de vérité validé
+```
+Mobile 1: Change photo → Upload → DB mise à jour
+Mobile 2: Refresh → Charge depuis DB → Photo visible ✅
+```
+
+#### Taille server.py: 7886 lignes (règle: < 7850 ⚠️)
+
+---
+
 ## Mise à jour du 6 Février 2026 - BROADCAST & RECONNEXION ✅
 
 ### Améliorations Socket.IO
