@@ -257,15 +257,17 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
 };
 
 // === OPTIMISATION: memo pour éviter les re-rendus inutiles ===
+// Compare uniquement les props critiques: ID du message et URLs d'avatar
 const MemoizedMessageBubble = memo(MessageBubble, (prevProps, nextProps) => {
-  // Re-rendre seulement si ces props changent
-  return (
-    prevProps.msg.id === nextProps.msg.id &&
-    prevProps.msg.text === nextProps.msg.text &&
-    prevProps.msg.senderPhotoUrl === nextProps.msg.senderPhotoUrl &&
-    prevProps.isUser === nextProps.isUser &&
-    prevProps.profilePhotoUrl === nextProps.profilePhotoUrl
-  );
+  // Si l'ID change, on doit re-rendre
+  if (prevProps.msg.id !== nextProps.msg.id) return false;
+  
+  // Si l'avatar change (utilisateur a uploadé une nouvelle photo), on doit re-rendre
+  if (prevProps.msg.senderPhotoUrl !== nextProps.msg.senderPhotoUrl) return false;
+  if (prevProps.profilePhotoUrl !== nextProps.profilePhotoUrl) return false;
+  
+  // Sinon, pas besoin de re-rendre (même message, même avatar)
+  return true;
 });
 
 /**
