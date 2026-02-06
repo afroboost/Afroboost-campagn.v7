@@ -3212,6 +3212,7 @@ export const ChatWidget = () => {
                       isCommunity={isCommunityMode}
                       currentUserId={participantId}
                       profilePhotoUrl={profilePhoto}
+                      onReservationClick={() => setShowReservationPanel(true)}
                     />
                   ))}
                   
