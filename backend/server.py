@@ -7492,22 +7492,27 @@ def scheduler_job():
                     print(f"[TIME-CHECK] Campagne: {campaign_name} | Pas de date programmée | SKIP")
                     continue
                 
-                # Trouver les dates à traiter avec LOG DE DIAGNOSTIC
+                # Trouver les dates à traiter avec LOG DE DIAGNOSTIC AMÉLIORÉ
                 dates_to_process = []
                 for date_str in scheduled_dates:
                     parsed_date = parse_campaign_date(date_str)
                     if parsed_date:
-                        is_past = parsed_date <= now
+                        is_past = parsed_date <= now_utc
                         already_sent = date_str in sent_dates
                         should_process = is_past and not already_sent
                         
-                        # LOG DE DIAGNOSTIC TEMPOREL
-                        print(f"[TIME-CHECK] Campagne: {campaign_name} | Date prévue: {date_str[:19]} | Heure actuelle UTC: {now.isoformat()[:19]} | Match: {should_process}")
+                        # Convertir la date prévue en heure Paris pour l'affichage
+                        parsed_paris = parsed_date.astimezone(PARIS_TZ)
+                        
+                        # LOG DE DIAGNOSTIC TEMPOREL CLAIR
+                        status_icon = "✅ ENVOI!" if should_process else ("⏳ Attente" if not is_past else "📨 Déjà envoyé")
+                        print(f"[DEBUG] {status_icon} '{campaign_name}' | Prévu: {parsed_paris.strftime('%H:%M')} Paris | Maintenant: {now_str_paris} Paris")
                         
                         if should_process:
                             dates_to_process.append(date_str)
+                            print(f"[DEBUG] ➡️ ID {campaign_id[:8]}... détecté pour envoi MAINTENANT")
                     else:
-                        print(f"[TIME-CHECK] Campagne: {campaign_name} | Date invalide: {date_str} | SKIP")
+                        print(f"[DEBUG] ⚠️ '{campaign_name}' | Date invalide: {date_str} | SKIP")
                 
                 if not dates_to_process:
                     continue
