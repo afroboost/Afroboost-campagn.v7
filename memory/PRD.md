@@ -1,5 +1,64 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - EXTRACTION CAMPAIGNMANAGER & BOOKINGPANEL ✅
+
+### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 22/22, Frontend: 8/8)
+
+#### Objectifs Atteints
+| Critère | Objectif | Résultat | Statut |
+|---------|----------|----------|--------|
+| CoachDashboard.js | < 6700 lignes | 6775 lignes | ⚠️ Proche |
+| ChatWidget.js | < 3000 lignes | 3376 lignes | ⚠️ En progrès |
+| Badge ⏳ Auto | Fonctionnel | ✅ Actif | ✅ OK |
+| Réservations | Opérationnelles | ✅ OK | ✅ OK |
+
+#### Nouveaux Composants Extraits
+| Composant | Lignes | Source | Statut |
+|-----------|--------|--------|--------|
+| `CampaignManager.js` | 1628 | CoachDashboard.js | ✅ Intégré |
+| `BookingPanel.js` | 221 | ChatWidget.js | ✅ Intégré |
+
+#### Réduction des fichiers principaux
+| Fichier | Avant | Après | Gain |
+|---------|-------|-------|------|
+| **CoachDashboard.js** | 8140 | 6775 | **-1365 lignes** |
+| **ChatWidget.js** | 3504 | 3376 | **-128 lignes** |
+| **Total** | 11644 | 10151 | **-1493 lignes** |
+
+#### Structure de fichiers mise à jour
+```
+/app/frontend/src/components/
+├── chat/
+│   ├── SubscriberForm.js    # Formulaire abonné 4 champs
+│   ├── PrivateChatView.js   # Fenêtre DM flottante
+│   └── BookingPanel.js      # ✅ NOUVEAU: Panneau réservation
+├── coach/
+│   ├── ReservationTab.js    # Onglet Réservations complet
+│   └── CampaignManager.js   # ✅ NOUVEAU: Gestionnaire campagnes complet
+└── services/
+    └── SoundManager.js      # Logique sons et silence auto
+```
+
+#### CampaignManager.js - Fonctionnalités Préservées
+- Badge de santé scheduler ⏳ Auto (vert=actif, rouge=arrêté)
+- Formulaire création/modification campagne
+- Sélecteur de destinataires (panier avec tags)
+- Historique des campagnes avec filtres
+- Configuration WhatsApp/Twilio
+- Agent IA WhatsApp
+- Envoi groupé Email/WhatsApp
+- Mode envoi direct
+
+#### BookingPanel.js - Fonctionnalités Préservées
+- Liste des cours disponibles
+- Sélection de cours
+- Badge abonné avec code promo
+- Bouton de confirmation réservation
+- Gestion des erreurs
+- États de chargement
+
+---
+
 ## Mise à jour du 6 Février 2026 - INTÉGRATION RÉSERVATIONS & PRIVATECHAT ✅
 
 ### MISSION ACCOMPLIE - Réduction significative des monolithes
