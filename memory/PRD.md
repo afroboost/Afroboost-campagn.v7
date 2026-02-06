@@ -1,5 +1,44 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - BROADCAST & RECONNEXION ✅
+
+### Améliorations Socket.IO
+
+| Fonctionnalité | Description | Statut |
+|----------------|-------------|--------|
+| **BROADCAST campagnes** | Émission vers TOUS les clients (pas de room) | ✅ |
+| **Reconnexion auto** | Récupère messages manqués après déconnexion | ✅ |
+| **HARD DELETE campagnes** | Suppression physique + notification Socket.IO | ✅ |
+
+#### Endpoint emit-group-message amélioré
+```python
+await sio.emit('message_received', message_data)  # BROADCAST
+logger.info("[SOCKET_PUSH] 📢 BROADCAST campagne vers TOUS les clients")
+```
+
+#### Listener reconnexion (ChatWidget.js)
+```javascript
+socket.on('reconnect', async (attemptNumber) => {
+  // Rejoindre la session
+  socket.emit('join_session', {...});
+  // Récupérer messages manqués
+  const data = await fetch(`${API}/chat/sessions/${id}/messages`);
+  setMessages(prev => [...prev, ...newMsgs]);
+});
+```
+
+#### Test BROADCAST validé
+```
+[DEBUG] ✅ ENVOI! '📢 TEST BROADCAST' | 12:57 Paris
+[SOCKET_PUSH] 📢 BROADCAST campagne vers TOUS les clients
+[SCHEDULER-EMIT] ✅ Message émis (broadcast=True)
+[SCHEDULER] 🟢 completed (✓1/✗0)
+```
+
+#### Taille server.py: 7816 lignes (< 7850 ✅)
+
+---
+
 ## Mise à jour du 6 Février 2026 - HARD DELETE & PURGE ✅
 
 ### Implémentations HARD DELETE
