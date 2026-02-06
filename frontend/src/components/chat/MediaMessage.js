@@ -192,7 +192,7 @@ const MediaMessage = ({
           </>
         )}
 
-        {/* Google Drive - Iframe ou image */}
+        {/* Google Drive - Image ou fallback élégant */}
         {mediaInfo.type === 'drive' && (
           !imageError ? (
             <img
@@ -209,18 +209,63 @@ const MediaMessage = ({
               onError={() => setImageError(true)}
             />
           ) : (
-            <iframe
-              src={mediaInfo.embedUrl}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                border: 'none'
-              }}
-              title="Google Drive Media"
-            />
+            /* Fallback élégant avec icône vidéo quand l'image ne charge pas */
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px'
+            }}>
+              {/* Icône vidéo stylisée */}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #9333ea 0%, #d91cd2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(147, 51, 234, 0.3)'
+              }}>
+                <PlayIcon />
+              </div>
+              <span style={{
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: '500',
+                opacity: 0.8
+              }}>
+                Vidéo Google Drive
+              </span>
+              {/* Bouton pour ouvrir dans Drive */}
+              <a 
+                href={mediaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  marginTop: '8px',
+                  padding: '8px 16px',
+                  background: 'rgba(255,255,255,0.1)',
+                  borderRadius: '20px',
+                  color: '#fff',
+                  fontSize: '11px',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+              >
+                Ouvrir dans Drive
+              </a>
+            </div>
           )
         )}
 
