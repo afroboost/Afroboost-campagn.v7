@@ -1604,51 +1604,30 @@ async def use_discount_code(code_id: str):
 
 @api_router.post("/check-reservation-eligibility")
 async def check_reservation_eligibility(data: dict):
-    """
-    Vérifie si un utilisateur peut réserver avec son code.
-    Utilisé par le frontend avant d'afficher le formulaire de réservation.
-    """
+    """Vérifie si un utilisateur peut réserver avec son code."""
     code_str = data.get("code", "").strip().upper()
     user_email = data.get("email", "").strip().lower()
     
     if not code_str:
         return {"canReserve": False, "reason": "Aucun code fourni"}
     
-    # Chercher le code
     discount = await db.discount_codes.find_one({
-        "code": {"$regex": f"^{code_str}$", "$options": "i"},
-        "active": True
+        "code": {"$regex": f"^{code_str}$", "$options": "i"}, "active": True
     }, {"_id": 0})
     
     if not discount:
         return {"canReserve": False, "reason": "Code invalide ou désactivé"}
     
-    # Vérifier l'assignation email
-    assigned_email = discount.get("assignedEmail")
-    if assigned_email and assigned_email.lower() != user_email:
+    # Vérifier assignation email
+    assigned = discount.get("assignedEmail")
+    if assigned and assigned.lower() != user_email:
         return {"canReserve": False, "reason": "Code non associé à cet email"}
     
-    # Vérifier les utilisations
+    # Vérifier utilisations
     max_uses = discount.get("maxUses", 0)
     used = discount.get("used", 0)
     if max_uses > 0 and used >= max_uses:
         return {"canReserve": False, "reason": "Code épuisé", "used": used, "maxUses": max_uses}
-    
-    # Vérifier l'expiration
-    if discount.get("expiresAt"):
-        try:
-            expiry = discount["expiresAt"]
-            if isinstance(expiry, str):
-                expiry = expiry.replace('Z', '+00:00')
-                if 'T' not in expiry:
-                    expiry = expiry + "T23:59:59+00:00"
-                expiry_date = datetime.fromisoformat(expiry)
-            else:
-                expiry_date = expiry
-            if expiry_date < datetime.now(timezone.utc):
-                return {"canReserve": False, "reason": "Code expiré"}
-        except:
-            pass
     
     return {
         "canReserve": True,
