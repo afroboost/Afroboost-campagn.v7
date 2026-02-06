@@ -7826,10 +7826,19 @@ def scheduler_job():
                         target_group_id = campaign.get("targetGroupId", "community")
                         print(f"[SCHEDULER-GROUP] 🎯 Envoi au groupe: {target_group_id}")
                         
+                        # Récupérer les données CTA de la campagne
+                        cta_type = campaign.get("ctaType")
+                        cta_text = campaign.get("ctaText")
+                        cta_link = campaign.get("ctaLink")
+                        
                         success, error, session_id = scheduler_send_group_message_sync(
                             scheduler_db=scheduler_db,
                             target_group_id=target_group_id,
-                            message_text=message
+                            message_text=message,
+                            media_url=media_url if media_url else None,
+                            cta_type=cta_type,
+                            cta_text=cta_text,
+                            cta_link=cta_link
                         )
                         
                         result_entry = {
