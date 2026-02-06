@@ -167,7 +167,13 @@ const BookingPanel = ({
               <div style={{ fontSize: '13px', marginBottom: '4px', color: '#a78bfa' }}>
                 📅 {course.formattedDate}
               </div>
-              <div style={{ fontSize: '12px', opacity: 0.8 }}>
+              {/* Lieu avec style discret si "Lieu à confirmer" */}
+              <div style={{ 
+                fontSize: '12px', 
+                opacity: 0.8,
+                color: course.displayLocation === 'Lieu à confirmer' ? '#999' : 'inherit',
+                fontStyle: course.displayLocation === 'Lieu à confirmer' ? 'italic' : 'normal'
+              }}>
                 📍 {course.displayLocation}
               </div>
               {course.spotsLeft !== undefined && (
