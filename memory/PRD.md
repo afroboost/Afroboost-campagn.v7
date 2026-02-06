@@ -1,5 +1,38 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - FIX VISIBILITÉ MOBILE & POSITIONNEMENT ✅
+
+### MISSION ACCOMPLIE - Tests 100% réussis (16/16)
+
+#### Fonctionnalités Implémentées
+
+| Fonctionnalité | Fichier | Ligne | Statut |
+|----------------|---------|-------|--------|
+| **WhatsApp bottom: 100px** | ChatWidget.js | 2131 | ✅ Corrigé |
+| **WhatsApp right: 20px** | ChatWidget.js | 2153 | ✅ |
+| **Input bar z-index: 9999** | ChatWidget.js | 3284 | ✅ |
+| **Input bar position: sticky** | ChatWidget.js | 3281 | ✅ |
+| **Conteneur 100dvh fullscreen** | ChatWidget.js | 2237 | ✅ |
+| **Structure Flexbox** | ChatWidget.js | 3274-3412 | ✅ |
+| **Bouton Envoyer 44px** | ChatWidget.js | 3396 | ✅ |
+
+#### Structure Flexbox Barre d'input
+```
+[Emoji 40px][📅 Réserv. 40px] | [Input flex:1 minWidth:0] | [Envoyer 44px marginLeft:auto]
+        GAUCHE                        MILIEU                      DROITE
+```
+
+#### Fix Media Query Mobile (ligne 2131)
+- **Avant** : `bottom: 20px !important;` → WhatsApp chevauchait la barre
+- **Après** : `bottom: 100px !important;` → WhatsApp au-dessus de la barre
+
+#### Compatibilité Clavier Mobile
+- `height: 100dvh` pour le conteneur fullscreen
+- `paddingBottom: max(12px, env(safe-area-inset-bottom))`
+- `position: sticky; bottom: 0;` sur la barre d'input
+
+---
+
 ## Mise à jour du 6 Février 2026 - UX MOBILE & SKELETON LOADING ✅
 
 ### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 14/14, Frontend: 7/7)
