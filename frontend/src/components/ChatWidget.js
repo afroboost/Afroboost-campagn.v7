@@ -946,6 +946,63 @@ export const ChatWidget = () => {
   const [selectedCourse, setSelectedCourse] = useState(null); // Cours sélectionné
   const [reservationLoading, setReservationLoading] = useState(false); // Chargement réservation
   const [reservationError, setReservationError] = useState(''); // Erreur réservation
+  const [reservationEligibility, setReservationEligibility] = useState(null); // Éligibilité code
+
+  // === VÉRIFICATION ÉLIGIBILITÉ RÉSERVATION ===
+  const checkReservationEligibility = useCallback(async () => {
+    if (!afroboostProfile?.code || !afroboostProfile?.email) {
+      setReservationEligibility({ canReserve: false, reason: "Profil incomplet" });
+      return false;
+    }
+    
+    try {
+      const response = await fetch(`${API}/check-reservation-eligibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: afroboostProfile.code,
+          email: afroboostProfile.email
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setReservationEligibility(data);
+        return data.canReserve;
+      }
+      return false;
+    } catch (err) {
+      console.error('[ELIGIBILITY] Erreur:', err);
+      setReservationEligibility({ canReserve: false, reason: "Erreur de vérification" });
+      return false;
+    }
+  }, [afroboostProfile?.code, afroboostProfile?.email]);
+
+  // === HANDLER CLIC BOUTON RÉSERVATION ===
+  const handleReservationClick = useCallback(async () => {
+    if (showReservationPanel) {
+      // Fermer le panel
+      setShowReservationPanel(false);
+      setSelectedCourse(null);
+      return;
+    }
+    
+    // Vérifier l'éligibilité avant d'ouvrir
+    const canReserve = await checkReservationEligibility();
+    
+    if (!canReserve) {
+      const reason = reservationEligibility?.reason || "Code invalide";
+      setReservationError(`⚠️ ${reason}. Réservation impossible.`);
+      // Afficher l'erreur pendant 5 secondes
+      setTimeout(() => setReservationError(''), 5000);
+      return;
+    }
+    
+    // Charger les cours et ouvrir
+    loadAvailableCourses();
+    setShowReservationPanel(true);
+    setSelectedCourse(null);
+  }, [showReservationPanel, checkReservationEligibility, reservationEligibility]);
 
   // === HANDLER CONFIRMATION RÉSERVATION (extrait pour BookingPanel) ===
   const handleConfirmReservation = useCallback(async () => {
