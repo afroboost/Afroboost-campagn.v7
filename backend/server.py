@@ -642,25 +642,20 @@ class FeatureFlagsUpdate(BaseModel):
 
 # COACH SUBSCRIPTION
 class CoachSubscription(BaseModel):
-    """
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    coachEmail: str  # Email du coach (clé de liaison avec coach_auth)
-    # Services disponibles selon l'abonnement
-    hasAudioService: bool = False  # Accès au service Audio
-    hasVideoService: bool = False  # Futur: service Vidéo
-    hasStreamingService: bool = False  # Futur: service Streaming
-    # Informations d'abonnement
-    subscriptionPlan: str = "free"  # "free", "basic", "premium", "enterprise"
+    coachEmail: str
+    hasAudioService: bool = False
+    hasVideoService: bool = False
+    hasStreamingService: bool = False
+    subscriptionPlan: str = "free"
     subscriptionStartDate: Optional[str] = None
     subscriptionEndDate: Optional[str] = None
     isActive: bool = True
-    # Métadonnées
     createdAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updatedAt: Optional[str] = None
 
 class CoachSubscriptionUpdate(BaseModel):
-    """Mise à jour partielle de l'abonnement coach"""
     hasAudioService: Optional[bool] = None
     hasVideoService: Optional[bool] = None
     hasStreamingService: Optional[bool] = None
