@@ -7326,12 +7326,8 @@ apscheduler = BackgroundScheduler(
     timezone="UTC"
 )
 
-print("✅ APScheduler configuré avec persistance MongoDB : OK")
-
-# Import du moteur de scheduler externe
 from scheduler_engine import scheduler_job as scheduler_job_engine, PARIS_TZ, parse_campaign_date
 
-# Référence mutable pour le heartbeat (passée au scheduler)
 SCHEDULER_HEARTBEAT_REF = [None]
 
 def scheduler_job():
@@ -7347,7 +7343,6 @@ async def startup_scheduler():
     global SCHEDULER_RUNNING
     
     logger.info("[SYSTEM] 🚀 Démarrage du serveur Afroboost...")
-    print("[SYSTEM] 🚀 AFROBOOST STARTING...")
     
     # Nettoyage zombie campaigns (bloquées > 30 min)
     try:
@@ -7402,7 +7397,6 @@ async def startup_scheduler():
     if not apscheduler.running:
         apscheduler.start()
         SCHEDULER_RUNNING = True
-        print("[SYSTEM] ✅ APScheduler ONLINE")
         logger.info("[SCHEDULER] ✅ Démarré - Jobs persistés dans MongoDB")
     else:
         logger.info("[SCHEDULER] Déjà en cours")
