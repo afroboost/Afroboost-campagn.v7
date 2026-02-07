@@ -1,5 +1,36 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 7 Février 2026 - MÉDIAS DYNAMIQUES & CTA FINALISÉS ✅
+
+### Nouveautés implémentées
+
+| Fonctionnalité | Statut | Détail |
+|----------------|--------|--------|
+| Lecteur YouTube inline | ✅ | Miniature cliquable + iframe autoplay mute=1 (iPhone) |
+| Images Google Drive | ✅ | Transformation uc?export=view + fallback 3s |
+| Bouton CTA | ✅ | Validation stricte + auto-https:// |
+| Backend media_handler | ✅ | Logging liens Drive mal formatés |
+
+### Composants Frontend (ChatWidget.js)
+```javascript
+InlineYouTubePlayer - mute=1&playsinline=1 pour autoplay iOS
+InlineDriveImage - timeout 3s + bouton "Voir sur Drive"
+InlineCtaButton - validation label+url, auto-https://
+```
+
+### Anti-régression confirmée
+- ✅ Login par code promo : Fonctionne
+- ✅ 4 dates de réservation : Visibles
+- ✅ Message sync UTC : Préservé
+- ✅ server.py : **7387 lignes** (< 7420)
+
+### Tests passés (Iteration 61)
+- 20/20 tests backend
+- 95% frontend
+- Code promo PROMO20SECRET : OK
+
+---
+
 ## Mise à jour du 7 Février 2026 - VERROUILLAGE FINAL MESSAGES ✅
 
 ### Améliorations horodatage
@@ -23,9 +54,9 @@
 ### Piliers préservés
 - ✅ Login : Non touché
 - ✅ Éligibilité : Non touchée
-- ✅ Médias : Non commencés
+- ✅ Médias : **COMPLÉTÉS**
 
-### server.py : 7449 lignes ✅
+### server.py : 7387 lignes ✅
 
 ---
 
