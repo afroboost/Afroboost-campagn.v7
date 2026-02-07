@@ -127,6 +127,148 @@ const formatMessageTime = (dateStr) => {
   }
 };
 
+// === COMPOSANTS MÉDIA INLINE ===
+const InlineYouTubePlayer = ({ videoId, thumbnailUrl }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  return (
+    <div style={{ marginTop: '8px', borderRadius: '12px', overflow: 'hidden', maxWidth: '100%' }} data-testid="inline-youtube">
+      {!isPlaying ? (
+        <button
+          onClick={() => setIsPlaying(true)}
+          style={{
+            width: '100%',
+            aspectRatio: '16/9',
+            background: `url(${thumbnailUrl}) center/cover no-repeat`,
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative'
+          }}
+          data-testid="youtube-thumbnail-btn"
+        >
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(0,0,0,0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <svg width="24" height="24" fill="#fff" viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </div>
+        </button>
+      ) : (
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+          style={{ width: '100%', aspectRatio: '16/9', border: 'none' }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title="YouTube Video"
+        />
+      )}
+    </div>
+  );
+};
+
+const InlineDriveImage = ({ directUrl, previewUrl }) => {
+  const [error, setError] = useState(false);
+  
+  if (error) {
+    return (
+      <a 
+        href={previewUrl || directUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{
+          display: 'block',
+          marginTop: '8px',
+          padding: '12px',
+          background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+          borderRadius: '12px',
+          textDecoration: 'none',
+          color: '#fff',
+          textAlign: 'center'
+        }}
+        data-testid="drive-fallback"
+      >
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginBottom: '4px' }}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <div style={{ fontSize: '12px' }}>Ouvrir dans Google Drive</div>
+      </a>
+    );
+  }
+  
+  return (
+    <img
+      src={directUrl}
+      alt="Google Drive"
+      onError={() => setError(true)}
+      style={{
+        marginTop: '8px',
+        maxWidth: '100%',
+        borderRadius: '12px',
+        display: 'block'
+      }}
+      data-testid="inline-drive-image"
+    />
+  );
+};
+
+const InlineImage = ({ src }) => (
+  <img
+    src={src}
+    alt="Image"
+    style={{
+      marginTop: '8px',
+      maxWidth: '100%',
+      borderRadius: '12px',
+      display: 'block'
+    }}
+    data-testid="inline-image"
+  />
+);
+
+const InlineCtaButton = ({ label, url }) => (
+  <a
+    href={url}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      marginTop: '10px',
+      padding: '12px 20px',
+      background: 'linear-gradient(135deg, #9333ea, #d91cd2)',
+      borderRadius: '12px',
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: '14px',
+      textDecoration: 'none',
+      transition: 'transform 0.2s, opacity 0.2s'
+    }}
+    onMouseEnter={(e) => { e.target.style.transform = 'scale(1.02)'; e.target.style.opacity = '0.9'; }}
+    onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; e.target.style.opacity = '1'; }}
+    data-testid="inline-cta-button"
+  >
+    {label}
+    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+  </a>
+);
+
 /**
  * Composant pour afficher un message avec liens cliquables et emojis
  * Affiche le nom de l'expéditeur au-dessus de chaque bulle
