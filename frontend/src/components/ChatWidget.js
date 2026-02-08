@@ -693,7 +693,7 @@ export const ChatWidget = () => {
       }
     } catch (e) {
       // FALLBACK: Nettoyer les données corrompues et rediriger vers le formulaire
-      console.warn('[PERSISTENCE] ⚠️ Données corrompues détectées, nettoyage...', e.message);
+      console.warn('[PERSISTENCE] Données corrompues détectées, nettoyage...', e.message);
       try {
         localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
         localStorage.removeItem(CHAT_CLIENT_KEY);
