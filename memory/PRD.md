@@ -1,5 +1,37 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 8 Février 2026 - DÉCONNEXION & MODE VISITEUR ✅
+
+### Nouvelles fonctionnalités
+
+| Fonctionnalité | Statut | Détail |
+|----------------|--------|--------|
+| Bouton Déconnexion | ✅ | Menu utilisateur → "Se déconnecter" (rouge) |
+| Mode Visiteur | ✅ | handleVisitorMode() préserve le profil |
+| Horodatage format | ✅ | "Aujourd'hui, 14:05" / "Hier, 09:15" / "08/02, 18:30" |
+| Anti-doublon | ✅ | Vérifie ID unique avant ajout (Socket + Sync) |
+
+### Fonction handleLogout
+```javascript
+handleLogout() {
+  localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
+  localStorage.removeItem(CHAT_CLIENT_KEY);
+  localStorage.removeItem(CHAT_SESSION_KEY);
+  localStorage.removeItem(AFROBOOST_PROFILE_KEY);
+  // ... réinitialise tous les états
+  window.location.reload();
+}
+```
+
+### Anti-régression confirmée
+- ✅ Login par code promo : Fonctionne
+- ✅ Code invalide : Bloqué
+- ✅ 4 dates de réservation : Visibles (08.02, 15.02, 22.02, 01.03)
+- ✅ Médias YouTube/Drive : Non touchés
+- ✅ server.py : **7387 lignes** (< 7450)
+
+---
+
 ## Mise à jour du 7 Février 2026 - MÉDIAS DYNAMIQUES & CTA FINALISÉS ✅
 
 ### Nouveautés implémentées
