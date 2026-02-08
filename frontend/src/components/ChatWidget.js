@@ -913,7 +913,7 @@ export const ChatWidget = () => {
     }
   };
   
-  // === FONCTION DE DÉCONNEXION STRICTE ===
+  // === FONCTION DE DÉCONNEXION STRICTE (HARD RESET) ===
   const handleLogout = () => {
     try {
       // Nettoyer TOUT le stockage local et session
@@ -933,14 +933,13 @@ export const ChatWidget = () => {
       
       console.log('[LOGOUT] Déconnexion effectuée');
       
-      // Remplacer l'historique pour empêcher le retour arrière
-      window.history.replaceState(null, '', window.location.pathname);
-      window.location.reload();
+      // HARD RESET: Remplace complètement l'URL et empêche le retour
+      window.location.replace('/');
     } catch (err) {
       console.error('[LOGOUT] Erreur:', err);
       localStorage.clear();
       sessionStorage.clear();
-      window.location.reload();
+      window.location.replace('/');
     }
   };
   
