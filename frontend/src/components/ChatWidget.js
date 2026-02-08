@@ -656,7 +656,7 @@ export const ChatWidget = () => {
       // PRIORITÉ 1: Vérifier si c'est un abonné identifié (afroboost_profile)
       const profile = getStoredProfile();
       
-      // ZERO-FLASH: Si profil existe ET ?group=ID → direct au chat (pas de formulaire)
+      // ZERO-FLASH: Si profil existe ET ?group=ID -> direct au chat (pas de formulaire)
       const urlParams = new URLSearchParams(window.location.search);
       const groupId = urlParams.get('group');
       
@@ -667,7 +667,7 @@ export const ChatWidget = () => {
       
       if (profile) {
         console.log('[PERSISTENCE] Abonné reconnu:', profile.name, '- Code:', profile.code);
-        return 'chat'; // Abonné → DIRECT au chat en mode plein écran
+        return 'chat'; // Abonné -> DIRECT au chat en mode plein écran
       }
       
       const savedIdentity = localStorage.getItem(AFROBOOST_IDENTITY_KEY);
@@ -686,7 +686,7 @@ export const ChatWidget = () => {
         // Vérification des données minimales requises
         if (data && typeof data === 'object' && data.firstName && typeof data.firstName === 'string' && data.firstName.trim()) {
           console.log('[PERSISTENCE] Utilisateur reconnu:', data.firstName);
-          return 'chat'; // Utilisateur déjà identifié → DIRECT au chat
+          return 'chat'; // Utilisateur déjà identifié -> DIRECT au chat
         } else {
           throw new Error('Données utilisateur incomplètes');
         }
@@ -703,13 +703,13 @@ export const ChatWidget = () => {
         console.error('[PERSISTENCE] Erreur lors du nettoyage localStorage:', cleanupError);
       }
     }
-    return 'form'; // Nouvel utilisateur ou données corrompues → formulaire
+    return 'form'; // Nouvel utilisateur ou données corrompues -> formulaire
   };
   
   // === DÉTERMINER SI MODE PLEIN ÉCRAN INITIAL (Abonné = plein écran OU lien groupe) ===
   const getInitialFullscreen = () => {
     const profile = getStoredProfile();
-    // Si profil + lien groupe → plein écran immédiat
+    // Si profil + lien groupe -> plein écran immédiat
     const urlParams = new URLSearchParams(window.location.search);
     const groupId = urlParams.get('group');
     return !!profile || (!!profile && !!groupId);
@@ -720,7 +720,7 @@ export const ChatWidget = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const groupId = urlParams.get('group');
     const profile = getStoredProfile();
-    // Si lien groupe + profil → ouvrir immédiatement
+    // Si lien groupe + profil -> ouvrir immédiatement
     if (groupId && profile) {
       console.log('[ZERO-FLASH] 🚀 Chat ouvert automatiquement');
       return true;
@@ -901,7 +901,7 @@ export const ChatWidget = () => {
     setIsVisitorMode(true);
     setShowUserMenu(false);
     setShowReservationPanel(false);
-    console.log('[MODE] 🏃 Mode visiteur activé (profil conservé)');
+    console.log('[MODE] Mode visiteur activé (profil conservé)');
   };
   
   // Fonction pour réactiver le mode abonné
@@ -979,9 +979,9 @@ export const ChatWidget = () => {
       // Persister la conversation active pour F5
       localStorage.setItem('afroboost_active_dm', JSON.stringify(conversation));
       
-      console.log('[DM] ✅ Conversation ouverte:', conversation.id);
+      console.log('[DM] Conversation ouverte:', conversation.id);
     } catch (err) {
-      console.error('[DM] ❌ Erreur ouverture DM:', err);
+      console.error('[DM] Erreur ouverture DM:', err);
     }
   };
   
@@ -1024,9 +1024,9 @@ export const ChatWidget = () => {
       setPrivateMessages(prev => [...prev, res.data]);
       setPrivateInput('');
       
-      console.log('[DM] ✅ Message envoyé');
+      console.log('[DM] Message envoyé');
     } catch (err) {
-      console.error('[DM] ❌ Erreur envoi message:', err);
+      console.error('[DM] Erreur envoi message:', err);
     }
   };
   
@@ -1144,7 +1144,7 @@ export const ChatWidget = () => {
       });
       
       const compressedFile = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-      console.log('[PHOTO] ✅ Recadrage terminé:', Math.round(compressedFile.size / 1024), 'KB');
+      console.log('[PHOTO] Recadrage terminé:', Math.round(compressedFile.size / 1024), 'KB');
       
       // Upload vers le NOUVEAU endpoint qui sauvegarde en DB
       const formData = new FormData();
@@ -1168,7 +1168,7 @@ export const ChatWidget = () => {
         // === ÉMETTRE LA MISE À JOUR D'AVATAR EN TEMPS RÉEL ===
         emitAvatarUpdate(photoUrl);
         
-        console.log('[PHOTO] ✅ Photo uploadée et sauvegardée en DB:', photoUrl, res.data.db_updated);
+        console.log('[PHOTO] Photo uploadée et sauvegardée en DB:', photoUrl, res.data.db_updated);
       }
     } catch (err) {
       console.error('[PHOTO] Erreur:', err);
@@ -1329,7 +1329,7 @@ export const ChatWidget = () => {
     
     try {
       const res = await axios.post(`${API}/reservations`, reservationData);
-      console.log('[RESERVATION] ✅ Réponse serveur:', res.data);
+      console.log('[RESERVATION] Réponse serveur:', res.data);
       
       if (res.data) {
         // Succès : fermer le panneau et afficher message
@@ -1340,13 +1340,13 @@ export const ChatWidget = () => {
         // Message de confirmation dans le chat
         const confirmMsg = {
           type: 'ai',
-          text: `✅ Réservation confirmée !\n📅 ${selectedCourse.name}\n🕐 ${selectedCourse.time}\n💎 Code: ${afroboostProfile?.code || 'N/A'}\n👤 ${reservationData.userName}`,
+          text: `Réservation confirmée !\n${selectedCourse.name}\n${selectedCourse.time}\nCode: ${afroboostProfile?.code || 'N/A'}\n${reservationData.userName}`,
           sender: 'Coach Bassi'
         };
         setMessages(prev => [...prev, confirmMsg]);
       }
     } catch (err) {
-      console.error('[RESERVATION] ❌ Erreur:', err.response?.data || err.message);
+      console.error('[RESERVATION] Erreur:', err.response?.data || err.message);
       // Afficher l'erreur dans l'UI (pas alert)
       const errorMsg = err.response?.data?.detail || err.response?.data?.message || 'Erreur serveur, réessayez.';
       setReservationError(errorMsg);
@@ -1364,7 +1364,7 @@ export const ChatWidget = () => {
     const data = { code, name, type, savedAt: new Date().toISOString() };
     localStorage.setItem('subscriber_data', JSON.stringify(data));
     setSubscriberData(data);
-    console.log('[SUBSCRIBER] ✅ Données abonné sauvegardées:', data);
+    console.log('[SUBSCRIBER] Données abonné sauvegardées:', data);
   }, []);
   
   // === VALIDATION DU CODE PROMO ET ENREGISTREMENT PROFIL ABONNÉ ===
@@ -1395,7 +1395,7 @@ export const ChatWidget = () => {
         return;
       }
       
-      // ✅ Code valide ! Sauvegarder le profil abonné
+      // Code valide ! Sauvegarder le profil abonné
       const profile = {
         name: name.trim(),
         whatsapp: whatsapp.trim(),
@@ -1414,7 +1414,7 @@ export const ChatWidget = () => {
       // Mettre à jour leadData pour le chat
       setLeadData({ firstName: profile.name, whatsapp: profile.whatsapp, email: profile.email });
       
-      console.log('[SUBSCRIBER] ✅ Profil abonné validé et sauvegardé:', profile.name);
+      console.log('[SUBSCRIBER] Profil abonné validé et sauvegardé:', profile.name);
       
       // Activer le mode plein écran et passer au chat
       setIsFullscreen(true);
@@ -1428,7 +1428,7 @@ export const ChatWidget = () => {
       });
       
     } catch (err) {
-      console.error('[SUBSCRIBER] ❌ Erreur validation:', err);
+      console.error('[SUBSCRIBER] Erreur validation:', err);
       setError(err.response?.data?.message || 'Erreur lors de la validation du code');
     } finally {
       setValidatingCode(false);
@@ -1442,9 +1442,9 @@ export const ChatWidget = () => {
       const res = await axios.get(`${API}/courses`);
       const courses = res.data || [];
       setAvailableCourses(courses);
-      console.log('[COURSES] ✅ Chargés:', courses.length);
+      console.log('[COURSES] Chargés:', courses.length);
     } catch (err) {
-      console.error('[COURSES] ❌ Erreur:', err);
+      console.error('[COURSES] Erreur:', err);
     }
     setLoadingCourses(false);
   }, []);
@@ -1458,7 +1458,7 @@ export const ChatWidget = () => {
       try {
         const res = await axios.get(`${API}/users/${participantId}/profile`);
         if (res.data?.success && res.data?.photo_url) {
-          console.log('[PHOTO] ✅ Photo chargée depuis DB:', res.data.photo_url);
+          console.log('[PHOTO] Photo chargée depuis DB:', res.data.photo_url);
           setProfilePhoto(res.data.photo_url);
           
           // Synchroniser localStorage avec la DB
@@ -1512,7 +1512,7 @@ export const ChatWidget = () => {
         // Vérifier si l'utilisateur est déjà connecté
         const storedProfile = getStoredProfile();
         if (!storedProfile || !storedProfile.email) {
-          console.log('[ZERO-FLASH] ⚠️ Utilisateur non connecté, formulaire requis');
+          console.log('[ZERO-FLASH] Utilisateur non connecté, formulaire requis');
           setPendingGroupJoin(null); // Reset
           return;
         }
@@ -1528,7 +1528,7 @@ export const ChatWidget = () => {
         });
         
         if (response.data.success) {
-          console.log('[ZERO-FLASH] ✅ Groupe rejoint:', response.data.group_name || pendingGroupJoin);
+          console.log('[ZERO-FLASH] Groupe rejoint:', response.data.group_name || pendingGroupJoin);
           
           // Charger l'historique du groupe
           if (response.data.conversation_id) {
@@ -1555,7 +1555,7 @@ export const ChatWidget = () => {
         setPendingGroupJoin(null); // Reset après traitement
         
       } catch (err) {
-        console.error('[ZERO-FLASH] ❌ Erreur adhésion:', err.response?.data?.detail || err.message);
+        console.error('[ZERO-FLASH] Erreur adhésion:', err.response?.data?.detail || err.message);
         setPendingGroupJoin(null); // Reset même en cas d'erreur
       }
     };
@@ -1575,7 +1575,7 @@ export const ChatWidget = () => {
       })();
       
       if (!storedProfile && !savedSession?.id) {
-        console.log('[HISTORY] ⚠️ Pas de session active, historique non chargé');
+        console.log('[HISTORY] Pas de session active, historique non chargé');
         setIsLoadingHistory(false); // Masquer skeleton
         return;
       }
@@ -1607,7 +1607,7 @@ export const ChatWidget = () => {
           }
         }
       } catch (err) {
-        console.warn('[HISTORY] ⚠️ Historique non disponible:', err.message);
+        console.warn('[HISTORY] Historique non disponible:', err.message);
       } finally {
         // Masquer le skeleton après le chargement (succès ou échec)
         setIsLoadingHistory(false);
@@ -1649,7 +1649,7 @@ export const ChatWidget = () => {
       socketRef.current = socket;
       
       socket.on('connect', () => {
-        console.log('[SOCKET.IO] ✅ WebSocket connecté! Session:', sessionData.id);
+        console.log('[SOCKET.IO] WebSocket connecté! Session:', sessionData.id);
         // Rejoindre la room de la session
         socket.emit('join_session', {
           session_id: sessionData.id,
@@ -1663,7 +1663,7 @@ export const ChatWidget = () => {
       
       // Gestion erreur WebSocket
       socket.on('connect_error', (error) => {
-        console.error('[SOCKET.IO] ❌ Erreur WebSocket:', error.message);
+        console.error('[SOCKET.IO] Erreur WebSocket:', error.message);
         // Tenter une reconnexion avec polling en dernier recours
         if (socket.io.opts.transports[0] === 'websocket') {
           console.log('[SOCKET.IO] 🔄 Tentative fallback polling...');
@@ -1700,7 +1700,7 @@ export const ChatWidget = () => {
             }
           }
         } catch (err) {
-          console.warn('[SOCKET.IO] ⚠️ Erreur récupération messages:', err);
+          console.warn('[SOCKET.IO] Erreur récupération messages:', err);
         }
       });
       
@@ -1721,7 +1721,7 @@ export const ChatWidget = () => {
           // Éviter les doublons (par ID)
           const exists = prev.some(m => m.id === messageData.id);
           if (exists) {
-            console.log('[SOCKET.IO] ⚠️ Doublon ignoré:', messageData.id);
+            console.log('[SOCKET.IO] Doublon ignoré:', messageData.id);
             return prev;
           }
           
@@ -1792,7 +1792,7 @@ export const ChatWidget = () => {
         
         // 3. Notification pour l'utilisateur
         if (data.deletedReservations > 0) {
-          console.log(`[SOCKET.IO] 📅 ${data.deletedReservations} réservation(s) annulée(s)`);
+          console.log(`[SOCKET.IO] ${data.deletedReservations} réservation(s) annulée(s)`);
         }
       });
       
@@ -1811,11 +1811,11 @@ export const ChatWidget = () => {
       });
       
       socket.on('disconnect', () => {
-        console.log('[SOCKET.IO] ❌ Déconnecté');
+        console.log('[SOCKET.IO] Déconnecté');
       });
       
       socket.on('connect_error', (error) => {
-        console.warn('[SOCKET.IO] ⚠️ Erreur connexion:', error.message);
+        console.warn('[SOCKET.IO] Erreur connexion:', error.message);
       });
     }
     
@@ -1917,7 +1917,7 @@ export const ChatWidget = () => {
             const newMsgs = data.messages.filter(m => m.id && !existingIds.has(m.id));
             
             if (newMsgs.length > 0) {
-              console.log(`[RAMASSER] ✅ ${newMsgs.length} NOUVEAUX messages ajoutés`);
+              console.log(`[RAMASSER] ${newMsgs.length} NOUVEAUX messages ajoutés`);
               // Trier par date UTC (comparaison de chaînes ISO 8601)
               const merged = [...prev, ...newMsgs];
               return merged.sort((a, b) => {
@@ -1935,7 +1935,7 @@ export const ChatWidget = () => {
         setIsSyncing(false);
         
       } catch (err) {
-        console.warn(`[RAMASSER] ⚠️ Tentative ${retryCount + 1}/${MAX_RETRIES} échouée:`, err.message);
+        console.warn(`[RAMASSER] Tentative ${retryCount + 1}/${MAX_RETRIES} échouée:`, err.message);
         
         // Retry si pas épuisé et toujours en ligne
         if (retryCount < MAX_RETRIES - 1 && navigator.onLine) {
@@ -1955,7 +1955,7 @@ export const ChatWidget = () => {
                 const existingIds = new Set(prev.map(m => m.id));
                 const newMsgs = data.filter(m => m.id && !existingIds.has(m.id));
                 if (newMsgs.length > 0) {
-                  console.log(`[RAMASSER-FALLBACK] ✅ ${newMsgs.length} messages récupérés`);
+                  console.log(`[RAMASSER-FALLBACK] ${newMsgs.length} messages récupérés`);
                   return [...prev, ...newMsgs].sort((a, b) => 
                     (a.created_at || '0').localeCompare(b.created_at || '0')
                   );
@@ -1965,7 +1965,7 @@ export const ChatWidget = () => {
             }
           }
         } catch (fallbackErr) {
-          console.warn('[RAMASSER] ❌ Fallback échoué:', fallbackErr.message);
+          console.warn('[RAMASSER] Fallback échoué:', fallbackErr.message);
         }
         
         setIsSyncing(false);
@@ -2595,7 +2595,7 @@ export const ChatWidget = () => {
           const result = await promptForNotifications(participantId);
           if (result.subscribed) {
             setPushEnabled(true);
-            console.log('✅ Push notifications enabled');
+            console.log('Push notifications enabled');
           }
         }, 2000);
       }
@@ -2633,11 +2633,11 @@ export const ChatWidget = () => {
         }]);
         setLastMessageCount(1);
         setShowMenu(false);
-        console.log('[ADMIN] ✅ Historique supprimé:', response.data.deleted_count, 'messages');
+        console.log('[ADMIN] Historique supprimé:', response.data.deleted_count, 'messages');
       }
       
     } catch (err) {
-      console.error('[SECURITY] ❌ Delete history error:', err.response?.data?.detail || err.message);
+      console.error('[SECURITY] Delete history error:', err.response?.data?.detail || err.message);
       if (err.response?.status === 403) {
         alert('⛔ Accès refusé. Seul le coach peut supprimer l\'historique.');
       } else {
@@ -2681,10 +2681,10 @@ export const ChatWidget = () => {
       setIsFullscreen(false);
       setShowSubscriberForm(false);
       setSubscriberFormData({ name: '', whatsapp: '', email: '', code: '' });
-      console.log('[ADMIN] ✅ Identité et profil abonné réinitialisés');
+      console.log('[ADMIN] Identité et profil abonné réinitialisés');
       
     } catch (err) {
-      console.error('[SECURITY] ❌ Change identity error:', err.response?.data?.detail || err.message);
+      console.error('[SECURITY] Change identity error:', err.response?.data?.detail || err.message);
       if (err.response?.status === 403) {
         alert('⛔ Accès refusé. Seul le coach peut changer l\'identité.');
       } else {
@@ -2743,7 +2743,7 @@ export const ChatWidget = () => {
       });
     } catch (e) {
       // NULL-SAFE: Ne pas bloquer le chat si l'événement échoue
-      console.warn('[DM-TYPING] ⚠️ Erreur émission:', e.message);
+      console.warn('[DM-TYPING] Erreur émission:', e.message);
     }
   };
 
@@ -2759,7 +2759,7 @@ export const ChatWidget = () => {
       });
       console.log('[AVATAR] 📷 Diffusion mise à jour avatar');
     } catch (e) {
-      console.warn('[AVATAR] ⚠️ Erreur diffusion avatar:', e.message);
+      console.warn('[AVATAR] Erreur diffusion avatar:', e.message);
     }
   };
 
@@ -3572,7 +3572,7 @@ export const ChatWidget = () => {
                       }}
                       data-testid="subscriber-btn"
                     >
-                      💎 S'identifier comme abonné
+                      S'identifier comme abonné
                     </button>
                     
                     <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
@@ -3817,7 +3817,7 @@ export const ChatWidget = () => {
                             {session.title || `Session ${session.id.slice(0, 8)}`}
                           </div>
                           <div style={{ color: '#888', fontSize: '11px', marginTop: '4px' }}>
-                            {session.mode === 'human' ? '👤 Mode Humain' : session.mode === 'community' ? '👥 Communauté' : '🤖 IA'}
+                            {session.mode === 'human' ? 'Mode Humain' : session.mode === 'community' ? '👥 Communauté' : '🤖 IA'}
                             {' • '}
                             {new Date(session.created_at).toLocaleDateString('fr-FR')}
                           </div>
@@ -3941,7 +3941,7 @@ export const ChatWidget = () => {
                       ? '👥 Mode Communauté - Plusieurs participants' 
                       : privateChatTarget
                       ? `💬 Discussion privée avec ${privateChatTarget.name}`
-                      : '👤 Mode Humain - Le coach vous répondra'}
+                      : 'Mode Humain - Le coach vous répondra'}
                   </div>
                 )}
 
@@ -4075,7 +4075,7 @@ export const ChatWidget = () => {
                       }}
                       data-testid="reactivate-subscriber-btn"
                     >
-                      💎 Repasser en mode Réservation
+                      Repasser en mode Réservation
                     </button>
                     <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>
                       ({afroboostProfile.name})
