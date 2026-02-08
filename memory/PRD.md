@@ -1,5 +1,46 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 8 Février 2026 - UI MINIMALISTE ✅
+
+### Interface sans emojis
+
+| Élément | Avant | Après |
+|---------|-------|-------|
+| Statut abonné | "💎 Abonné • Nom" | "Abonné - Nom" |
+| Mode visiteur | Icône flèches | Icône œil SVG |
+| Silence Auto | "Silence Auto ✓" | "Silence Auto (actif)" |
+| Déconnexion | Emoji 🚪 | Icône logout SVG rouge |
+
+### Horodatage format précis
+```
+Aujourd'hui : "14:05"
+Hier : "Hier, 09:15"
+Autre : "08/02, 18:30"
+```
+
+### Fonction déconnexion stricte
+```javascript
+handleLogout() {
+  localStorage.clear();
+  sessionStorage.clear();
+  window.history.replaceState(null, '', window.location.pathname);
+  window.location.reload();
+}
+```
+
+### Mode Vue Visiteur (Admin)
+- Toggle dans menu coach avec icône œil
+- Barre gradient 2px en haut + badge "Aperçu"
+- isVisitorPreview state pour masquer réservation/shop
+
+### Anti-régression confirmée
+- ✅ Code PROMO20SECRET : Fonctionne
+- ✅ 4 dates réservation : Visibles
+- ✅ Médias YouTube/Drive : Non touchés
+- ✅ server.py : **7387 lignes** (< 7450)
+
+---
+
 ## Mise à jour du 8 Février 2026 - DÉCONNEXION & MODE VISITEUR ✅
 
 ### Nouvelles fonctionnalités
