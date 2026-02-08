@@ -2720,7 +2720,7 @@ export const ChatWidget = () => {
     const eventName = isTyping ? 'typing_start' : 'typing_stop';
     socketRef.current.emit(eventName, {
       session_id: sessionData.id,
-      user_name: isCoachMode ? '💪 Coach Bassi' : leadData.firstName || 'Utilisateur',
+      user_name: isCoachMode ? 'Coach Bassi' : leadData.firstName || 'Utilisateur',
       user_type: isCoachMode ? 'coach' : 'user'
     });
   };
@@ -3357,7 +3357,7 @@ export const ChatWidget = () => {
                         style={{ color: '#fff', border: 'none', background: 'none' }}
                         data-testid="change-identity-btn"
                       >
-                        🔄 Changer d'identité
+                        Changer d'identité
                       </button>
                     </div>
                   )}
@@ -3461,7 +3461,7 @@ export const ChatWidget = () => {
                     }}
                   >
                     <p className="text-white text-sm text-center mb-2">
-                      👋 Avant de commencer, présentez-vous !
+                      Avant de commencer, présentez-vous !
                     </p>
                     
                     {error && (
@@ -3596,7 +3596,7 @@ export const ChatWidget = () => {
                   alignItems: 'center'
                 }}>
                   <span style={{ color: '#d91cd2', fontSize: '12px', fontWeight: 'bold' }}>
-                    💪 Mode Coach
+                    Mode Coach
                   </span>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }} className="coach-icons-menu">
                     {/* Icône Partage (SVG minimaliste) */}
@@ -3817,7 +3817,7 @@ export const ChatWidget = () => {
                             {session.title || `Session ${session.id.slice(0, 8)}`}
                           </div>
                           <div style={{ color: '#888', fontSize: '11px', marginTop: '4px' }}>
-                            {session.mode === 'human' ? 'Mode Humain' : session.mode === 'community' ? '👥 Communauté' : '🤖 IA'}
+                            {session.mode === 'human' ? 'Mode Humain' : session.mode === 'community' ? 'Communauté' : 'IA'}
                             {' • '}
                             {new Date(session.created_at).toLocaleDateString('fr-FR')}
                           </div>
@@ -3938,7 +3938,7 @@ export const ChatWidget = () => {
                     }}
                   >
                     {isCommunityMode 
-                      ? '👥 Mode Communauté - Plusieurs participants' 
+                      ? 'Mode Communauté - Plusieurs participants' 
                       : privateChatTarget
                       ? `💬 Discussion privée avec ${privateChatTarget.name}`
                       : 'Mode Humain - Le coach vous répondra'}
@@ -3993,7 +3993,7 @@ export const ChatWidget = () => {
                           gap: '6px'
                         }}
                       >
-                        <span className="animate-pulse">💪</span>
+                        <span className="animate-pulse">...</span>
                         <span>{typingUser.type === 'coach' ? 'Coach Bassi' : typingUser.name} est en train d'écrire...</span>
                         <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>.</span>
                         <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>.</span>
