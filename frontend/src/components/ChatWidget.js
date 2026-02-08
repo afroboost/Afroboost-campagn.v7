@@ -3391,7 +3391,9 @@ export const ChatWidget = () => {
                 height: '2px',
                 background: 'linear-gradient(90deg, #9333ea, #ec4899)',
                 position: 'relative',
-                flexShrink: 0
+                flexShrink: 0,
+                zIndex: 9999,
+                boxShadow: '0 2px 8px rgba(147, 51, 234, 0.4)'
               }}
             >
               <span
@@ -3407,7 +3409,8 @@ export const ChatWidget = () => {
                   color: '#9333ea',
                   fontWeight: '500',
                   letterSpacing: '0.5px',
-                  textTransform: 'uppercase'
+                  textTransform: 'uppercase',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
                 }}
                 data-testid="visitor-preview-badge"
               >
