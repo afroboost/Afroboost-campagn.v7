@@ -3151,10 +3151,8 @@ export const ChatWidget = () => {
                             data-testid="visitor-mode-btn"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <polyline points="4 14 10 14 10 20"></polyline>
-                              <polyline points="20 10 14 10 14 4"></polyline>
-                              <line x1="14" y1="10" x2="21" y2="3"></line>
-                              <line x1="3" y1="21" x2="10" y2="14"></line>
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                             Mode Visiteur
                           </button>
