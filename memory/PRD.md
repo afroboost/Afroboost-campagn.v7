@@ -1,5 +1,49 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 8 Février 2026 - PERFECTIONNEMENT UI & SÉCURITÉ ✅
+
+### Blindage Mode Vue Visiteur (Admin)
+```javascript
+handleReservationClick() {
+  if (isVisitorPreview) {
+    console.log('[ADMIN] Réservation bloquée');
+    return; // BLOQUÉ
+  }
+  // ... suite normale
+}
+```
+- isVisitorPreview jamais sauvegardé dans localStorage
+- Page refresh remet l'admin en vue normale
+
+### Icônes SVG avec strokeLinecap="round"
+Toutes les icônes menu utilisateur/coach mises à jour:
+- Mode visiteur (œil)
+- Son (speaker)
+- Silence auto (lune)
+- Rafraîchir (flèche circulaire)
+- Déconnexion (logout)
+
+### Horodatage perfectionné
+```
+< 60 secondes : "À l'instant"
+Aujourd'hui   : "14:05"
+Hier          : "Hier, 09:15"
+Autre         : "08/02, 18:30"
+Couleur       : #999
+```
+
+### Barre Aperçu repositionnée
+- SOUS la barre de navigation (compatible iPhone notch)
+- Badge "Aperçu" violet discret
+
+### Anti-régression confirmée
+- ✅ Code PROMO20SECRET : Fonctionne
+- ✅ Eligibility : OK
+- ✅ 4 dates : Visibles
+- ✅ server.py : **7387 lignes**
+
+---
+
 ## Mise à jour du 8 Février 2026 - UI MINIMALISTE ✅
 
 ### Interface sans emojis
