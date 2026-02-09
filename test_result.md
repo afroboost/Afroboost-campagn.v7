@@ -213,32 +213,35 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      FLUX RETABLI - DEBLOCAGE MEDIAS ET SCHEDULER
+      SYSTEME OPERATIONNEL - SCHEDULER + MEDIAS
       Date: 09.02.2026
       ==========================================
       
       CORRECTIONS EFFECTUEES:
       
-      1. SCHEDULER ROBUSTE (server.py - 7393 lignes)
-         - Route /scheduler/emit-group-message amelioree
-         - Tous les champs media inclus: media_url, media_type, cta_type, cta_text, cta_link
-         - Try/except autour de sio.emit avec fallback texte seul
-         - Si media mal forme -> message texte envoye quand meme
+      1. CHATWIDGET.JS - Handler message_received
+         - AJOUT des champs media: media_url, media_type, cta_type, cta_text, cta_link
+         - Les messages Socket.io avec media sont maintenant rendus correctement
+         - Avant: seuls text, sender, senderId etaient transmis
+         - Apres: tous les champs media inclus dans setMessages()
       
-      2. REGEX YOUTUBE (MediaParser.js)
-         - Pattern ameliore: (?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&#]|$)
-         - Supporte youtu.be/ID?si=xxx
-         - Supporte youtube.com/shorts/
+      2. SCHEDULER_ENGINE.PY
+         - Emoji supprime du sender ("Coach Bassi" au lieu de "💪 Coach Bassi")
+         - Tous les champs media passes via emit_socket_signal
       
-      3. CONVERSION DRIVE
-         - Format direct-link: https://drive.google.com/uc?export=view&id=ID
-         - Log warning si lien non reconnu (ne bloque pas)
+      3. SERVER.PY (7393 lignes)
+         - Route /scheduler/emit-group-message robuste avec try/except
+         - Fallback texte seul si media mal forme
+      
+      4. MEDIAPARSER.JS
+         - Regex YouTube amelioree pour youtu.be/ID?si=xxx
+         - Support Drive /file/d/ID/preview
       
       TEST REUSSI:
-      - Emission message mixte (Video YouTube + CTA) -> SUCCESS
-      - Aucune erreur KeyError dans les logs
+      - Message mixte (Video YouTube + CTA) emis via scheduler -> SUCCESS
+      - Champs media transmis au frontend via Socket.io
       
-      server.py = 7393 lignes (limite 7410)
+      server.py = 7393 lignes (limite 7405)
   
   - agent: "testing"
     message: |
