@@ -198,6 +198,8 @@ const MediaMessage = ({
             <img
               src={mediaInfo.directUrl}
               alt="Média Google Drive"
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
               style={{
                 width: '100%',
                 height: '100%',
