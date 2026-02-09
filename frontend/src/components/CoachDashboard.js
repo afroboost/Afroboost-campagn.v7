@@ -1726,21 +1726,33 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
   // === SUPPRESSION CONTACT CRM ===
   const deleteChatParticipant = async (participantId) => {
-    if (!window.confirm("⚠️ Supprimer ce contact du CRM ?\n\nCette action est irréversible.")) return;
+    if (!window.confirm("Supprimer ce contact definitivement ?\n\nSes messages et conversations seront aussi supprimes.")) return;
     
     try {
-      console.log('DELETE_DEBUG: Suppression participant:', participantId);
-      await axios.delete(`${API}/chat/participants/${participantId}`);
-      console.log('DELETE_DEBUG: API OK pour participant');
+      console.log('[DELETE] Suppression participant:', participantId);
+      const response = await axios.delete(`${API}/chat/participants/${participantId}`);
+      console.log('[DELETE] API OK:', response.data);
+      
+      // Mise a jour immediate de l'UI - supprime le participant de la liste
       setChatParticipants(prev => {
         const filtered = prev.filter(p => p.id !== participantId && p._id !== participantId);
-        console.log('DELETE_DEBUG: chatParticipants filtré:', prev.length, '->', filtered.length);
+        console.log('[DELETE] chatParticipants:', prev.length, '->', filtered.length);
         return filtered;
       });
-      console.log('DELETE_DEBUG: Suppression participant terminée ✅');
+      
+      // Nettoyer aussi les conversations enrichies qui contenaient ce participant
+      setEnrichedConversations(prev => {
+        const filtered = prev.filter(c => {
+          const pids = c.participant_ids || [];
+          return !pids.includes(participantId);
+        });
+        return filtered;
+      });
+      
+      console.log('[DELETE] Contact supprime avec succes');
     } catch (err) {
-      console.error("DELETE_DEBUG: ERREUR participant:", err);
-      alert("Erreur lors de la suppression du contact: " + (err.response?.data?.detail || err.message));
+      console.error("[DELETE] ERREUR:", err);
+      alert("Erreur lors de la suppression: " + (err.response?.data?.detail || err.message));
     }
   };
 
