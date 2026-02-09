@@ -7345,7 +7345,14 @@ async def startup_scheduler():
             logger.info("[ZOMBIE-CLEANUP] ✅ Aucune campagne zombie détectée")
             
     except Exception as e:
-        logger.error(f"[ZOMBIE] ❌ {e}")
+        logger.error(f"[ZOMBIE] Erreur: {e}")
+    
+    # Index unique pour push_subscriptions (evite doublons)
+    try:
+        await db.push_subscriptions.create_index("endpoint", unique=True, sparse=True)
+        logger.info("[INDEX] push_subscriptions.endpoint unique OK")
+    except Exception:
+        pass  # Index existe deja
     
     # Ajouter le job APScheduler
     try:
