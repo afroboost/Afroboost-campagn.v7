@@ -212,32 +212,30 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implementation V4 - Notifications Push REELLES activees:
+      Implementation V5 - Persistance MongoDB et fiabilite Push:
       
-      1. CLES VAPID (Backend)
-         - Deja configurees dans .env (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
-         - Route /api/push/vapid-key retourne la cle publique
-         - pywebpush installe et fonctionnel
+      1. STOCKAGE DURABLE (MongoDB)
+         - Collection push_subscriptions avec index unique sur endpoint
+         - Index cree au startup: db.push_subscriptions.create_index("endpoint", unique=True)
+         - Evite les doublons d'abonnement (meme telephone = 1 seul enregistrement)
       
-      2. ABONNEMENT PUSH (Frontend)
-         - subscribeToPush() appele apres permission granted
-         - Envoie l'abonnement a /api/push/subscribe
-         - Lie a l'ID du participant
+      2. NETTOYAGE AUTOMATIQUE (Erreur 410 Gone)
+         - Si webpush retourne 404 ou 410 -> abonnement desactive (active: False)
+         - Signifie que l'utilisateur a desinstalle l'app ou revoque la permission
       
-      3. DECLENCHEMENT ALERTE (Backend)
-         - send_push_notification() appele dans /chat/coach-response
-         - Socket.io pour chat ouvert
-         - Push notification pour chat ferme/veille
+      3. INTELLIGENCE D'ENVOI (Skip si socket actif)
+         - Verifie sio.manager.rooms avant d'envoyer push
+         - Si session_id a des clients connectes -> skip push
+         - Evite vibration inutile si l'utilisateur a le chat ouvert
       
-      4. ROUTES ACTIVES:
-         - GET /api/push/vapid-key - Cle publique VAPID
-         - POST /api/push/subscribe - Enregistrer abonnement
-         - DELETE /api/push/subscribe/{id} - Desabonner
+      4. ICONE AFROBOOST
+         - sw.js et backend utilisent /logo192.png pour icon et badge
+         - Notification affiche le logo Afroboost au lieu de l'icone par defaut
       
       CONTRAINTES RESPECTEES:
       - server.py = 7387 lignes exactement
-      - Design minimaliste SVG conserve
-      - Pas de modification login/reservation/medias
+      - Aucune modification login/reservation/medias
+      - Verification via logs: "[INDEX] push_subscriptions.endpoint unique OK"
   
   - agent: "testing"
     message: |
