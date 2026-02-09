@@ -6590,11 +6590,17 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                                   <span className="text-white/40 text-xs" title={msgDate.toLocaleString('fr-FR')}>
                                     {msgDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                   </span>
+                                  {/* Indicateur message de groupe */}
+                                  {(msg.broadcast || msg.type === 'group') && (
+                                    <span className="text-purple-400/60 text-xs ml-2" title="Message de groupe">
+                                      (tous)
+                                    </span>
+                                  )}
                                 </div>
                                 {/* Contenu avec liens cliquables */}
                                 <p 
                                   className="text-white text-sm"
-                                  dangerouslySetInnerHTML={{ __html: linkifyText(msg.content) }}
+                                  dangerouslySetInnerHTML={{ __html: linkifyText(msg.content || msg.text || '') }}
                                 />
                               </div>
                             );
