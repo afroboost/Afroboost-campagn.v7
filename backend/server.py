@@ -798,6 +798,17 @@ class PrivateConversation(BaseModel):
     last_message_at: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+# === FONCTION UTILITAIRE: Formatage unifie des messages ===
+def format_message_for_frontend(m: dict) -> dict:
+    """Convertit un message MongoDB vers le format attendu par le frontend."""
+    return {
+        "id": m.get("id"), "type": "user" if m.get("sender_type") == "user" else ("coach" if m.get("sender_type") == "coach" else "ai"),
+        "text": m.get("content", "") or m.get("text", ""), "sender": (m.get("sender_name") or m.get("sender", "")).replace("💪 ", ""),
+        "senderId": m.get("sender_id") or m.get("senderId", ""), "sender_type": m.get("sender_type", "ai"),
+        "created_at": m.get("created_at"), "media_url": m.get("media_url"), "media_type": m.get("media_type"),
+        "cta_type": m.get("cta_type"), "cta_text": m.get("cta_text"), "cta_link": m.get("cta_link")
+    }
+
 # ==================== ROUTES ====================
 
 @api_router.get("/")
