@@ -246,14 +246,14 @@ export const showBrowserNotification = async (title, body, options = {}) => {
       badge: options.badge || '/favicon.ico',
       tag: options.tag || 'afroboost-chat',
       requireInteraction: options.requireInteraction || false,
-      silent: false, // Permet le son système
+      silent: false, // Permet le son systeme
       ...options
     });
 
-    // Fermer automatiquement après 8 secondes (plus long pour plus de visibilité)
+    // Fermer automatiquement apres 8 secondes (plus long pour plus de visibilite)
     setTimeout(() => notification.close(), 8000);
 
-    // Callback au clic - Focus la fenêtre et exécuter le callback
+    // Callback au clic - Focus la fenetre et executer le callback
     notification.onclick = (event) => {
       event.preventDefault();
       window.focus();
@@ -270,6 +270,41 @@ export const showBrowserNotification = async (title, body, options = {}) => {
     console.error('[NOTIFICATIONS] Error showing notification:', err);
     return { notification: null, fallbackNeeded: true, reason: 'error' };
   }
+};
+
+/**
+ * Affiche une notification systeme pour un nouveau message Afroboost
+ * A utiliser quand l'onglet est en arriere-plan
+ * @param {string} senderName - Nom de l'expediteur
+ * @param {string} messageText - Texte du message (tronque si trop long)
+ * @returns {Promise<boolean>} - true si la notification a ete affichee
+ */
+export const showNewMessageNotification = async (senderName, messageText) => {
+  // Ne pas afficher si la fenetre a le focus
+  if (document.hasFocus()) {
+    console.log('[NOTIFICATIONS] Window has focus - skipping notification');
+    return false;
+  }
+  
+  // Tronquer le message si trop long (max 100 caracteres)
+  const truncatedText = messageText && messageText.length > 100 
+    ? messageText.substring(0, 97) + '...' 
+    : messageText || '';
+  
+  const result = await showBrowserNotification(
+    `Afroboost - ${senderName || 'Nouveau message'}`,
+    truncatedText,
+    {
+      tag: 'afroboost-new-message',
+      requireInteraction: false,
+      onClick: () => {
+        // Focus et scroll vers le chat quand l'utilisateur clique
+        window.focus();
+      }
+    }
+  );
+  
+  return !result.fallbackNeeded;
 };
 
 /**
