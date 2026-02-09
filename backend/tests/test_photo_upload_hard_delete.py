@@ -20,7 +20,7 @@ from PIL import Image
 # Base URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://alert-sound.preview.emergentagent.com"
+    BASE_URL = "https://go-live-v7.preview.emergentagent.com"
 
 
 class TestPhotoUpload:
