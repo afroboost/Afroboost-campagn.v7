@@ -1713,56 +1713,34 @@ export const ChatWidget = () => {
       // Écouter les nouveaux messages en temps réel
       socket.on('message_received', (messageData) => {
         console.log('[SOCKET.IO] Message recu:', messageData);
-        
-        // Quand un message est recu, cacher l'indicateur de saisie
         setTypingUser(null);
         
-        // Ne pas dupliquer nos propres messages (deja ajoutes localement)
-        if (messageData.senderId === participantId && messageData.type === 'user') {
-          return;
-        }
+        // Ne pas dupliquer nos propres messages
+        if (messageData.senderId === participantId && messageData.type === 'user') return;
         
-        // Ajouter le message a la liste avec TOUS les champs media
+        // ANTI-DOUBLONS: Verifier ID avant d'ajouter
         setMessages(prev => {
-          // Eviter les doublons (par ID)
-          const exists = prev.some(m => m.id === messageData.id);
-          if (exists) {
-            console.log('[SOCKET.IO] Doublon ignore:', messageData.id);
+          const msgId = messageData.id || messageData._id;
+          if (!msgId || prev.some(m => m.id === msgId || m._id === msgId)) {
+            console.log('[SOCKET.IO] Doublon ignore:', msgId);
             return prev;
           }
-          
           return [...prev, {
-            id: messageData.id,
-            type: messageData.type,
-            text: messageData.text,
-            sender: messageData.sender,
-            senderId: messageData.senderId,
+            id: msgId, type: messageData.type, text: messageData.text || '',
+            sender: messageData.sender || '', senderId: messageData.senderId || '',
             created_at: messageData.created_at || new Date().toISOString(),
-            // Champs media pour les messages programmes
-            media_url: messageData.media_url || null,
-            media_type: messageData.media_type || null,
-            cta_type: messageData.cta_type || null,
-            cta_text: messageData.cta_text || null,
+            media_url: messageData.media_url || null, media_type: messageData.media_type || null,
+            cta_type: messageData.cta_type || null, cta_text: messageData.cta_text || null,
             cta_link: messageData.cta_link || null
           }];
         });
         
-        // === NOTIFICATIONS SONORES ET VISUELLES ===
-        // Verifier si l'utilisateur regarde ACTIVEMENT la conversation
+        // Notifications si pas en train de regarder le chat
         const isUserWatchingChat = isOpen && document.hasFocus();
-        
-        if (messageData.senderId !== participantId) {
-          // TOUJOURS jouer le son sauf si l'utilisateur regarde le chat
-          if (!isUserWatchingChat) {
-            playSoundIfEnabled(messageData.type === 'coach' ? 'coach' : 'message');
-            
-            // Afficher notification navigateur si onglet en arriere-plan
-            const senderName = messageData.sender || (messageData.type === 'coach' ? 'Coach Bassi' : 'Afroboost');
-            showNewMessageNotification(senderName, messageData.text);
-          } else {
-            // L'utilisateur regarde le chat - son leger optionnel
-            console.log('[NOTIFICATIONS] Utilisateur actif sur le chat - notification ignoree');
-          }
+        if (messageData.senderId !== participantId && !isUserWatchingChat) {
+          playSoundIfEnabled(messageData.type === 'coach' ? 'coach' : 'message');
+          const senderName = messageData.sender || (messageData.type === 'coach' ? 'Coach Bassi' : 'Afroboost');
+          showNewMessageNotification(senderName, messageData.text);
         }
       });
       
