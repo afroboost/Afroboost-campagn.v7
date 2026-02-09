@@ -3717,11 +3717,29 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-6 flex-wrap items-center">
           {tabs.map(tb => (
             <button key={tb.id} onClick={() => setTab(tb.id)} className={`coach-tab px-3 py-2 rounded-lg text-xs sm:text-sm ${tab === tb.id ? 'active' : ''}`}
               style={{ color: 'white' }} data-testid={`coach-tab-${tb.id}`}>{tb.label}</button>
           ))}
+          
+          {/* Bouton Vue Visiteur - Toggle mode apercu */}
+          <button
+            onClick={toggleVisitorPreview}
+            className="ml-auto px-3 py-2 rounded-lg text-xs sm:text-sm flex items-center gap-2"
+            style={{
+              background: isVisitorPreviewActive ? 'rgba(147, 51, 234, 0.3)' : 'rgba(255,255,255,0.1)',
+              border: isVisitorPreviewActive ? '1px solid rgba(147, 51, 234, 0.5)' : '1px solid rgba(255,255,255,0.2)',
+              color: isVisitorPreviewActive ? '#a855f7' : 'white'
+            }}
+            data-testid="coach-visitor-preview-toggle"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            {isVisitorPreviewActive ? 'Apercu actif' : 'Vue Visiteur'}
+          </button>
         </div>
 
         {/* Reservations Tab - Utilise le composant extrait ReservationTab */}
