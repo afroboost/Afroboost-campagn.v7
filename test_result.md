@@ -212,29 +212,32 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implementation V3 - Alertes mobiles infaillibles:
+      Implementation V4 - Notifications Push REELLES activees:
       
-      1. VIBRATION COUPLEE AU SON
-         - navigator.vibrate([200, 100, 200]) ajoute dans notificationService.js
-         - Se declenche meme si telephone en mode silencieux
-         - Verification compatibilite (if navigator.vibrate)
+      1. CLES VAPID (Backend)
+         - Deja configurees dans .env (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+         - Route /api/push/vapid-key retourne la cle publique
+         - pywebpush installe et fonctionnel
       
-      2. SERVICE WORKER BLINDE (sw.js)
-         - Push event avec showNotification
-         - Titre: "Afroboost", Corps: "Nouveau message de votre coach"
-         - Vibrate pattern + focus fenetre au clic
-         - Gestion JSON et texte brut
+      2. ABONNEMENT PUSH (Frontend)
+         - subscribeToPush() appele apres permission granted
+         - Envoie l'abonnement a /api/push/subscribe
+         - Lie a l'ID du participant
       
-      3. MESSAGE iOS PWA
-         - Detection iOS via userAgent
-         - Message discret: "Pour recevoir les alertes, ajoutez a l'ecran d'accueil"
-         - Design SVG minimaliste, fermeture auto 5s
-         - Affiche une seule fois (localStorage)
+      3. DECLENCHEMENT ALERTE (Backend)
+         - send_push_notification() appele dans /chat/coach-response
+         - Socket.io pour chat ouvert
+         - Push notification pour chat ferme/veille
+      
+      4. ROUTES ACTIVES:
+         - GET /api/push/vapid-key - Cle publique VAPID
+         - POST /api/push/subscribe - Enregistrer abonnement
+         - DELETE /api/push/subscribe/{id} - Desabonner
       
       CONTRAINTES RESPECTEES:
-      - server.py inchange (7387 lignes)
+      - server.py = 7387 lignes exactement
+      - Design minimaliste SVG conserve
       - Pas de modification login/reservation/medias
-      - Design minimaliste SVG (pas d'emojis)
   
   - agent: "testing"
     message: |
