@@ -236,39 +236,38 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      IMPLEMENTATION v7.1 - ADMINISTRATION
+      FINALISATION ADMIN v7.1
       Date: 09.02.2026
       ==========================================
       
       MODIFICATIONS EFFECTUEES:
       
-      1. MODE VUE VISITEUR (CoachDashboard -> ChatWidget)
-         - Bouton ajoute dans la barre des tabs du CoachDashboard
-         - Communication via CustomEvent 'afroboost:visitorPreview'
-         - ChatWidget ecoute et applique isVisitorPreview={true/false}
-         - Style: violet quand actif, minimaliste SVG
+      1. VUE VISITEUR FONCTIONNELLE
+         - Menu burger admin masque quand isVisitorPreview=true
+         - Header "Mode Coach" masque en mode apercu
+         - Badge "Apercu" affiche sous la navigation
+         - Communication CoachDashboard <-> ChatWidget via CustomEvent
       
-      2. SUPPRESSION CONTACT DEFINITIVE (Backend)
-         - Route DELETE /api/chat/participants/{id} amelioree
-         - Supprime: participant + messages + sessions orphelines
-         - Log detaille de chaque etape
-         - Retour JSON avec compteurs de suppression
+      2. SUPPRESSION CONTACT AMELIOREE
+         - Backend: supprime participant + messages + sessions orphelines
+         - Frontend: mise a jour immediate via setChatParticipants
+         - Nettoyage des enrichedConversations associees
+         - Dialogue confirmation sans emoji
       
-      3. PARSER YOUTUBE CORRIGE (MediaParser.js)
-         - Pattern regex simplifie pour supporter ?si= et autres params
-         - Ancien: /...([a-zA-Z0-9_-]{11})(?:[?&#]|$)/
-         - Nouveau: /...([a-zA-Z0-9_-]{11})/
-         - Miniature mqdefault.jpg disponible
+      3. APERCU MEDIA ROBUSTE
+         - Fallback SVG (icone play) si miniature ne charge pas
+         - Parser YouTube corrige pour ?si= et autres params
+         - onError -> affiche fallback au lieu de cacher
       
       COMPTEURS:
-      - server.py: 7397 lignes (< 7415 autorise)
-      - Zero emoji ajoute
-      - Zero print() debug
+      - server.py: 7397 lignes (< 7410)
+      - ChatWidget.js: lint OK
+      - CoachDashboard.js: lint OK
       
       A TESTER:
-      - Backend: DELETE /api/chat/participants/{id}
-      - Frontend: Bouton Vue Visiteur dans CoachDashboard
-      - Frontend: Parser YouTube avec URL ?si=
+      - Mode Vue Visiteur: boutons admin masques
+      - Suppression contact: UI mise a jour immediate
+      - Miniature YouTube: affiche sans erreur domaine
   
   - agent: "testing"
     message: |
