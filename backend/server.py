@@ -1894,7 +1894,7 @@ async def launch_campaign(campaign_id: str):
                     "content": message_content,
                     "media_url": media_url or None,
                     "sender_type": "coach",
-                    "sender_name": "💪 Coach Bassi",
+                    "sender_name": "Coach Bassi",
                     "sender_id": "coach-campaign",
                     "timestamp": msg_timestamp,
                     "created_at": msg_timestamp
