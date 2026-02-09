@@ -2901,6 +2901,62 @@ export const ChatWidget = () => {
         }
       `}</style>
 
+      {/* === MESSAGE iOS PWA (ajout ecran d'accueil) === */}
+      {showiOSPrompt && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '170px',
+            right: '20px',
+            maxWidth: '280px',
+            background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            zIndex: 60,
+            border: '1px solid rgba(255,255,255,0.1)',
+            animation: 'fadeIn 0.3s ease-out'
+          }}
+          data-testid="ios-pwa-prompt"
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            {/* Icone Share SVG minimaliste */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" style={{ flexShrink: 0, marginTop: '2px' }}>
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: '12px', color: '#fff', lineHeight: '1.4' }}>
+                Pour recevoir les alertes, ajoutez cette application a votre ecran d'accueil.
+              </div>
+              <div style={{ fontSize: '10px', color: '#888', marginTop: '4px' }}>
+                Partager &gt; Sur l'ecran d'accueil
+              </div>
+            </div>
+            {/* Bouton fermer */}
+            <button
+              onClick={() => setShowiOSPrompt(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#666',
+                cursor: 'pointer',
+                padding: '0',
+                marginLeft: 'auto',
+                flexShrink: 0
+              }}
+              aria-label="Fermer"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Bouton flottant WhatsApp - Positionné à DROITE, au-dessus de la barre */}
       {!isOpen && (
         <button
