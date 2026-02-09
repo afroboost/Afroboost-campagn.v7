@@ -5902,11 +5902,15 @@ async def send_coach_response(request: Request):
         "id": coach_message.id,
         "type": "coach",
         "text": message_text,
-        "sender": "💪 Coach Bassi",
+        "sender": "Coach Bassi",
         "senderId": "coach",
         "sender_type": "coach",
         "created_at": coach_message.created_at
     })
+    # === PUSH NOTIFICATION: Alerter l'abonné si app fermée ===
+    participant_id = session.get("participant_id") or (session.get("participant_ids") or [None])[0]
+    if participant_id:
+        asyncio.create_task(send_push_notification(participant_id, "Afroboost", f"Nouveau message de {coach_name}"))
     
     return {
         "success": True,
