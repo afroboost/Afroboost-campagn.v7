@@ -125,7 +125,7 @@ def emit_socket_signal(message_id, session_id, message_data):
             "id": message_data.get("id", message_id),
             "type": "coach",
             "text": message_data.get("content", ""),
-            "sender": "💪 Coach Bassi",
+            "sender": "Coach Bassi",
             "senderId": "coach",
             "sender_type": "coach",
             "scheduled": True,
