@@ -213,37 +213,32 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      REPARATION SYSTEME MEDIA ET SCHEDULER
+      FLUX RETABLI - DEBLOCAGE MEDIAS ET SCHEDULER
       Date: 09.02.2026
       ==========================================
       
       CORRECTIONS EFFECTUEES:
       
-      1. PARSER YOUTUBE (media_handler.py)
-         - Regex amelioree pour youtu.be/ID?si=xxx
-         - Pattern: (?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&]|$)
+      1. SCHEDULER ROBUSTE (server.py - 7393 lignes)
+         - Route /scheduler/emit-group-message amelioree
+         - Tous les champs media inclus: media_url, media_type, cta_type, cta_text, cta_link
+         - Try/except autour de sio.emit avec fallback texte seul
+         - Si media mal forme -> message texte envoye quand meme
       
-      2. APERCU MEDIA (CoachDashboard.js)
-         - useEffect parseMediaUrl pour URLs YouTube/Drive externes
-         - Extraction correcte de la thumbnail YouTube
+      2. REGEX YOUTUBE (MediaParser.js)
+         - Pattern ameliore: (?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&#]|$)
+         - Supporte youtu.be/ID?si=xxx
+         - Supporte youtube.com/shorts/
       
-      3. FIX IMAGES DRIVE (MediaMessage.js + CampaignManager.js)
-         - Ajout referrerPolicy="no-referrer" sur les <img>
-         - Evite les blocages de securite navigateur
+      3. CONVERSION DRIVE
+         - Format direct-link: https://drive.google.com/uc?export=view&id=ID
+         - Log warning si lien non reconnu (ne bloque pas)
       
-      4. SCHEDULER (scheduler_engine.py)
-         - Deja fonctionnel avec champs optionnels media_url, cta_*
-         - Architecture POSER-RAMASSER preservee
+      TEST REUSSI:
+      - Emission message mixte (Video YouTube + CTA) -> SUCCESS
+      - Aucune erreur KeyError dans les logs
       
-      FICHIERS MODIFIES (HORS VERROUILLAGE):
-      - backend/media_handler.py (regex YouTube)
-      - frontend/src/components/CoachDashboard.js (parseMediaUrl dans useEffect)
-      - frontend/src/components/coach/CampaignManager.js (referrerPolicy)
-      - frontend/src/components/chat/MediaMessage.js (referrerPolicy)
-      
-      CONTRAINTES RESPECTEES:
-      - server.py = 7387 lignes (INCHANGE)
-      - Login, reservations, notifications INTACTS
+      server.py = 7393 lignes (limite 7410)
   
   - agent: "testing"
     message: |
