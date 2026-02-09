@@ -1928,7 +1928,6 @@ export const ChatWidget = () => {
             return prev;
           });
         }
-        }
         
         setIsSyncing(false);
         
