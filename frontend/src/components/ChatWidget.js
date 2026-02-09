@@ -1913,26 +1913,21 @@ export const ChatWidget = () => {
         }
         
         if (data.messages && data.messages.length > 0) {
-          console.log(`[RAMASSER] 📥 ${data.count} message(s) récupéré(s)`);
+          console.log(`[RAMASSER] ${data.count} message(s) recupere(s)`);
           setMessages(prev => {
-            // Fusionner sans doublons (basé sur ID unique)
-            const existingIds = new Set(prev.map(m => m.id));
-            const newMsgs = data.messages.filter(m => m.id && !existingIds.has(m.id));
-            
+            // ANTI-DOUBLONS: Set avec id ET _id
+            const existingIds = new Set(prev.flatMap(m => [m.id, m._id].filter(Boolean)));
+            const newMsgs = data.messages.filter(m => {
+              const msgId = m.id || m._id;
+              return msgId && !existingIds.has(msgId);
+            });
             if (newMsgs.length > 0) {
-              console.log(`[RAMASSER] ${newMsgs.length} NOUVEAUX messages ajoutés`);
-              // Trier par date UTC (comparaison de chaînes ISO 8601)
-              const merged = [...prev, ...newMsgs];
-              return merged.sort((a, b) => {
-                const dateA = a.created_at || '0';
-                const dateB = b.created_at || '0';
-                return dateA.localeCompare(dateB);
-              });
+              console.log(`[RAMASSER] ${newMsgs.length} NOUVEAUX messages ajoutes`);
+              return [...prev, ...newMsgs].sort((a, b) => (a.created_at || '0').localeCompare(b.created_at || '0'));
             }
             return prev;
           });
-        } else {
-          console.log('[RAMASSER] ℹ️ Aucun nouveau message');
+        }
         }
         
         setIsSyncing(false);
