@@ -103,10 +103,10 @@
 #====================================================================================================
 
 user_problem_statement: |
-  Implementation des notifications sonores et alertes visuelles (P0):
-  1. Alerte sonore - Son de notification a chaque message Socket.IO recu (sauf si utilisateur regarde la conversation)
-  2. Notifications navigateur (Web Push) - Demander autorisation au premier chargement post-login
-  3. Afficher notification systeme avec le texte du message Afroboost meme si onglet en arriere-plan
+  Test des nouvelles fonctionnalités v7.1 Afroboost:
+  1. DELETE /api/chat/participants/{id} - Suppression définitive contact
+  2. Non-régression des endpoints existants
+  3. Vérification intégrité server.py (7397 lignes)
 
 backend:
   - task: "Backend Socket.IO pour messages temps réel"
