@@ -6592,7 +6592,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                                   </span>
                                   {/* Indicateur message de groupe */}
                                   {(msg.broadcast || msg.type === 'group') && (
-                                    <span className="text-purple-400/80 text-xs ml-2 font-light" title="Message de groupe">
+                                    <span className="text-purple-400/80 text-xs ml-1 mr-2 font-light" title="Message de groupe">
                                       (tous)
                                     </span>
                                   )}
