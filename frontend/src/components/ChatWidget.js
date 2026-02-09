@@ -3703,7 +3703,8 @@ export const ChatWidget = () => {
             {/* === MODE COACH: Interface de gestion des conversations === */}
             {step === 'coach' && isCoachMode && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                {/* Header Coach MINIMALISTE - Icônes uniquement */}
+                {/* Header Coach MINIMALISTE - Masque en mode Vue Visiteur */}
+                {!isVisitorPreview && (
                 <div style={{ 
                   background: 'rgba(217, 28, 210, 0.2)', 
                   padding: '8px 16px', 
