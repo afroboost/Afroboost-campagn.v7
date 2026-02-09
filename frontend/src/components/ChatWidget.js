@@ -1510,6 +1510,20 @@ export const ChatWidget = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // === ECOUTEUR MODE VUE VISITEUR (Communication CoachDashboard -> ChatWidget) ===
+  useEffect(() => {
+    const handleVisitorPreviewToggle = (event) => {
+      const newState = event.detail?.enabled;
+      if (typeof newState === 'boolean') {
+        setIsVisitorPreview(newState);
+        console.log('[ADMIN] Vue Visiteur via Dashboard:', newState ? 'activee' : 'desactivee');
+      }
+    };
+    
+    window.addEventListener('afroboost:visitorPreview', handleVisitorPreviewToggle);
+    return () => window.removeEventListener('afroboost:visitorPreview', handleVisitorPreviewToggle);
+  }, []);
+
   // Enregistrer le Service Worker au montage
   useEffect(() => {
     if (isPushSupported()) {
