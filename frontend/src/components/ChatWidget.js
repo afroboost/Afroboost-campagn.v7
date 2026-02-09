@@ -8,7 +8,10 @@ import { io } from 'socket.io-client';
 import { 
   parseMessageContent, 
   notifyPrivateMessage,
-  stopTitleFlash 
+  stopTitleFlash,
+  showNewMessageNotification,
+  requestNotificationPermission,
+  getNotificationPermissionStatus
 } from '../services/notificationService';
 import { 
   isPushSupported, 
