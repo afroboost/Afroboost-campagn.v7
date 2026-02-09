@@ -922,23 +922,24 @@ export const ChatWidget = () => {
   
   // === FONCTION DE DÉCONNEXION STRICTE (HARD RESET) ===
   const handleLogout = async () => {
-    let cleanupDone = false;
+    if (isLoggingOut) return; // Eviter double clic
+    setIsLoggingOut(true);
+    
+    // Timeout de securite: force redirect apres 3s
+    const forceRedirect = setTimeout(() => window.location.replace('/'), 3000);
+    
     try {
       // 1. Desabonner des notifications push (garde la PWA installee)
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-          await subscription.unsubscribe();
-          console.log('[LOGOUT] Push unsubscribed');
-        }
+        if (subscription) await subscription.unsubscribe();
       }
       
-      // 2. Vider les caches (images/medias) et attendre completion
+      // 2. Vider les caches
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('[LOGOUT] Caches vides:', cacheNames.length);
       }
       
       // 3. Nettoyer le stockage
@@ -950,19 +951,15 @@ export const ChatWidget = () => {
       setParticipantId(null);
       setMessages([]);
       setAfroboostProfile(null);
-      setIsFullscreen(false);
-      setIsVisitorMode(false);
-      setShowUserMenu(false);
-      setShowMenu(false);
       setStep('welcome');
       
-      cleanupDone = true;
+      clearTimeout(forceRedirect);
     } catch (err) {
       console.error('[LOGOUT] Erreur:', err);
-    } finally {
-      if (!cleanupDone) { localStorage.clear(); sessionStorage.clear(); }
-      window.location.replace('/');
+      localStorage.clear();
+      sessionStorage.clear();
     }
+    window.location.replace('/');
   };
   
   // === OUVRIR UN DM (Message Privé) ===
