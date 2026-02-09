@@ -213,34 +213,33 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      SYSTEME UNIFIE, SECURISE ET SANS DOUBLONS
+      FLUX DE GROUPE ET PERFORMANCE VALIDES
       Date: 09.02.2026
       ==========================================
       
       CORRECTIONS EFFECTUEES:
       
-      1. FONCTION UTILITAIRE format_message_for_frontend()
-         - Centralise la conversion content -> text
-         - Unifie le formatage pour toutes les routes
-         - Supprime automatiquement les emojis du sender
-         - Inclut tous les champs media (ou null)
+      1. ROUTE /messages/sync INCLUSIVE (server.py)
+         - Query MongoDB: $or [session_id, broadcast:true, type:"group"]
+         - Nouveaux users voient TOUS les messages de groupe passes
+         - Tri par created_at ASC
+         - format_message_for_frontend applique
       
-      2. ANTI-DOUBLONS (ChatWidget.js)
-         - Verification ID et _id avant ajout
-         - Set avec flatMap pour couvrir les deux formats
-         - Applique dans message_received ET fetchLatestMessages
+      2. ANTI-DOUBLONS OPTIMISE (ChatWidget.js)
+         - Set avec flatMap pour id ET _id
+         - Verification avant ajout dans setMessages
+         - Pas de recalcul inutile
       
-      3. BLINDAGE RENDU MEDIA
-         - Optional chaining: msg?.media_url
-         - Validation URL: startsWith('http')
-         - Pas de crash si media invalide
+      3. SECURITE FICHIERS NON SUPPORTES (MediaMessage.js)
+         - Liste: .zip, .exe, .rar, .7z, .tar, .gz, .dmg, .iso, .bin
+         - Affiche "Fichier non supporte" avec icone SVG
+         - Ne plante pas le chat
       
-      4. ROUTES UNIFIEES
-         - /messages/sync: utilise format_message_for_frontend
-         - /chat/sessions/{id}/messages: idem
-         - Format identique pour live et historique
+      4. BLINDAGE RENDU CONDITIONNEL
+         - {mediaInfo && (...)} pour la zone media
+         - Fallback texte si media invalide
       
-      server.py = 7372 lignes (limite 7405)
+      server.py = 7373 lignes (limite 7385)
   
   - agent: "testing"
     message: |
