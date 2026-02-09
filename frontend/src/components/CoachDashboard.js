@@ -274,6 +274,19 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   // === PARTAGE COACH ===
   const [linkCopied, setLinkCopied] = useState(false);
   
+  // === MODE VUE VISITEUR (communique avec ChatWidget via evenement) ===
+  const [isVisitorPreviewActive, setIsVisitorPreviewActive] = useState(false);
+  
+  const toggleVisitorPreview = () => {
+    const newState = !isVisitorPreviewActive;
+    setIsVisitorPreviewActive(newState);
+    // Emettre l'evenement pour ChatWidget
+    window.dispatchEvent(new CustomEvent('afroboost:visitorPreview', { 
+      detail: { enabled: newState } 
+    }));
+    console.log('[COACH] Vue Visiteur:', newState ? 'activee' : 'desactivee');
+  };
+
   const [reservations, setReservations] = useState([]);
   const [reservationsSearch, setReservationsSearch] = useState(''); // Recherche locale réservations
   const [reservationPagination, setReservationPagination] = useState({ page: 1, limit: 20, total: 0, pages: 0 });
