@@ -6419,13 +6419,7 @@ async def send_campaign_email(request: Request):
     # Extraire le prénom pour personnalisation
     to_name = body.get("to_name", "")
     first_name = to_name.split()[0] if to_name else "ami(e)"
-    
-    # Preheader invisible pour la délivrabilité (apparaît dans l'aperçu Gmail)
     preheader_text = f"Salut {first_name}, découvre notre nouvelle vidéo exclusive !"
-    
-    # LOG pour debug - vérifier l'URL de clic (seulement si media_url présent)
-    if media_url:
-        logger.info(f"Email click_url FINAL: {click_url}")
     
     html_content = f'''<!DOCTYPE html>
 <html lang="fr">
