@@ -158,7 +158,7 @@ class BackendTester:
                 "sender_id": self.test_participant_id,
                 "sender_name": "TestUser Backend",
                 "sender_type": "participant",
-                "message": "Test message de non-régression"
+                "content": "Test message de non-régression"
             }
             response = self.session.post(
                 f"{BACKEND_URL}/api/chat/messages",
