@@ -5835,7 +5835,7 @@ Si la question ne concerne pas un produit ou un cours Afroboost, réponds:
             "id": ai_message.id,
             "type": "ai",
             "text": ai_response_text,
-            "sender": "💪 Coach Bassi",
+            "sender": "Coach Bassi",
             "senderId": "ai",
             "sender_type": "ai",
             "created_at": ai_message.created_at
