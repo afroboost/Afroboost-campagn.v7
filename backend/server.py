@@ -7077,38 +7077,44 @@ async def get_scheduler_health():
 # ==================== SCHEDULER GROUP MESSAGE EMISSION ====================
 @api_router.post("/scheduler/emit-group-message")
 async def scheduler_emit_group_message(request: Request):
-    """
-    Endpoint interne pour permettre au scheduler d'émettre des messages via Socket.IO.
-    Appelé uniquement par le thread scheduler pour contourner les limitations asyncio.
-    
-    AMÉLIORATION: Émet en BROADCAST vers toutes les sessions communautaires
-    pour garantir la réception sur tous les mobiles.
-    """
+    """Endpoint interne pour permettre au scheduler d'emettre des messages via Socket.IO."""
     try:
         body = await request.json()
         session_id = body.get("session_id")
-        message_data = body.get("message")
-        broadcast = body.get("broadcast", True)  # Par défaut, broadcast activé
-        
+        message_data = body.get("message", {})
+        broadcast = body.get("broadcast", True)
         if not message_data:
             return {"success": False, "error": "message requis"}
-        
-        # Ajouter le session_id au message pour le frontend
-        message_data["session_id"] = session_id
-        
-        if broadcast:
-            # BROADCAST: Émettre à TOUS les clients connectés (pas de room spécifique)
-            await sio.emit('message_received', message_data)
-            logger.info(f"[SOCKET_PUSH] 📢 BROADCAST campagne vers TOUS les clients - Session source: {session_id}")
-        else:
-            # Émettre uniquement vers la room spécifique
-            await emit_new_message(session_id, message_data)
-        
-        logger.info(f"[SCHEDULER-EMIT] ✅ Message émis (broadcast={broadcast})")
-        
-        return {"success": True, "session_id": session_id, "broadcast": broadcast}
+        # S'assurer que tous les champs media sont inclus (meme si None)
+        safe_message = {
+            "id": message_data.get("id", str(uuid.uuid4())),
+            "type": message_data.get("type", "coach"),
+            "text": message_data.get("text", ""),
+            "sender": message_data.get("sender", "Coach Bassi"),
+            "senderId": message_data.get("senderId", "coach"),
+            "sender_type": message_data.get("sender_type", "coach"),
+            "created_at": message_data.get("created_at", datetime.now(timezone.utc).isoformat()),
+            "session_id": session_id,
+            "scheduled": True
+        }
+        # Ajouter champs optionnels media/CTA seulement s'ils existent
+        for field in ["media_url", "media_type", "cta_type", "cta_text", "cta_link"]:
+            if message_data.get(field):
+                safe_message[field] = message_data[field]
+        try:
+            if broadcast:
+                await sio.emit('message_received', safe_message)
+            else:
+                await emit_new_message(session_id, safe_message)
+            logger.debug(f"[SCHEDULER-EMIT] Message emis OK")
+        except Exception as emit_err:
+            # Si emission echoue, envoyer en mode texte seul
+            logger.error(f"[SCHEDULER-EMIT] Emit error, fallback texte: {emit_err}")
+            text_only = {"id": safe_message["id"], "type": "coach", "text": safe_message["text"], "sender": "Coach Bassi", "senderId": "coach", "created_at": safe_message["created_at"], "session_id": session_id}
+            await sio.emit('message_received', text_only)
+        return {"success": True, "session_id": session_id}
     except Exception as e:
-        logger.error(f"[SCHEDULER-EMIT] ❌ Erreur: {e}")
+        logger.error(f"[SCHEDULER-EMIT] Erreur: {e}")
         return {"success": False, "error": str(e)}
 
 # Include router
