@@ -3907,27 +3907,49 @@ async def update_chat_participant(participant_id: str, update_data: dict):
 
 @api_router.delete("/chat/participants/{participant_id}")
 async def delete_chat_participant(participant_id: str):
-    """Supprime un participant du CRM"""
+    """Supprime un participant du CRM avec nettoyage complet des donnees orphelines"""
     logger.info(f"[DELETE] Suppression participant: {participant_id}")
     
     participant = await db.chat_participants.find_one({"id": participant_id}, {"_id": 0})
     if not participant:
-        logger.warning(f"[DELETE] Participant non trouvé: {participant_id}")
-        raise HTTPException(status_code=404, detail="Participant non trouvé")
+        logger.warning(f"[DELETE] Participant non trouve: {participant_id}")
+        raise HTTPException(status_code=404, detail="Participant non trouve")
     
-    # Supprimer le participant
-    result = await db.chat_participants.delete_one({"id": participant_id})
-    logger.info(f"[DELETE] Participant supprimé: deleted_count={result.deleted_count}")
+    participant_name = participant.get('name', 'inconnu')
     
-    # Optionnel: Retirer le participant de toutes les sessions
+    # 1. Supprimer tous les messages envoyes par ce participant
+    messages_result = await db.chat_messages.delete_many({"sender_id": participant_id})
+    logger.info(f"[DELETE] Messages supprimes: {messages_result.deleted_count}")
+    
+    # 2. Retirer le participant de toutes les sessions
     sessions_update = await db.chat_sessions.update_many(
         {"participant_ids": participant_id},
         {"$pull": {"participant_ids": participant_id}}
     )
-    logger.info(f"[DELETE] Sessions mises à jour: modified_count={sessions_update.modified_count}")
+    logger.info(f"[DELETE] Sessions mises a jour: {sessions_update.modified_count}")
     
-    logger.info(f"[DELETE] Participant {participant.get('name', 'inconnu')} supprimé avec succès ✅")
-    return {"success": True, "message": f"Participant {participant.get('name', 'inconnu')} supprimé"}
+    # 3. Supprimer les sessions privees ou le participant etait seul
+    orphan_sessions = await db.chat_sessions.delete_many({
+        "mode": "private",
+        "participant_ids": {"$size": 0}
+    })
+    logger.info(f"[DELETE] Sessions orphelines supprimees: {orphan_sessions.deleted_count}")
+    
+    # 4. Supprimer le participant
+    result = await db.chat_participants.delete_one({"id": participant_id})
+    logger.info(f"[DELETE] Participant supprime: {result.deleted_count}")
+    
+    logger.info(f"[DELETE] Participant {participant_name} et donnees associees supprimes")
+    return {
+        "success": True, 
+        "message": f"Contact {participant_name} supprime definitivement",
+        "deleted": {
+            "participant": result.deleted_count,
+            "messages": messages_result.deleted_count,
+            "sessions_updated": sessions_update.modified_count,
+            "orphan_sessions": orphan_sessions.deleted_count
+        }
+    }
 
 # --- Active Conversations for Internal Messaging ---
 @api_router.get("/conversations/active")
