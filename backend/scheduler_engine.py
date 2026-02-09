@@ -73,7 +73,7 @@ def store_scheduled_message(scheduler_db, session_id, message_text, mode="commun
             "id": message_id,
             "session_id": session_id,
             "sender_id": "coach",
-            "sender_name": "💪 Coach Bassi",
+            "sender_name": "Coach Bassi",
             "sender_type": "coach",
             "content": message_text,
             "mode": mode,
