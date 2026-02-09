@@ -2452,8 +2452,14 @@ export const ChatWidget = () => {
         const permission = await requestNotificationPermission();
         if (permission === 'granted') {
           setPushEnabled(true);
-          console.log('[NOTIFICATIONS] Permission accordee');
+          // S'abonner aux notifications push avec l'ID du participant
+          const subscribed = await subscribeToPush(participant.id);
+          console.log('[PUSH] Abonnement:', subscribed ? 'OK' : 'Echec');
         }
+      } else if (currentPermission === 'granted' && !isSubscribed()) {
+        // Permission deja accordee mais pas encore abonne -> s'abonner
+        const subscribed = await subscribeToPush(participant.id);
+        if (subscribed) setPushEnabled(true);
       }
       
       // Debloquer l'audio pour iOS (necessite action utilisateur)
