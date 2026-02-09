@@ -213,43 +213,39 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      PROTOCOLE AFROBOOST v7.0 CLOTURE
+      IMPLEMENTATION v7.1 - ADMINISTRATION
       Date: 09.02.2026
       ==========================================
       
-      AUDIT FINAL CONFIRME:
+      MODIFICATIONS EFFECTUEES:
       
-      1. COMMENTAIRE VERSION (ligne 1 server.py)
-         "# VERSION 7.0 - PRODUCTION READY - NE PAS MODIFIER login/tri/sync"
+      1. MODE VUE VISITEUR (CoachDashboard -> ChatWidget)
+         - Bouton ajoute dans la barre des tabs du CoachDashboard
+         - Communication via CustomEvent 'afroboost:visitorPreview'
+         - ChatWidget ecoute et applique isVisitorPreview={true/false}
+         - Style: violet quand actif, minimaliste SVG
       
-      2. DECONNEXION SECURISEE
-         - pushManager.getSubscription() -> unsubscribe()
-         - caches.keys() -> caches.delete()
-         - localStorage.clear() + sessionStorage.clear()
-         - Timeout 3s de securite
-         - Bouton "Deconnexion..." avec feedback
+      2. SUPPRESSION CONTACT DEFINITIVE (Backend)
+         - Route DELETE /api/chat/participants/{id} amelioree
+         - Supprime: participant + messages + sessions orphelines
+         - Log detaille de chaque etape
+         - Retour JSON avec compteurs de suppression
       
-      3. BADGE "(tous)" 80%
-         - text-purple-400/80 (contraste optimal)
-         - ml-1 mr-2 (espacement mobile)
-         - font-light (style minimaliste)
-      
-      4. SYSTEME OPERATIONNEL
-         - /api/health: "healthy" + "database: connected"
-         - /api/push/vapid-key: OK
-         - Tri MongoDB deterministe: OK
+      3. PARSER YOUTUBE CORRIGE (MediaParser.js)
+         - Pattern regex simplifie pour supporter ?si= et autres params
+         - Ancien: /...([a-zA-Z0-9_-]{11})(?:[?&#]|$)/
+         - Nouveau: /...([a-zA-Z0-9_-]{11})/
+         - Miniature mqdefault.jpg disponible
       
       COMPTEURS:
-      - server.py: 7375 lignes
-      - Zero emoji
+      - server.py: 7397 lignes (< 7415 autorise)
+      - Zero emoji ajoute
       - Zero print() debug
       
-      INTERDICTIONS v7.0+:
-      - Modifier server.py sans audit complet
-      - Reintroduire emojis
-      - Toucher login/tri/sync
-      
-      BASE OR ARCHIVEE
+      A TESTER:
+      - Backend: DELETE /api/chat/participants/{id}
+      - Frontend: Bouton Vue Visiteur dans CoachDashboard
+      - Frontend: Parser YouTube avec URL ?si=
   
   - agent: "testing"
     message: |
