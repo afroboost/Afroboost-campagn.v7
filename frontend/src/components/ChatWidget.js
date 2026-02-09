@@ -2440,6 +2440,22 @@ export const ChatWidget = () => {
       }
 
       setStep('chat');
+      
+      // === DEMANDE AUTORISATION NOTIFICATIONS SUR CLIC CONNEXION ===
+      // Anti-blocage mobile: demande liee a une action utilisateur (clic)
+      const currentPermission = getNotificationPermissionStatus();
+      if (currentPermission !== 'granted' && currentPermission !== 'denied') {
+        console.log('[NOTIFICATIONS] Demande autorisation sur clic connexion...');
+        const permission = await requestNotificationPermission();
+        if (permission === 'granted') {
+          setPushEnabled(true);
+          console.log('[NOTIFICATIONS] Permission accordee');
+        }
+      }
+      
+      // Debloquer l'audio pour iOS (necessite action utilisateur)
+      unlockAudio();
+      
       return { success: true, session, participant };
 
     } catch (err) {
