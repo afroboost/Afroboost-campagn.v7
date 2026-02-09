@@ -1277,17 +1277,22 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           const res = await axios.get(`${API}/media/${slug}/thumbnail`);
           if (res.data?.thumbnail) {
             setResolvedThumbnail(res.data.thumbnail);
-            console.log('THUMBNAIL RESOLVED for slug', slug, ':', res.data.thumbnail);
           } else {
             setResolvedThumbnail(null);
           }
         } catch (err) {
-          console.warn('Could not resolve thumbnail for slug:', slug);
           setResolvedThumbnail(null);
         }
       } else {
-        // URL externe directe - utiliser telle quelle
-        setResolvedThumbnail(url);
+        // URL externe - parser pour YouTube/Drive/Image
+        const parsed = parseMediaUrl(url);
+        if (parsed.thumbnailUrl) {
+          setResolvedThumbnail(parsed.thumbnailUrl);
+        } else if (parsed.type === 'image') {
+          setResolvedThumbnail(url);
+        } else {
+          setResolvedThumbnail(null);
+        }
       }
     };
     
