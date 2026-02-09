@@ -213,25 +213,37 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      BASE DE REFERENCE v6 - VERROUILLAGE TOTAL
+      REPARATION SYSTEME MEDIA ET SCHEDULER
       Date: 09.02.2026
       ==========================================
       
-      FICHIERS VERROUILLES (NE PAS MODIFIER):
-      - backend/server.py: 7387 lignes
-      - frontend/src/components/ChatWidget.js
-      - frontend/src/services/notificationService.js
-      - frontend/public/sw.js
+      CORRECTIONS EFFECTUEES:
       
-      CONFORMITE VALIDEE:
-      - Tag notifications: 'afroboost-chat-sync' (regroupement actif)
-      - Deconnexion: window.location.replace('/') + localStorage.clear()
-      - Reservations: 4 dates (08.02, 15.02, 22.02, 01.03) intactes
-      - Design: 0 emoji, 100% SVG minimaliste
+      1. PARSER YOUTUBE (media_handler.py)
+         - Regex amelioree pour youtu.be/ID?si=xxx
+         - Pattern: (?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&]|$)
       
-      REGLE D'OR:
-      Toute future demande (Twilio, etc.) ne doit PAS toucher
-      aux fichiers verrouilles ci-dessus.
+      2. APERCU MEDIA (CoachDashboard.js)
+         - useEffect parseMediaUrl pour URLs YouTube/Drive externes
+         - Extraction correcte de la thumbnail YouTube
+      
+      3. FIX IMAGES DRIVE (MediaMessage.js + CampaignManager.js)
+         - Ajout referrerPolicy="no-referrer" sur les <img>
+         - Evite les blocages de securite navigateur
+      
+      4. SCHEDULER (scheduler_engine.py)
+         - Deja fonctionnel avec champs optionnels media_url, cta_*
+         - Architecture POSER-RAMASSER preservee
+      
+      FICHIERS MODIFIES (HORS VERROUILLAGE):
+      - backend/media_handler.py (regex YouTube)
+      - frontend/src/components/CoachDashboard.js (parseMediaUrl dans useEffect)
+      - frontend/src/components/coach/CampaignManager.js (referrerPolicy)
+      - frontend/src/components/chat/MediaMessage.js (referrerPolicy)
+      
+      CONTRAINTES RESPECTEES:
+      - server.py = 7387 lignes (INCHANGE)
+      - Login, reservations, notifications INTACTS
   
   - agent: "testing"
     message: |
