@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 # === PATTERNS REGEX ===
 YOUTUBE_PATTERNS = [
-    re.compile(r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([a-zA-Z0-9_-]{11})'),
+    re.compile(r'(?:youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]{11})(?:[?&]|$)'),
+    re.compile(r'youtube\.com/embed/([a-zA-Z0-9_-]{11})'),
     re.compile(r'youtube\.com/shorts/([a-zA-Z0-9_-]{11})')
 ]
 
