@@ -1784,9 +1784,22 @@ export const ChatWidget = () => {
           }];
         });
         
-        // Notification sonore si message d'un autre
+        // === NOTIFICATIONS SONORES ET VISUELLES ===
+        // Verifier si l'utilisateur regarde ACTIVEMENT la conversation
+        const isUserWatchingChat = isOpen && document.hasFocus();
+        
         if (messageData.senderId !== participantId) {
-          playSoundIfEnabled(messageData.type === 'coach' ? 'coach' : 'message');
+          // TOUJOURS jouer le son sauf si l'utilisateur regarde le chat
+          if (!isUserWatchingChat) {
+            playSoundIfEnabled(messageData.type === 'coach' ? 'coach' : 'message');
+            
+            // Afficher notification navigateur si onglet en arriere-plan
+            const senderName = messageData.sender || (messageData.type === 'coach' ? 'Coach Bassi' : 'Afroboost');
+            showNewMessageNotification(senderName, messageData.text);
+          } else {
+            // L'utilisateur regarde le chat - son leger optionnel
+            console.log('[NOTIFICATIONS] Utilisateur actif sur le chat - notification ignoree');
+          }
         }
       });
       
