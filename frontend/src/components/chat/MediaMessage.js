@@ -129,12 +129,23 @@ const MediaMessage = ({
       }}
       data-testid="media-message"
     >
+      {/* === FICHIER NON SUPPORTE === */}
+      {isUnsupportedFile && (
+        <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', borderBottom: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span style={{ color: '#ef4444', fontSize: '13px' }}>Fichier non supporte</span>
+        </div>
+      )}
+      
       {/* === ZONE MÉDIA === */}
+      {mediaInfo && (
       <div 
         style={{
           position: 'relative',
           width: '100%',
-          paddingBottom: mediaInfo.type === 'youtube' ? '56.25%' : 'auto', // 16:9 pour YouTube
+          paddingBottom: mediaInfo.type === 'youtube' ? '56.25%' : 'auto',
           background: '#000',
           minHeight: isCompact ? '120px' : '180px',
           display: 'flex',
