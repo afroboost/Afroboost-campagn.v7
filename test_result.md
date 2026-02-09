@@ -109,7 +109,7 @@ user_problem_statement: |
   3. Vérification intégrité server.py (7397 lignes)
 
 backend:
-  - task: "Backend Socket.IO pour messages temps réel"
+  - task: "DELETE /api/chat/participants/{id} - Suppression définitive contact"
     implemented: true
     working: true
     file: "backend/server.py"
@@ -119,9 +119,9 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "Socket.IO configuré correctement (ligne 74-141), endpoint HTTP répond, websocket avec issue mineure de connexion externe mais service fonctionnel"
+        comment: "DELETE endpoint testé avec succès (ligne 3908-3952). Créé participant test, vérifié suppression avec compteurs retournés (participant=1, messages=0, sessions=0, orphan_sessions=0). Test 404 pour participant inexistant fonctionne correctement."
 
-  - task: "Endpoints chat existants (non-régression)"
+  - task: "GET /api/health - Non-régression"
     implemented: true
     working: true
     file: "backend/server.py"
@@ -131,9 +131,9 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "Tous les endpoints chat testés avec succès: participants, sessions, messages. CRUD complet fonctionne"
+        comment: "Endpoint santé testé avec succès. Retourne correctement {\"status\":\"healthy\",\"database\":\"connected\"} comme attendu."
 
-  - task: "Intégrité server.py (7387 lignes)"
+  - task: "GET /api/chat/participants - Non-régression"
     implemented: true
     working: true
     file: "backend/server.py"
@@ -143,7 +143,31 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "Vérification OK: server.py contient exactement 7387 lignes comme requis, pas de modification"
+        comment: "Endpoint participants testé avec succès. Retourne liste des participants (0 actuellement), fonctionnel sans régression."
+
+  - task: "Autres endpoints - Non-régression"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Endpoints clés testés: /api/courses (2 items), /api/offers (3 items), /api/users (0 items). Tous fonctionnels, aucune régression détectée."
+
+  - task: "Intégrité server.py (7397 lignes)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Vérification OK: server.py contient exactement 7397 lignes comme requis dans la spécification v7.1. Augmentation autorisée pour la route DELETE confirmée."
 
 frontend:
   - task: "Son de notification via Web Audio API"
