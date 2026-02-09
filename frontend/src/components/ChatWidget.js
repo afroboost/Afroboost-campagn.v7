@@ -921,19 +921,27 @@ export const ChatWidget = () => {
   
   // === FONCTION DE DÉCONNEXION STRICTE (HARD RESET) ===
   const handleLogout = async () => {
+    let cleanupDone = false;
     try {
-      // Nettoyer TOUT le stockage local et session
-      localStorage.clear();
-      sessionStorage.clear();
+      // 1. Desactiver les notifications push (Service Worker)
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(r => r.unregister()));
+        console.log('[LOGOUT] ServiceWorkers desinscrits:', registrations.length);
+      }
       
-      // Vider les caches (images/medias) pour confidentialite
+      // 2. Vider les caches (images/medias)
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
         console.log('[LOGOUT] Caches vides:', cacheNames.length);
       }
       
-      // Reinitialiser tous les etats
+      // 3. Nettoyer le stockage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // 4. Reinitialiser les etats
       setSessionData(null);
       setParticipantId(null);
       setMessages([]);
@@ -944,14 +952,16 @@ export const ChatWidget = () => {
       setShowMenu(false);
       setStep('welcome');
       
-      console.log('[LOGOUT] Deconnexion complete');
-      
-      // HARD RESET: Remplace completement l'URL et empeche le retour
-      window.location.replace('/');
+      cleanupDone = true;
+      console.log('[LOGOUT] Nettoyage complet');
     } catch (err) {
       console.error('[LOGOUT] Erreur:', err);
-      localStorage.clear();
-      sessionStorage.clear();
+    } finally {
+      // Toujours rediriger, meme en cas d'erreur
+      if (!cleanupDone) {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
       window.location.replace('/');
     }
   };
