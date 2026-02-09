@@ -213,35 +213,36 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      SYSTEME OPERATIONNEL - SCHEDULER + MEDIAS
+      INTEGRATION TOTALE VALIDEE - SYNC + DIRECT
       Date: 09.02.2026
       ==========================================
       
       CORRECTIONS EFFECTUEES:
       
-      1. CHATWIDGET.JS - Handler message_received
-         - AJOUT des champs media: media_url, media_type, cta_type, cta_text, cta_link
-         - Les messages Socket.io avec media sont maintenant rendus correctement
-         - Avant: seuls text, sender, senderId etaient transmis
-         - Apres: tous les champs media inclus dans setMessages()
+      1. ROUTE /messages/sync (server.py)
+         - Mapping content -> text pour le frontend
+         - Inclusion champs media: media_url, media_type, cta_type, cta_text, cta_link
+         - Format unifie pour tous les messages
       
-      2. SCHEDULER_ENGINE.PY
-         - Emoji supprime du sender ("Coach Bassi" au lieu de "💪 Coach Bassi")
-         - Tous les champs media passes via emit_socket_signal
+      2. ROUTE /chat/sessions/{id}/messages (server.py)
+         - Meme mapping que /messages/sync
+         - Compatibilite fallback frontend
       
-      3. SERVER.PY (7393 lignes)
-         - Route /scheduler/emit-group-message robuste avec try/except
-         - Fallback texte seul si media mal forme
+      3. SUPPRESSION EMOJI "💪"
+         - scheduler_engine.py: sender_name = "Coach Bassi"
+         - server.py ligne 1897: sender_name = "Coach Bassi"
+         - server.py ligne 5838: sender = "Coach Bassi"
       
-      4. MEDIAPARSER.JS
-         - Regex YouTube amelioree pour youtu.be/ID?si=xxx
-         - Support Drive /file/d/ID/preview
+      4. CHATWIDGET.JS
+         - Handler message_received: tous les champs media inclus
+         - Messages socket et historique identiques graphiquement
       
-      TEST REUSSI:
-      - Message mixte (Video YouTube + CTA) emis via scheduler -> SUCCESS
-      - Champs media transmis au frontend via Socket.io
+      TESTS REUSSIS:
+      - Emission message avec media via scheduler -> SUCCESS
+      - Format unifie content->text + champs media -> OK
+      - Aucune erreur dans les logs
       
-      server.py = 7393 lignes (limite 7405)
+      server.py = 7394 lignes (limite 7410)
   
   - agent: "testing"
     message: |
