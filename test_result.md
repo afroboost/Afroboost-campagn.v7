@@ -212,30 +212,28 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implementation V5 - Persistance MongoDB et fiabilite Push:
+      Implementation V6 - Finalisation Production et Etancheite:
       
-      1. STOCKAGE DURABLE (MongoDB)
-         - Collection push_subscriptions avec index unique sur endpoint
-         - Index cree au startup: db.push_subscriptions.create_index("endpoint", unique=True)
-         - Evite les doublons d'abonnement (meme telephone = 1 seul enregistrement)
+      1. SECURISATION ENDPOINT-USER
+         - Si endpoint existe pour AUTRE user -> reassigne au nouveau
+         - Evite qu'un ancien user recoive les messages du nouveau
+         - Cle: update_one({"subscription.endpoint": endpoint}, {...})
       
-      2. NETTOYAGE AUTOMATIQUE (Erreur 410 Gone)
-         - Si webpush retourne 404 ou 410 -> abonnement desactive (active: False)
-         - Signifie que l'utilisateur a desinstalle l'app ou revoque la permission
+      2. PRIORITE ET CANAUX (sw.js)
+         - tag unique: 'afroboost-chat-' + Date.now()
+         - silent: false pour forcer le son
+         - renotify: true pour chaque message
       
-      3. INTELLIGENCE D'ENVOI (Skip si socket actif)
-         - Verifie sio.manager.rooms avant d'envoyer push
-         - Si session_id a des clients connectes -> skip push
-         - Evite vibration inutile si l'utilisateur a le chat ouvert
-      
-      4. ICONE AFROBOOST
-         - sw.js et backend utilisent /logo192.png pour icon et badge
-         - Notification affiche le logo Afroboost au lieu de l'icone par defaut
+      3. NETTOYAGE DES LOGS
+         - Succes push -> logger.debug (invisible en prod)
+         - Seules les ERREURS critiques -> logger.error
+         - Logs de simulation email -> logger.debug
       
       CONTRAINTES RESPECTEES:
       - server.py = 7387 lignes exactement
       - Aucune modification login/reservation/medias
-      - Verification via logs: "[INDEX] push_subscriptions.endpoint unique OK"
+      - Design minimaliste (pas d'emojis)
+      - window.location.replace('/') inchange
   
   - agent: "testing"
     message: |
