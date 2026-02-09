@@ -213,36 +213,34 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      INTEGRATION TOTALE VALIDEE - SYNC + DIRECT
+      SYSTEME UNIFIE, SECURISE ET SANS DOUBLONS
       Date: 09.02.2026
       ==========================================
       
       CORRECTIONS EFFECTUEES:
       
-      1. ROUTE /messages/sync (server.py)
-         - Mapping content -> text pour le frontend
-         - Inclusion champs media: media_url, media_type, cta_type, cta_text, cta_link
-         - Format unifie pour tous les messages
+      1. FONCTION UTILITAIRE format_message_for_frontend()
+         - Centralise la conversion content -> text
+         - Unifie le formatage pour toutes les routes
+         - Supprime automatiquement les emojis du sender
+         - Inclut tous les champs media (ou null)
       
-      2. ROUTE /chat/sessions/{id}/messages (server.py)
-         - Meme mapping que /messages/sync
-         - Compatibilite fallback frontend
+      2. ANTI-DOUBLONS (ChatWidget.js)
+         - Verification ID et _id avant ajout
+         - Set avec flatMap pour couvrir les deux formats
+         - Applique dans message_received ET fetchLatestMessages
       
-      3. SUPPRESSION EMOJI "💪"
-         - scheduler_engine.py: sender_name = "Coach Bassi"
-         - server.py ligne 1897: sender_name = "Coach Bassi"
-         - server.py ligne 5838: sender = "Coach Bassi"
+      3. BLINDAGE RENDU MEDIA
+         - Optional chaining: msg?.media_url
+         - Validation URL: startsWith('http')
+         - Pas de crash si media invalide
       
-      4. CHATWIDGET.JS
-         - Handler message_received: tous les champs media inclus
-         - Messages socket et historique identiques graphiquement
+      4. ROUTES UNIFIEES
+         - /messages/sync: utilise format_message_for_frontend
+         - /chat/sessions/{id}/messages: idem
+         - Format identique pour live et historique
       
-      TESTS REUSSIS:
-      - Emission message avec media via scheduler -> SUCCESS
-      - Format unifie content->text + champs media -> OK
-      - Aucune erreur dans les logs
-      
-      server.py = 7394 lignes (limite 7410)
+      server.py = 7372 lignes (limite 7405)
   
   - agent: "testing"
     message: |
