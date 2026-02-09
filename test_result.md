@@ -213,33 +213,34 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      FLUX DE GROUPE ET PERFORMANCE VALIDES
+      V7 VERROUILLEE ET PRETE
       Date: 09.02.2026
       ==========================================
       
-      CORRECTIONS EFFECTUEES:
+      CORRECTIONS FINALES:
       
-      1. ROUTE /messages/sync INCLUSIVE (server.py)
-         - Query MongoDB: $or [session_id, broadcast:true, type:"group"]
-         - Nouveaux users voient TOUS les messages de groupe passes
-         - Tri par created_at ASC
-         - format_message_for_frontend applique
+      1. TRI DETERMINISTE (server.py)
+         - .sort([("created_at", 1), ("id", 1)])
+         - Meme timestamp = ordre par ID garanti
+         - Conversation ne change jamais de place au refresh
       
-      2. ANTI-DOUBLONS OPTIMISE (ChatWidget.js)
-         - Set avec flatMap pour id ET _id
-         - Verification avant ajout dans setMessages
-         - Pas de recalcul inutile
+      2. INDICATEUR MESSAGES DE GROUPE (CoachDashboard.js)
+         - Affiche "(tous)" en violet pour broadcast/group
+         - Coach voit preuve visuelle de ses annonces
+         - Champ "broadcast" ajoute dans format_message_for_frontend
       
-      3. SECURITE FICHIERS NON SUPPORTES (MediaMessage.js)
-         - Liste: .zip, .exe, .rar, .7z, .tar, .gz, .dmg, .iso, .bin
-         - Affiche "Fichier non supporte" avec icone SVG
-         - Ne plante pas le chat
+      3. FORMAT UNIFIE
+         - broadcast: true/false inclus dans le JSON
+         - scheduled: true/false inclus
+         - msg.content || msg.text pour compatibilite
       
-      4. BLINDAGE RENDU CONDITIONNEL
-         - {mediaInfo && (...)} pour la zone media
-         - Fallback texte si media invalide
+      SYSTEME COMPLET:
+      - Anti-doublons par ID
+      - Fichiers .exe/.zip bloques
+      - Messages de groupe inclusifs
+      - Tri chronologique stable
       
-      server.py = 7373 lignes (limite 7385)
+      server.py = 7374 lignes (limite 7385)
   
   - agent: "testing"
     message: |
