@@ -3378,18 +3378,20 @@ export const ChatWidget = () => {
                       {/* Bouton Déconnexion */}
                       <button
                         onClick={() => { handleLogout(); }}
+                        disabled={isLoggingOut}
                         style={{
                           width: '100%',
                           padding: '10px 14px',
                           textAlign: 'left',
                           fontSize: '12px',
-                          color: '#ef4444',
+                          color: isLoggingOut ? '#888' : '#ef4444',
                           background: 'none',
                           border: 'none',
-                          cursor: 'pointer',
+                          cursor: isLoggingOut ? 'wait' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '10px'
+                          gap: '10px',
+                          opacity: isLoggingOut ? 0.6 : 1
                         }}
                         className="hover:bg-white/10"
                         data-testid="logout-btn"
@@ -3399,7 +3401,7 @@ export const ChatWidget = () => {
                           <polyline points="16 17 21 12 16 7"></polyline>
                           <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
-                        Se déconnecter
+                        {isLoggingOut ? 'Deconnexion...' : 'Se deconnecter'}
                       </button>
                     </div>
                   )}
