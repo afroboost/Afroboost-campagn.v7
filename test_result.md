@@ -213,38 +213,43 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      AFROBOOST v7 : SYSTEME DE PRODUCTION VERROUILLE
+      PROTOCOLE AFROBOOST v7.0 CLOTURE
       Date: 09.02.2026
       ==========================================
       
-      UX DECONNEXION COMPLETE:
+      AUDIT FINAL CONFIRME:
       
-      1. FEEDBACK IMMEDIAT
-         - isLoggingOut state ajoute
-         - Bouton affiche "Deconnexion..."
-         - Bouton desactive (disabled + cursor:wait)
-         - Opacite reduite pendant le processus
+      1. COMMENTAIRE VERSION (ligne 1 server.py)
+         "# VERSION 7.0 - PRODUCTION READY - NE PAS MODIFIER login/tri/sync"
       
-      2. TIMEOUT DE SECURITE
-         - setTimeout(3000) force redirect
-         - Evite blocage si caches.delete() echoue
-         - clearTimeout si succes avant 3s
+      2. DECONNEXION SECURISEE
+         - pushManager.getSubscription() -> unsubscribe()
+         - caches.keys() -> caches.delete()
+         - localStorage.clear() + sessionStorage.clear()
+         - Timeout 3s de securite
+         - Bouton "Deconnexion..." avec feedback
       
-      3. COMMENTAIRE VERSION (server.py ligne 1)
-         - "VERSION 7.0 - PRODUCTION READY"
-         - Instructions: NE PAS MODIFIER login/tri/sync
+      3. BADGE "(tous)" 80%
+         - text-purple-400/80 (contraste optimal)
+         - ml-1 mr-2 (espacement mobile)
+         - font-light (style minimaliste)
       
-      4. NETTOYAGE DEBUG
-         - Aucun print() restant
-         - Logs console minimaux
+      4. SYSTEME OPERATIONNEL
+         - /api/health: "healthy" + "database: connected"
+         - /api/push/vapid-key: OK
+         - Tri MongoDB deterministe: OK
       
-      VERIFICATIONS FINALES:
-      - server.py = 7375 lignes OK
-      - Tri MongoDB: intact
-      - 4 dates reservation: intactes
-      - Zero emoji: OK
+      COMPTEURS:
+      - server.py: 7375 lignes
+      - Zero emoji
+      - Zero print() debug
       
-      SYSTEME VERROUILLE ET PRET
+      INTERDICTIONS v7.0+:
+      - Modifier server.py sans audit complet
+      - Reintroduire emojis
+      - Toucher login/tri/sync
+      
+      BASE OR ARCHIVEE
   
   - agent: "testing"
     message: |
