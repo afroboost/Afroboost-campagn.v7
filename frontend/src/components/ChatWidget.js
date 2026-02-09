@@ -1712,22 +1712,22 @@ export const ChatWidget = () => {
       
       // Écouter les nouveaux messages en temps réel
       socket.on('message_received', (messageData) => {
-        console.log('[SOCKET.IO] 📩 Message reçu:', messageData);
+        console.log('[SOCKET.IO] Message recu:', messageData);
         
-        // Quand un message est reçu, cacher l'indicateur de saisie
+        // Quand un message est recu, cacher l'indicateur de saisie
         setTypingUser(null);
         
-        // Ne pas dupliquer nos propres messages (déjà ajoutés localement)
+        // Ne pas dupliquer nos propres messages (deja ajoutes localement)
         if (messageData.senderId === participantId && messageData.type === 'user') {
           return;
         }
         
-        // Ajouter le message à la liste
+        // Ajouter le message a la liste avec TOUS les champs media
         setMessages(prev => {
-          // Éviter les doublons (par ID)
+          // Eviter les doublons (par ID)
           const exists = prev.some(m => m.id === messageData.id);
           if (exists) {
-            console.log('[SOCKET.IO] Doublon ignoré:', messageData.id);
+            console.log('[SOCKET.IO] Doublon ignore:', messageData.id);
             return prev;
           }
           
@@ -1737,7 +1737,13 @@ export const ChatWidget = () => {
             text: messageData.text,
             sender: messageData.sender,
             senderId: messageData.senderId,
-            created_at: messageData.created_at || new Date().toISOString()
+            created_at: messageData.created_at || new Date().toISOString(),
+            // Champs media pour les messages programmes
+            media_url: messageData.media_url || null,
+            media_type: messageData.media_type || null,
+            cta_type: messageData.cta_type || null,
+            cta_text: messageData.cta_text || null,
+            cta_link: messageData.cta_link || null
           }];
         });
         
