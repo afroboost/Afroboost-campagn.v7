@@ -108,6 +108,43 @@ user_problem_statement: |
   2. Notifications navigateur (Web Push) - Demander autorisation au premier chargement post-login
   3. Afficher notification systeme avec le texte du message Afroboost meme si onglet en arriere-plan
 
+backend:
+  - task: "Backend Socket.IO pour messages temps réel"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Socket.IO configuré correctement (ligne 74-141), endpoint HTTP répond, websocket avec issue mineure de connexion externe mais service fonctionnel"
+
+  - task: "Endpoints chat existants (non-régression)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Tous les endpoints chat testés avec succès: participants, sessions, messages. CRUD complet fonctionne"
+
+  - task: "Intégrité server.py (7387 lignes)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Vérification OK: server.py contient exactement 7387 lignes comme requis, pas de modification"
+
 frontend:
   - task: "Son de notification via Web Audio API"
     implemented: true
