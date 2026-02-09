@@ -328,6 +328,7 @@ const MediaMessage = ({
           </div>
         )}
       </div>
+      )}
 
       {/* === DESCRIPTION === */}
       {description && (
