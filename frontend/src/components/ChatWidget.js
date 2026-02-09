@@ -3906,6 +3906,7 @@ export const ChatWidget = () => {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Liste des sessions ou messages */}
                 {!selectedCoachSession ? (
