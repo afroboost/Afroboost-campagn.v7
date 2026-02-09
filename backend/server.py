@@ -4437,19 +4437,11 @@ async def toggle_session_ai(session_id: str):
 # --- Chat Messages ---
 @api_router.get("/chat/sessions/{session_id}/messages")
 async def get_session_messages(session_id: str, include_deleted: bool = False):
-    """Recupere tous les messages d'une session avec format unifie pour le frontend."""
+    """Recupere tous les messages d'une session avec format unifie."""
     query = {"session_id": session_id}
-    if not include_deleted:
-        query["is_deleted"] = {"$ne": True}
-    raw_messages = await db.chat_messages.find(query, {"_id": 0}).sort("created_at", 1).to_list(500)
-    # Mapper les champs pour le frontend
-    return [{
-        "id": m.get("id"), "type": "user" if m.get("sender_type") == "user" else ("coach" if m.get("sender_type") == "coach" else "ai"),
-        "text": m.get("content", ""), "sender": m.get("sender_name", ""), "senderId": m.get("sender_id", ""),
-        "sender_type": m.get("sender_type", "ai"), "created_at": m.get("created_at"),
-        "media_url": m.get("media_url"), "media_type": m.get("media_type"),
-        "cta_type": m.get("cta_type"), "cta_text": m.get("cta_text"), "cta_link": m.get("cta_link")
-    } for m in raw_messages]
+    if not include_deleted: query["is_deleted"] = {"$ne": True}
+    raw = await db.chat_messages.find(query, {"_id": 0}).sort("created_at", 1).to_list(500)
+    return [format_message_for_frontend(m) for m in raw]
 
 
 # ==================== ENDPOINT SYNC "RAMASSER" ====================
