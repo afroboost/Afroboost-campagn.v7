@@ -51,7 +51,7 @@ self.addEventListener('push', (event) => {
     icon: data.icon,
     badge: data.badge,
     vibrate: [200, 100, 200],
-    tag: 'afroboost-chat-' + Date.now(),
+    tag: 'afroboost-chat-sync',
     renotify: true,
     requireInteraction: false,
     silent: false,
