@@ -4447,8 +4447,7 @@ async def get_session_messages(session_id: str, include_deleted: bool = False):
 # ==================== ENDPOINT SYNC "RAMASSER" ====================
 @api_router.get("/messages/sync")
 async def sync_messages(session_id: str, since: Optional[str] = None, limit: int = 100):
-    """RAMASSER: Messages de la session OU messages de groupe (broadcast)."""
-    # Query inclusive: session_id specifique OU messages de groupe
+    """RAMASSER: Messages de la session OU messages de groupe (broadcast). Tri deterministe."""
     base_query = {"is_deleted": {"$ne": True}, "$or": [{"session_id": session_id}, {"broadcast": True}, {"type": "group"}]}
     if since:
         try:
@@ -4458,7 +4457,8 @@ async def sync_messages(session_id: str, since: Optional[str] = None, limit: int
             base_query["created_at"] = {"$gt": parsed.astimezone(timezone.utc).isoformat()}
         except Exception:
             base_query["created_at"] = {"$gt": since}
-    raw = await db.chat_messages.find(base_query, {"_id": 0}).sort("created_at", 1).to_list(limit)
+    # Tri deterministe: created_at puis id pour garantir un ordre stable
+    raw = await db.chat_messages.find(base_query, {"_id": 0}).sort([("created_at", 1), ("id", 1)]).to_list(limit)
     messages = [format_message_for_frontend(m) for m in raw]
     sync_ts = datetime.now(timezone.utc).isoformat()
     return {"success": True, "session_id": session_id, "count": len(messages), "messages": messages, "synced_at": sync_ts, "server_time_utc": sync_ts}
