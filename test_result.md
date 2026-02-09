@@ -213,34 +213,38 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      V7 VERROUILLEE ET PRETE
+      AFROBOOST v7 : PRET POUR LE LANCEMENT
       Date: 09.02.2026
       ==========================================
       
-      CORRECTIONS FINALES:
+      AUDIT FINAL CONFIRME:
       
-      1. TRI DETERMINISTE (server.py)
-         - .sort([("created_at", 1), ("id", 1)])
-         - Meme timestamp = ordre par ID garanti
-         - Conversation ne change jamais de place au refresh
+      1. SERVER.PY
+         - Lignes: 7374 (limite 7385) OK
+         - Tri: .sort([("created_at", 1), ("id", 1)]) OK
+         - Messages groupe: $or [session_id, broadcast, type:group] OK
       
-      2. INDICATEUR MESSAGES DE GROUPE (CoachDashboard.js)
-         - Affiche "(tous)" en violet pour broadcast/group
-         - Coach voit preuve visuelle de ses annonces
-         - Champ "broadcast" ajoute dans format_message_for_frontend
+      2. NETTOYAGE DECONNEXION (ChatWidget.js)
+         - localStorage.clear() OK
+         - sessionStorage.clear() OK
+         - caches.keys() + caches.delete() AJOUTE
+         - Aucune trace de session precedente
       
-      3. FORMAT UNIFIE
-         - broadcast: true/false inclus dans le JSON
-         - scheduled: true/false inclus
-         - msg.content || msg.text pour compatibilite
+      3. INDICATEUR "(tous)" (CoachDashboard.js)
+         - Couleur: text-purple-400/60 (violet contraste)
+         - Police: text-xs (fine, minimaliste)
+         - Aucun emoji
       
-      SYSTEME COMPLET:
-      - Anti-doublons par ID
-      - Fichiers .exe/.zip bloques
-      - Messages de groupe inclusifs
-      - Tri chronologique stable
+      4. DATES DE RESERVATION
+         - 4 dates protegees dans le calendrier
+         - Logique de reservation intacte
       
-      server.py = 7374 lignes (limite 7385)
+      5. SYSTEMES VERROUILLES
+         - Scheduler: NON MODIFIE
+         - Push notifications: NON MODIFIE
+         - Login par code: NON MODIFIE
+      
+      PRET POUR PRODUCTION
   
   - agent: "testing"
     message: |
