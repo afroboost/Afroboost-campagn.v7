@@ -4438,19 +4438,8 @@ async def get_session_messages(session_id: str, include_deleted: bool = False):
 # ==================== ENDPOINT SYNC "RAMASSER" ====================
 @api_router.get("/messages/sync")
 async def sync_messages(session_id: str, since: Optional[str] = None, limit: int = 100):
-    """
-    RAMASSER: Récupère les messages depuis la DB.
-    Architecture "POSER-RAMASSER" - Le mobile appelle cet endpoint au réveil.
-    
-    IMPORTANT: Toutes les comparaisons temporelles sont en UTC ISO 8601.
-    Le paramètre 'since' doit être en UTC ISO 8601 format.
-    """
-    query = {
-        "session_id": session_id,
-        "is_deleted": {"$ne": True}
-    }
-    
-    # Si "since" est fourni, filtrer les messages STRICTEMENT après cette date
+    """RAMASSER: Recupere les messages depuis la DB avec format unifie pour le frontend."""
+    query = {"session_id": session_id, "is_deleted": {"$ne": True}}
     if since:
         try:
             if 'Z' in since:
@@ -4464,24 +4453,30 @@ async def sync_messages(session_id: str, since: Optional[str] = None, limit: int
             logger.warning(f"[SYNC] Erreur parsing 'since': {e}")
             query["created_at"] = {"$gt": since}
     
-    messages = await db.chat_messages.find(
-        query, 
-        {"_id": 0}
-    ).sort("created_at", 1).to_list(limit)
+    raw_messages = await db.chat_messages.find(query, {"_id": 0}).sort("created_at", 1).to_list(limit)
     
-    # Timestamp UTC pour la prochaine sync
+    # Mapper les champs pour le frontend (content -> text, inclure media)
+    messages = []
+    for m in raw_messages:
+        messages.append({
+            "id": m.get("id"),
+            "type": "user" if m.get("sender_type") == "user" else ("coach" if m.get("sender_type") == "coach" else "ai"),
+            "text": m.get("content", ""),
+            "sender": m.get("sender_name", ""),
+            "senderId": m.get("sender_id", ""),
+            "sender_type": m.get("sender_type", "ai"),
+            "created_at": m.get("created_at"),
+            "media_url": m.get("media_url"),
+            "media_type": m.get("media_type"),
+            "cta_type": m.get("cta_type"),
+            "cta_text": m.get("cta_text"),
+            "cta_link": m.get("cta_link")
+        })
+    
     sync_timestamp = datetime.now(timezone.utc).isoformat()
+    logger.debug(f"[SYNC] {len(messages)} message(s) pour session {session_id[:8]}...")
     
-    logger.info(f"[SYNC] 📱 Ramassé {len(messages)} message(s) pour session {session_id[:8]}... (since={since[:20] if since else 'None'})")
-    
-    return {
-        "success": True,
-        "session_id": session_id,
-        "count": len(messages),
-        "messages": messages,
-        "synced_at": sync_timestamp,
-        "server_time_utc": sync_timestamp
-    }
+    return {"success": True, "session_id": session_id, "count": len(messages), "messages": messages, "synced_at": sync_timestamp, "server_time_utc": sync_timestamp}
 
 
 @api_router.get("/messages/sync/all")
