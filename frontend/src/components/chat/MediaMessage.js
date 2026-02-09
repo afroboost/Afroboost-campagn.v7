@@ -95,8 +95,12 @@ const MediaMessage = ({
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Parser le média
-  const mediaInfo = parseMediaUrl(mediaUrl);
+  // Extensions non supportees
+  const UNSUPPORTED_EXTENSIONS = ['.zip', '.exe', '.rar', '.7z', '.tar', '.gz', '.dmg', '.iso', '.bin'];
+  const isUnsupportedFile = mediaUrl && UNSUPPORTED_EXTENSIONS.some(ext => mediaUrl.toLowerCase().endsWith(ext));
+
+  // Parser le média (seulement si supporte)
+  const mediaInfo = isUnsupportedFile ? null : parseMediaUrl(mediaUrl);
 
   // Gérer le clic sur le CTA
   const handleCtaClick = useCallback((e) => {
