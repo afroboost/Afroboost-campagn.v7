@@ -920,13 +920,20 @@ export const ChatWidget = () => {
   };
   
   // === FONCTION DE DÉCONNEXION STRICTE (HARD RESET) ===
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
       // Nettoyer TOUT le stockage local et session
       localStorage.clear();
       sessionStorage.clear();
       
-      // Réinitialiser tous les états
+      // Vider les caches (images/medias) pour confidentialite
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('[LOGOUT] Caches vides:', cacheNames.length);
+      }
+      
+      // Reinitialiser tous les etats
       setSessionData(null);
       setParticipantId(null);
       setMessages([]);
@@ -937,9 +944,9 @@ export const ChatWidget = () => {
       setShowMenu(false);
       setStep('welcome');
       
-      console.log('[LOGOUT] Déconnexion effectuée');
+      console.log('[LOGOUT] Deconnexion complete');
       
-      // HARD RESET: Remplace complètement l'URL et empêche le retour
+      // HARD RESET: Remplace completement l'URL et empeche le retour
       window.location.replace('/');
     } catch (err) {
       console.error('[LOGOUT] Erreur:', err);
