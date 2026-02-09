@@ -411,9 +411,9 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
   };
   
   // === DÉTECTION MÉDIA AVEC CTA ===
-  // Si le message contient un média (media_url) et/ou un CTA
-  const hasMedia = msg.media_url && msg.media_url.trim() !== '';
-  const hasCta = msg.cta_type && msg.cta_text;
+  // Si le message contient un média (media_url) et/ou un CTA - BLINDAGE
+  const hasMedia = msg?.media_url && typeof msg.media_url === 'string' && msg.media_url.startsWith('http');
+  const hasCta = msg?.cta_type && msg?.cta_text;
   
   // Si c'est un message média avec CTA, utiliser MediaMessage
   if (hasMedia || hasCta) {
