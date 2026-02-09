@@ -213,38 +213,36 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      LANCEMENT v7 VALIDE : SYSTEME ETANCHE
+      AFROBOOST v7 : PRET POUR LA PRODUCTION
       Date: 09.02.2026
       ==========================================
       
-      SECURISATION LOGOUT COMPLETE:
+      DECONNEXION INTELLIGENTE:
       
-      1. DESINSCRIPTION SERVICE WORKER
-         - navigator.serviceWorker.getRegistrations()
-         - Promise.all(registrations.map(r => r.unregister()))
-         - Plus aucune notification apres logout
+      1. PUSH UNSUBSCRIBE (garde PWA installee)
+         - registration.pushManager.getSubscription()
+         - subscription.unsubscribe()
+         - Icone app reste sur ecran d'accueil
       
-      2. NETTOYAGE COMPLET
-         - caches.keys() + caches.delete() (images/medias)
-         - localStorage.clear()
-         - sessionStorage.clear()
-         - Reinitialisation etats React
+      2. NETTOYAGE SEQUENTIEL
+         - await caches.delete() AVANT redirect
+         - localStorage.clear() + sessionStorage.clear()
+         - Etats React reinitialises
       
-      3. BLOC TRY...FINALLY
-         - Redirection garantie meme en cas d'erreur
-         - cleanupDone flag pour eviter double clear
+      3. BADGE "(tous)" OPTIMISE
+         - ml-1 mr-2 (espacement equilibre)
+         - text-purple-400/80 (lisibilite 80%)
+         - font-light (style fin)
+         - Pas de chevauchement avec l'heure
       
-      4. BADGE "(tous)" OPTIMISE
-         - Opacite: 60% -> 80% (text-purple-400/80)
-         - font-light ajoute pour style fin
-         - Lisible en exterieur sur mobile
+      VERIFICATIONS FINALES:
+      - server.py = 7374 lignes OK
+      - Tri MongoDB: [("created_at", 1), ("id", 1)] OK
+      - 4 dates reservation: INTACTES
+      - Login par code: INTACT
+      - Zero emoji: OK
       
-      5. PERFORMANCE format_message_for_frontend
-         - Fonction inline simple (dict comprehension)
-         - Pas de boucle ni calcul lourd
-         - 50 messages = <1ms de traitement
-      
-      server.py = 7374 lignes (limite 7385)
+      PRET POUR PRODUCTION
   
   - agent: "testing"
     message: |
