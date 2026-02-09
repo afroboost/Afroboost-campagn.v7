@@ -558,6 +558,7 @@ export default {
   playNotificationSound,
   playPushNotificationSound,
   playSoftPopSound,
+  triggerVibration,
   unlockAudio,
   requestNotificationPermission,
   getNotificationPermissionStatus,
