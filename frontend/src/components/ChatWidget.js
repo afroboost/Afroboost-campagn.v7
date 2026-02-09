@@ -923,14 +923,17 @@ export const ChatWidget = () => {
   const handleLogout = async () => {
     let cleanupDone = false;
     try {
-      // 1. Desactiver les notifications push (Service Worker)
+      // 1. Desabonner des notifications push (garde la PWA installee)
       if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(r => r.unregister()));
-        console.log('[LOGOUT] ServiceWorkers desinscrits:', registrations.length);
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await subscription.unsubscribe();
+          console.log('[LOGOUT] Push unsubscribed');
+        }
       }
       
-      // 2. Vider les caches (images/medias)
+      // 2. Vider les caches (images/medias) et attendre completion
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
@@ -953,15 +956,10 @@ export const ChatWidget = () => {
       setStep('welcome');
       
       cleanupDone = true;
-      console.log('[LOGOUT] Nettoyage complet');
     } catch (err) {
       console.error('[LOGOUT] Erreur:', err);
     } finally {
-      // Toujours rediriger, meme en cas d'erreur
-      if (!cleanupDone) {
-        localStorage.clear();
-        sessionStorage.clear();
-      }
+      if (!cleanupDone) { localStorage.clear(); sessionStorage.clear(); }
       window.location.replace('/');
     }
   };
