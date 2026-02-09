@@ -212,12 +212,31 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implementation terminee des notifications sonores et visuelles:
-      1. Son via Web Audio API (inline, pas de fichier externe)
-      2. Notification navigateur quand onglet en arriere-plan (showNewMessageNotification)
-      3. Demande permission au premier chargement post-login (3s delay)
-      4. Verification isOpen && document.hasFocus() avant notification
-      server.py inchange (7387 lignes comme requis)
+      Implementation V2 des notifications PWA et son discret:
+      
+      1. DEMANDE PERMISSION SUR CLIC CONNEXION (Anti-blocage mobile)
+         - Supprime la demande automatique apres 3s
+         - Demande liee a handleSmartEntry() = action utilisateur
+         - Compatible navigateurs mobiles (geste volontaire requis)
+      
+      2. SON "SOFT POP" BASE64 (Qualite)
+         - Son encode en Base64 inline (pas de fichier externe = pas de 404)
+         - Se declenche UNIQUEMENT si document.visibilityState === 'hidden'
+         - Volume modere (50%) pour notification douce
+      
+      3. SERVICE WORKER PWA (deja existant)
+         - /public/sw.js gere les push events en arriere-plan
+         - Vibration [200, 100, 200] pour mobile
+         - Focus fenetre au clic sur notification
+      
+      4. DEVERROUILLAGE AUDIO iOS
+         - unlockAudio() appele sur clic connexion
+         - Pre-charge le son Base64 pour lecture immediate
+      
+      CONTRAINTES RESPECTEES:
+      - server.py inchange (7387 lignes)
+      - Design minimaliste (pas d'emojis dans l'interface)
+      - Son inline Base64 (zero fichier externe)
   
   - agent: "testing"
     message: |
