@@ -226,9 +226,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Notification navigateur si onglet en arriere-plan"
-    - "Demande autorisation notifications au login"
-    - "Verification utilisateur actif avant notification"
+    - "DELETE /api/chat/participants/{id} - Suppression définitive contact"
+    - "Non-régression endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
