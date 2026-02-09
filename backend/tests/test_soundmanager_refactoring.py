@@ -14,7 +14,7 @@ import requests
 import os
 import re
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coaching-sync.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://alert-sound.preview.emergentagent.com')
 
 # === SOUNDMANAGER.JS FILE TESTS ===
 
