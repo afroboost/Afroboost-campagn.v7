@@ -7381,6 +7381,6 @@ async def shutdown_db_client():
         logger.info("[SCHEDULER] Arrêté (jobs persistés)")
     client.close()
     mongo_client_sync.close()
-    logger.info("[SYSTEM] Arrêté")
+    logger.info("[SYSTEM] Arrete")
 
 # END
