@@ -806,7 +806,8 @@ def format_message_for_frontend(m: dict) -> dict:
         "text": m.get("content", "") or m.get("text", ""), "sender": (m.get("sender_name") or m.get("sender", "")).replace("💪 ", ""),
         "senderId": m.get("sender_id") or m.get("senderId", ""), "sender_type": m.get("sender_type", "ai"),
         "created_at": m.get("created_at"), "media_url": m.get("media_url"), "media_type": m.get("media_type"),
-        "cta_type": m.get("cta_type"), "cta_text": m.get("cta_text"), "cta_link": m.get("cta_link")
+        "cta_type": m.get("cta_type"), "cta_text": m.get("cta_text"), "cta_link": m.get("cta_link"),
+        "broadcast": m.get("broadcast", False), "scheduled": m.get("scheduled", False)
     }
 
 # ==================== ROUTES ====================
