@@ -241,15 +241,34 @@ const MediaDisplay = ({ url, className }) => {
     );
   }
   
-  // Image ou lien inconnu - affiche directUrl ou thumbnailUrl
+  // Image ou lien inconnu - affiche directUrl ou thumbnailUrl avec fallback SVG
   return (
     <div className={className} style={containerStyle}>
       <img 
         src={media.thumbnailUrl || media.directUrl} 
         alt="Media" 
         style={{ ...contentStyle, objectFit: 'cover' }}
-        onError={(e) => { e.target.style.display = 'none'; }}
+        onError={(e) => { 
+          // Fallback: affiche une icone video SVG
+          e.target.style.display = 'none';
+          const fallback = e.target.nextSibling;
+          if (fallback) fallback.style.display = 'flex';
+        }}
       />
+      {/* Fallback SVG quand image ne charge pas */}
+      <div 
+        style={{ 
+          ...contentStyle, 
+          display: 'none', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          background: 'rgba(0,0,0,0.5)'
+        }}
+      >
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+      </div>
     </div>
   );
 };
