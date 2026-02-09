@@ -213,36 +213,38 @@ agent_communication:
   - agent: "main"
     message: |
       ==========================================
-      AFROBOOST v7 : PRET POUR LA PRODUCTION
+      AFROBOOST v7 : SYSTEME DE PRODUCTION VERROUILLE
       Date: 09.02.2026
       ==========================================
       
-      DECONNEXION INTELLIGENTE:
+      UX DECONNEXION COMPLETE:
       
-      1. PUSH UNSUBSCRIBE (garde PWA installee)
-         - registration.pushManager.getSubscription()
-         - subscription.unsubscribe()
-         - Icone app reste sur ecran d'accueil
+      1. FEEDBACK IMMEDIAT
+         - isLoggingOut state ajoute
+         - Bouton affiche "Deconnexion..."
+         - Bouton desactive (disabled + cursor:wait)
+         - Opacite reduite pendant le processus
       
-      2. NETTOYAGE SEQUENTIEL
-         - await caches.delete() AVANT redirect
-         - localStorage.clear() + sessionStorage.clear()
-         - Etats React reinitialises
+      2. TIMEOUT DE SECURITE
+         - setTimeout(3000) force redirect
+         - Evite blocage si caches.delete() echoue
+         - clearTimeout si succes avant 3s
       
-      3. BADGE "(tous)" OPTIMISE
-         - ml-1 mr-2 (espacement equilibre)
-         - text-purple-400/80 (lisibilite 80%)
-         - font-light (style fin)
-         - Pas de chevauchement avec l'heure
+      3. COMMENTAIRE VERSION (server.py ligne 1)
+         - "VERSION 7.0 - PRODUCTION READY"
+         - Instructions: NE PAS MODIFIER login/tri/sync
+      
+      4. NETTOYAGE DEBUG
+         - Aucun print() restant
+         - Logs console minimaux
       
       VERIFICATIONS FINALES:
-      - server.py = 7374 lignes OK
-      - Tri MongoDB: [("created_at", 1), ("id", 1)] OK
-      - 4 dates reservation: INTACTES
-      - Login par code: INTACT
+      - server.py = 7375 lignes OK
+      - Tri MongoDB: intact
+      - 4 dates reservation: intactes
       - Zero emoji: OK
       
-      PRET POUR PRODUCTION
+      SYSTEME VERROUILLE ET PRET
   
   - agent: "testing"
     message: |
