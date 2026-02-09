@@ -203,11 +203,12 @@ class BackendTester:
         """Test Socket.IO connection and basic events"""
         try:
             # Create a Socket.IO client
-            sio = socketio.SimpleClient()
+            sio = socketio.SimpleClient(logger=False, engineio_logger=False)
             
-            # Connect to the backend
+            # Connect to the backend - Socket.IO should be available on the main URL
             try:
-                sio.connect(BACKEND_URL)
+                # Try connecting to Socket.IO with SSL verification disabled for testing
+                sio.connect(BACKEND_URL, transports=['websocket', 'polling'])
                 self.log_result("Socket.IO Connection", True, "Connexion Socket.IO établie")
                 
                 # Test join session if we have a test session
@@ -225,6 +226,9 @@ class BackendTester:
                 sio.disconnect()
                 return True
                 
+            except socketio.exceptions.ConnectionError as e:
+                self.log_result("Socket.IO Connection", False, f"Erreur de connexion Socket.IO: {str(e)}")
+                return False
             except Exception as e:
                 self.log_result("Socket.IO Connection", False, f"Erreur de connexion: {str(e)}")
                 return False
