@@ -25,7 +25,7 @@ const initSoftPopAudio = () => {
   if (!softPopAudio) {
     try {
       softPopAudio = new Audio(SOFT_POP_SOUND_BASE64);
-      softPopAudio.volume = 0.5; // Volume modere (50%)
+      softPopAudio.volume = 0.7; // v7.1: Volume augmente (70%) pour meilleure audibilite
       softPopAudio.preload = 'auto';
     } catch (e) {
       console.warn('[AUDIO] Impossible de creer Audio element:', e);
