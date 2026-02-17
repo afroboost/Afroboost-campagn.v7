@@ -104,12 +104,12 @@ export const triggerVibration = () => {
 
 /**
  * Joue le son "soft pop" Base64 (son doux de qualite) + VIBRATION
- * Se declenche UNIQUEMENT si document.visibilityState === 'hidden'
+ * v7.1: Joue TOUJOURS le son + fallback iOS ameliore
  */
-export const playSoftPopSound = async () => {
-  // CONDITION OBLIGATOIRE: Ne jouer que si l'app est en arriere-plan
-  if (document.visibilityState !== 'hidden') {
-    console.log('[SOUND] App visible - son ignore');
+export const playSoftPopSound = async (forcePlay = false) => {
+  // v7.1: Option forcePlay pour tester le son meme si app visible
+  if (!forcePlay && document.visibilityState !== 'hidden') {
+    console.log('[SOUND] App visible - son ignore (sauf forcePlay)');
     return false;
   }
   
@@ -120,14 +120,55 @@ export const playSoftPopSound = async () => {
     const audio = initSoftPopAudio();
     if (audio) {
       audio.currentTime = 0;
+      // v7.1: Fallback iOS - tenter de resumer le contexte audio avant
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        await ctx.resume().catch(() => {});
+      }
       await audio.play();
-      console.log('[SOUND] Son Pop joue (arriere-plan)');
+      console.log('[SOUND] Son Pop joue (volume 70%)');
       return true;
     }
   } catch (err) {
-    console.warn('[SOUND] Lecture son Base64 echouee:', err);
+    console.warn('[SOUND] Lecture son Base64 echouee:', err.message);
+    // v7.1: Fallback synthetique si Audio HTML5 echoue
+    return await playFallbackBeep();
   }
   return false;
+};
+
+/**
+ * v7.1: Son de secours via Web Audio API si Audio HTML5 echoue (iOS)
+ */
+const playFallbackBeep = async () => {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return false;
+    
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+    
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime); // La5
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.15);
+    
+    console.log('[SOUND] Fallback beep joue (Web Audio)');
+    return true;
+  } catch (e) {
+    console.warn('[SOUND] Fallback beep echoue:', e.message);
+    return false;
+  }
 };
 
 /**
