@@ -630,5 +630,6 @@ export default {
   startTitleFlash,
   stopTitleFlash,
   isWindowFocused,
-  notifyPrivateMessage
+  notifyPrivateMessage,
+  testNotificationSound
 };
