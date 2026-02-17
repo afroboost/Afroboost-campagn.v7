@@ -595,6 +595,24 @@ export const notifyPrivateMessage = (senderName = 'Quelqu\'un') => {
   );
 };
 
+/**
+ * v7.1: Fonction de test pour verifier que le son fonctionne
+ * A appeler depuis la console: window.testAfroboostSound()
+ */
+export const testNotificationSound = async () => {
+  console.log('[TEST] Deverrouillage audio...');
+  await unlockAudio();
+  console.log('[TEST] Lecture du son de notification...');
+  await playSoftPopSound(true); // forcePlay = true pour ignorer visibilityState
+  console.log('[TEST] Terminé - Le son devrait avoir été joué');
+  return true;
+};
+
+// v7.1: Exposer la fonction de test sur window pour debug console
+if (typeof window !== 'undefined') {
+  window.testAfroboostSound = testNotificationSound;
+}
+
 export default {
   playNotificationSound,
   playPushNotificationSound,
